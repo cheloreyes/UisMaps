@@ -1,5 +1,6 @@
 package com.proyecto.uis.uismaps;
 
+import android.content.pm.ActivityInfo;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -8,27 +9,29 @@ import android.view.MenuItem;
 
 
 public class MainActivity extends FragmentActivity {
-    // **********************
-    // Constants
-    // **********************
-    private static final String MAP_FRAGMENT_TAG = "MAP_FRAGMENT_TAG";
+    private static final String MAP_FRAGMENT_TAG = "Map_Fragment_CartoType";
 
-    // **********************
-    // Fields
-    // **********************
+/*
+    Llamado cuando la actividad es creada por primera vez.
+ */
 
-
+    private MapView miMapa;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         FragmentManager fm = this.getSupportFragmentManager();
         if(fm.findFragmentByTag(MAP_FRAGMENT_TAG) == null) {
-            MapController imapController = MapController.newInstance();
-            fm.beginTransaction().add(R.id.map_container, imapController, MAP_FRAGMENT_TAG).commit();
+            ViewController iViewController = ViewController.newInstance();
+            fm.beginTransaction().add(R.id.map_container,iViewController,MAP_FRAGMENT_TAG).commit();
         }
-    }
+        //LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,3000,10,miMapa);
 
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -51,4 +54,6 @@ public class MainActivity extends FragmentActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
 }

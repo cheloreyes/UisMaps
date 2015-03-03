@@ -1,6 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">UisMaps</string>
 
+    <string name="app_name">CartoTypeTest</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+
+    <string name="destination_not_know">No es posible iniciar la navegación, destino desconocido. Por favor seleccione el destino tocando en el mapa e intente nuevamente.</string>
+    <string name="waiting_GPS">Esperando ubicación GPS.</string>
+    <string name="navigation_error">No se pudo iniciar la navegación.</string>
+    <string name="gps_device_on">Iniciando servicio GPS, ésto puede tomar un tiempo.</string>
+    <string name="conecting">Conectando</string>
+    <string name="please_wait">Por favor espera</string>
+    <string name="cancel">Cancelar</string>
+    <string name="location_unable">Servicios de ubicación inhabilitados</string>
+    <string name="location_unable_message">UISMaps necesita saber tu ubicación. Por favor activa los servicios de ubicación</string>
+    <string name="config_location">Configuración</string>
+    ##Preferencias
+    <string name="title_activity_ajustes">Ajustes</string>
+    <string name="location">Ubicación</string>
+    <string name="power_save_title">Ahorro de batería</string>
+    <string name="power_save_description">UISMaps utilizará el proveedor de red para saber tu ubicación pero puede ser menos preciso</string>
+    <string name="title_activity_splash">Splash</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_vista_mapa">Map</string>
+    <string name="no_gps">Su dispositivo no tiene GPS. No es posible hacer seguimiento a su navegación, lo sentimos!</string>
+    <string name="current_location">Mi ubicación actual</string>
 </resources>
