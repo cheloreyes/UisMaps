@@ -80,6 +80,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         containerLayout = new RelativeLayout(this);
         TextView titleTextView = new TextView(this);
         ImageButton findMeButton = new ImageButton(this);
+        findMeButton.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                miMapa.locateMe();
+                miMapa.notifyMessage("Ubicame!");
+            }
+        });
         SearchView searchView = new SearchView(this);
 
         titleTextView.setTextAppearance(this, android.R.style.TextAppearance_Material_Medium);
@@ -88,7 +95,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         searchView.setBackgroundColor(Color.LTGRAY);
 
         findMeButton.setImageResource(android.R.drawable.ic_menu_mylocation);
-        findMeButton.setId(FIND_ME_BUTTON_ID);
+       // findMeButton.setId(FIND_ME_BUTTON_ID);
 
         RelativeLayout.LayoutParams mapViewLayout = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         RelativeLayout.LayoutParams searchViewLayaout = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
@@ -128,8 +135,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         switch (v.getId()) {
             case FIND_ME_BUTTON_ID:
-                miMapa.locateMe();
-                miMapa.notifyMessage("Ubicame!");
+              //  miMapa.locateMe();
+              //  miMapa.notifyMessage("Ubicame!");
                 break;
         }
     }
