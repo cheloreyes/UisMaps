@@ -22,6 +22,7 @@ import android.view.ViewStub;
 import android.widget.Toast;
 
 import com.cartotype.Framework;
+import com.cartotype.MapObject;
 import com.cartotype.RouteProfile;
 import com.cartotype.Turn;
 
@@ -42,8 +43,12 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // Constants
     // **********************
 
-    public static final int MIN_DISTANCE = 3;
-    public static final int MIN_TIME = 2000;
+    private static final double MAX_XA = -73.12329138853613;
+    private static final double MAX_XB = -73.1155327517166;
+    private static final double MAX_YA = 7.143398173714375;
+    private static final double MAX_YB = 7.1382743178385315;
+    private static final int MIN_DISTANCE = 3;
+    private static final int MIN_TIME = 2000;
     private static final String ACT_OPTIONS = "UisMapPreferencias";
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
     private static final int DPI_MIN = 160;
@@ -180,7 +185,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                     double arrayOfDouble[] = new double[2];
                     arrayOfDouble[0] = event.getX();
                     arrayOfDouble[1] = event.getY();
-
                     miFramework.convertCoords(arrayOfDouble, Framework.SCREEN_COORDS, Framework.DEGREE_COORDS);
                     setSelectedPoint(arrayOfDouble[0], arrayOfDouble[1]);
                     miTouchCount = 0;
@@ -327,7 +331,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      */
     public void init()
     {
-        miRouteProfile = new RouteProfile();
+        //miRouteProfile = new RouteProfile(1);
         setKeepScreenOn(true);
         miScaleGestureDetector = new ScaleGestureDetector(miContext,this);
 
@@ -490,7 +494,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         try {
             files = assetManager.list(assetItem);
         } catch (IOException e) {
-            Log.e("Error al leer carpeta assets", e.toString());
+            Log.e("Error al leer carpeta assets", "");
             e.printStackTrace();
         }
 
@@ -507,7 +511,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                 out.close();
                 out=null;
             } catch (IOException e) {
-                Log.e("Error al copiar de asset", e.toString());
+                Log.e("Error al copiar de asset", "");
                 e.printStackTrace();
             }
         }
@@ -541,9 +545,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miFramework.deleteObjects(ID_SELECTED_POINT, ID_SELECTED_POINT);
         miFramework.addPointObject("pushpin", interestingPointLong, interestingPointLat, Framework.DEGREE_COORDS,
                                           "", 0, ID_SELECTED_POINT, 0);
+        Log.v(TAG, "pone marcador");
+        //notifyMessage(getNearbyPlaces());
+        notifyMessage(interestingPointLong +", "+ interestingPointLat);
         getMap();
         invalidate();
-        Log.v(TAG, "pone marcador");
     }
 
     /**
@@ -709,13 +715,49 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     /**
-     * Centra el mapa en la ubicación del usuario
+     * Ubica al usuario en el mapa.
      */
     public void locateMe() {
+        toggleGPS(true);
         if(miCurrentLon != 0 && miCurrentLat != 0) {
-            miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
+            if(MAX_XA < miCurrentLon && miCurrentLon < MAX_XB) {
+                if(MAX_YA < miCurrentLat && miCurrentLat < MAX_YB) {
+                    miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
+                    displayCurrentLocation();
+                }
+            }
+            else {
+                notifyMessage(miContext.getString(R.string.inside_campus));
+            }
         }
-        displayCurrentLocation();
+
+    }
+
+    /**
+     * Busca los lugares cercanos al toque del usuario en la pantalla.
+     * @return un @String con el nombre del lugar si toca un edifico o informa si no se encuentran lugares.
+     */
+    public String getNearbyPlaces() {
+        String places = null;
+        double[] point = new double[2];
+        point[0] = interestingPointLong;
+        point[1] = interestingPointLat;
+        miFramework.convertCoords(point,Framework.DEGREE_COORDS,Framework.SCREEN_COORDS);
+        MapObject[] nearby = miFramework.findInDisplay(point[0], point[1], 20, 5);
+        if(nearby != null && nearby.length > 0) {
+            int i=0;
+            for(MapObject iNearby : nearby) {
+                if(iNearby.getLabel().length() != 0) {
+                    places = iNearby.getLabel();
+                    i++;
+
+                }
+            }
+            if(i == 0) {
+                places = miContext.getString(R.string.no_places_nearby);
+            }
+        }
+        return places;
     }
 
     public void notifyMessage(String cMessage) {
