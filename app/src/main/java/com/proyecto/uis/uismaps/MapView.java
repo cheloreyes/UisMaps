@@ -48,6 +48,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private static final double MAX_YA = 7.143398173714375;
     private static final double MAX_YB = 7.1382743178385315;
     private static final int MIN_DISTANCE = 3;
+    public static final int MIN_DIST_TO_POINT = 13;
     private static final int MIN_TIME = 2000;
     private static final String ACT_OPTIONS = "UisMapPreferencias";
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
@@ -58,17 +59,14 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private static final int ID_ROUTE_START = 2;
     private static final int ID_SELECTED_POINT = 1;
     private static final String MAP_ESCALE = "last_scale";
-    private static final String MAP_GROUND = "last_terrain";
     private static final String MAP_LAT = "last_lat";
     private static final String MAP_LONG = "last_lon";
-    private static final String MAP_NAME = "last_map";
-    private static final String MAP_PERSPECTIVE = "last_perspective";
     private static final String MAP_ROTATION = "last_rotation";
     private static final String MAP_UNIT = "display_units";
     private static final int PRED_SCALE = 2500000;
     private static final String TAG = "MapView";
     private static final String uisMapsFolder = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
-    private static final String miDefaultMap = uisMapsFolder + "/mapa/mapa.ctm1";
+    private static final String campusMap = uisMapsFolder + "/mapa/mapa.ctm1";
     private static final String FILE_STYLE = uisMapsFolder + "/estilos/osm-style.xml";
     private static final String FILE_FONT = uisMapsFolder + "/fuentes/DejaVuSans.ttf";
 
@@ -91,7 +89,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private double miCurrentLat;
     private double miCurrentLon;
     private View miDetailsView;
-    private boolean miDisplayTerrain;
     private String miDistanceUnits;
     private Turn miFirstTurn;
     private double miFirstTurnDistance;
@@ -146,188 +143,13 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miContext = iContexto;
     }
 
-    // **********************
-    // Methods from SuperClass
-    // **********************
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        if (miScaleGestureDetector == null || miFramework == null) {
-            return false;
-        }
-        miScaleGestureDetector.onTouchEvent(event);
-        if (miScaleGestureDetector.isInProgress()) {
-            return true;
-        }
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                if (miTouchCount == 0) {
-                    miTouchCount = 1;
-                    miStartTouchPointX = event.getX();
-                    miStartTouchPointY = event.getY();
-                    return true;
-                }
-            case MotionEvent.ACTION_MOVE:
-                if (miTouchCount == 1) {
-                    miXOffset = event.getX() - miStartTouchPointX;
-                    miYOffset = event.getY() - miStartTouchPointY;
-                    invalidate();
-                }
-                return true;
-            case MotionEvent.ACTION_UP:
-                if (miTouchCount != 1) {
-                    break;
-                }
-                miXOffset = event.getX() - miStartTouchPointX;
-                miYOffset = event.getY() - miStartTouchPointY;
-
-                if (miXOffset > -13 && miXOffset < 13 && miYOffset > -13 && miYOffset < 13) {
-                    double arrayOfDouble[] = new double[2];
-                    arrayOfDouble[0] = event.getX();
-                    arrayOfDouble[1] = event.getY();
-                    miFramework.convertCoords(arrayOfDouble, Framework.SCREEN_COORDS, Framework.DEGREE_COORDS);
-                    setSelectedPoint(arrayOfDouble[0], arrayOfDouble[1]);
-                    miTouchCount = 0;
-                    if (miSimulatingNavigation) {
-                        //  setSimulatedNavLocation(arrayOfDouble[0], arrayOfDouble[1]);
-                    }
-                } else {
-                    miTouchCount = 0;
-                    miFramework.pan((int) Math.floor(-miXOffset + 0.5), (int) Math.floor(-miYOffset + 0.5));
-                    miXOffset = 0;
-                    miYOffset = 0;
-                    getMap();
-                    invalidate();
-                }
-                return true;
-        }
-        return false;
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        //super.onDraw(canvas);
-        if (miBitmap == null) {
-            init();
-            miMatrix = canvas.getMatrix();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && canvas.isHardwareAccelerated()) {
-                int[] arrayOfInt = new int[2];
-                getLocationOnScreen(arrayOfInt);
-                miMatrix.preTranslate(arrayOfInt[0], arrayOfInt[1]);
-            }
-        }
-        if (miScale != 1.0 || miXOffset != 0 || miYOffset != 0) {
-            Matrix m = canvas.getMatrix();
-            m.set(miMatrix);
-            m.preTranslate(getWidth() / 2 + miXOffset, getHeight() / 2 + miYOffset);
-            m.preScale(miScale, miScale);
-            m.preTranslate(-getWidth() / 2, -getHeight() / 2);
-            canvas.setMatrix(m);
-        } else {
-            canvas.setMatrix(miMatrix);
-        }
-
-        if (miBitmap != null) {
-            canvas.drawBitmap(miBitmap, 0.0F, 0, null);
-        }
-    }
-
-    @Override
-    public boolean onScale(ScaleGestureDetector detector) {
-        miScaleGestureDetector = detector;
-        miScale *= miScaleGestureDetector.getScaleFactor();
-        float x = miScaleGestureDetector.getFocusX();
-        float y = miScaleGestureDetector.getFocusY();
-        miXOffset += x - miPrevScaleFocusX;
-        miYOffset += y - miPrevScaleFocusY;
-        miPrevScaleFocusX = x;
-        miPrevScaleFocusY = y;
-        invalidate();
-        return true;
-    }
-
-    @Override
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
-        miScaleGestureDetector = detector;
-        miPrevScaleFocusX = miScaleGestureDetector.getFocusX();
-        miPrevScaleFocusY = miScaleGestureDetector.getFocusY();
-        miTouchCount = 2;
-        return true;
-    }
-
-    @Override
-    public void onScaleEnd(ScaleGestureDetector detector) {
-        miScaleGestureDetector = detector;
-        if (miScale != 1) {
-            miFramework.zoom(miScale);
-        }
-        miScale = 1;
-        if (miXOffset != 0 || miYOffset != 0) {
-            miFramework.pan((int) Math.floor(-miXOffset + 0.5),
-                    (int) Math.floor(-miYOffset + 0.5));
-        }
-        miXOffset = 0;
-        miYOffset = 0;
-
-        miTouchCount = 0;
-        getMap();
-        invalidate();
-    }
-
-    @Override
-    public void onLocationChanged(Location cLocation) {
-        if(cLocation.hasAccuracy()){
-            progressDialog.hide();
-        }
-        Log.d(TAG,"Location update "+ miCurrentLon + ", " + miCurrentLat);
-        miCurrentLon = cLocation.getLongitude();
-        miCurrentLat = cLocation.getLatitude();
-        displayCurrentLocation();
-        if(iWantNavigate) {
-            navigateStart();
-            iWantNavigate = false;
-        }
-        if(isNavigateStarted) {
-            int validity = Framework.POSITION_VALID | Framework.TIME_VALID;
-            if(cLocation.hasSpeed()) {
-                validity |= Framework.SPEED_VALID;
-            }
-            if(cLocation.hasBearing()) {
-                validity |= Framework.COURSE_VALID;
-            }
-            if(cLocation.hasAltitude()) {
-                validity |= Framework.HEIGHT_VALID;
-            }
-            double time = (cLocation.getTime()) / 1000;
-            double speed = cLocation.getSpeed() * 3.6;
-            setUpNavigation(validity, time , miCurrentLon, miCurrentLat, speed, cLocation.getBearing(), cLocation.getAltitude());
-            miFramework.setViewCenterLatLong(miCurrentLon,miCurrentLat);
-            displayCurrentLocation();
-        }
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
 
     // **********************
     // Methods
     // **********************
 
     /**
-     * Inicializa la vista del mapa. Se necesita cuando se inicia la app
+     * Inicializa los componentes necesarios por el FrameWork de CartoType para dibujar el mapa.
      */
     public void init()
     {
@@ -342,18 +164,9 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
         int width = getWidth();
         int height = getHeight();
-//TODO restoreDefaultMap() puede que no se necesite, ya que es para cuando usamos diferentes mapas
-        restoreDefaultMap();
-
-        //Comprueba que exista el archivo del mapa antes de iniciar el API
+        miMapFile = campusMap;
         File f = new File(miMapFile);
-        if(!f.exists()) {
-            //Se asigna el mapa predeterminado
-            Log.e(TAG,"Estableciendo mapa"+ miDefaultMap);
-            miMapFile = miDefaultMap;
-//TODO averiguar para que sirve deleteState()
-            deleteState();
-        }
+
         Log.v(TAG, "Creando nuevo framework");
         //Se crea la instancia del framework
         miFramework = new Framework(miMapFile, FILE_STYLE, FILE_FONT, width, height);
@@ -364,18 +177,70 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miFramework.setNavigatorTimeTolerance(15);
 
         //Aplica los estados de Escala, rotacion, perspectiva, latitud etc.. de la ultima sesion.
-        //restoreState();
+        restoreState();
 
         miBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         getMap();
-        invalidate();
+        invalidate(); //indica que se necesita redibujar la vista.
     }
-
     /**
      * getMap() Dibuja el mapa.
      */
     private void getMap() {
         miBitmap = miFramework.getMap();
+    }
+
+    public int getMapScale() {
+        int mapScale;
+        try {
+            mapScale = miFramework.getScale();
+        } catch (NullPointerException e) {
+            mapScale = PRED_SCALE;
+        }
+        return mapScale;
+    }
+
+    /**
+     * Obtiene el angulo de rotación del mapa.
+     * @return el angulo de rotación del mapa, 0 si no se a inicializado.
+     */
+    private double getMapRotation() {
+        try {
+            return miFramework.getRotation();
+        } catch (NullPointerException e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * Obtiene la posición del mapa en la pantalla.
+     *
+     * @param pPoint es un vector donde se guarda la posición.
+     */
+    public void getMapPosition(double[] pPoint) {
+        try {
+            miFramework.getViewDimensions(pPoint, Framework.DEGREE_COORDS);
+        } catch (NullPointerException e) {
+            pPoint[0] = 0.0;
+            pPoint[1] = 0.0;
+        }
+    }
+
+    /**
+     * Guarda el estado del mapa @MAP_ESCALE, @MAP_LAT, @MAP_LONG, @MAP_ROTATION, @MAP_UNIT
+     * cuando el usuario abandona la aplicación.
+     */
+    public void saveState() {
+        SharedPreferences preferences = miContext.getSharedPreferences(ACT_OPTIONS, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt(MAP_ESCALE, getMapScale());
+        double[] mapPos = new double[2];
+        getMapPosition(mapPos);
+        editor.putLong(MAP_LONG, Double.doubleToLongBits(mapPos[0]));
+        editor.putLong(MAP_LAT, Double.doubleToLongBits(mapPos[1]));
+        editor.putLong(MAP_ROTATION, Double.doubleToLongBits((getMapRotation())));
+        editor.putString(MAP_UNIT, miDistanceUnits);
+        editor.commit();
     }
 
     /**
@@ -389,13 +254,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         double map_rotation = 0;
         double map_lat = 0.0;
         double map_lon = 0.0;
-        //Obtiene los ultimos estados (posición, escala, rotacion etc.).
+        //se Intenta obtener los estados guardados (posición, escala, rotacion etc.).
         try {
             miDistanceUnits = preferences.getString(MAP_UNIT, "metric");
-            miDisplayTerrain = preferences.getBoolean(MAP_GROUND, false);
             map_scale = preferences.getInt(MAP_ESCALE, 0);
             map_rotation = Double.longBitsToDouble(preferences.getLong(MAP_ROTATION, 0));
-            miPerspective = preferences.getBoolean(MAP_PERSPECTIVE, false);
             map_lat = Double.longBitsToDouble(preferences.getLong(MAP_LAT, 0));
             map_lon = Double.longBitsToDouble(preferences.getLong(MAP_LONG, 0));
         } catch (ClassCastException e) {
@@ -403,19 +266,12 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             e.printStackTrace();
         }
         Log.v(TAG, "restoreState() lat = " + map_lat + "Lon = " + map_lon + "Escala = " + map_scale + "Rotacion = " + map_rotation);
-        //Establece la escala.
         if (map_scale != 0) {
             Log.v(TAG, "MapSetUp() con ultima escala conocida: " + map_scale);
             miFramework.setScale(map_scale);
         } else {
             Log.v(TAG, "MapSetUp() con escala predeterminada:" + PRED_SCALE);
             miFramework.setScale(PRED_SCALE);
-        }
-        //TODO verificar si es necesario enableLayer
-        //miFramework.enableLayer("terrain-height-feet", true);
-        //miFramework.enableLayer("terrain-shadow", true);
-        if (miPerspective) {
-            miFramework.setPerspective(true);
         }
         if (map_rotation != 0) {
             Log.v(TAG, "MapSetUp() con ultima rotacion conocida:" + map_rotation);
@@ -428,27 +284,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     /**
-     * deleteState() es usado para eliminar la escala, rotación, latitud y longitud guardadas.
-     */
-    private void deleteState() {
-        SharedPreferences preferences = miContext.getSharedPreferences(ACT_OPTIONS, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.remove(MAP_ESCALE);
-        editor.remove(MAP_LONG);
-        editor.remove(MAP_LAT);
-        editor.remove(MAP_ROTATION);
-        editor.commit();
-    }
-
-    private void restoreDefaultMap() {
-        SharedPreferences prefs = miContext.getSharedPreferences(ACT_OPTIONS, Context.MODE_PRIVATE);
-        miMapFile = prefs.getString(MAP_NAME, miDefaultMap);
-    }
-
-    /**
-     * Comprueba que existan las carpetas y archivos en la memoria y los adiciona si no estan.
-     * Carpetas creadas por software.
-     * Archivos copiados de la carpeta "assets".
+     * Comprueba que existan las carpetas y archivos en la memoria SD del dispositivo.
      */
     private void folderCheck()
     {
@@ -463,7 +299,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             dir.mkdirs();
         }
         //Existe el archivo mapa?
-        File f = new File(miDefaultMap);
+        File f = new File(campusMap);
         if(!f.exists()) {
             assetCopy("mapa");
             Log.i(TAG, "Mapa no encontrado, se copia de asset");
@@ -482,6 +318,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         }
     }
 
+    /**
+     * Se encarga de crear los directorios y copiar los archivos necesarios del contenido del paquete
+     * de aplicación.
+     * @param assetItem es el fichero faltante encontrado por @folderCheck.
+     */
     private void assetCopy(String assetItem)
     {
         File sdCardDir = new File(uisMapsFolder + "/" + assetItem);
@@ -494,7 +335,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         try {
             files = assetManager.list(assetItem);
         } catch (IOException e) {
-            Log.e("Error al leer carpeta assets", "");
+            Log.e("Error al leer carpeta assets", e.toString());
             e.printStackTrace();
         }
 
@@ -511,17 +352,17 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                 out.close();
                 out=null;
             } catch (IOException e) {
-                Log.e("Error al copiar de asset", "");
+                Log.e("Error al copiar de asset", e.toString());
                 e.printStackTrace();
             }
         }
-
     }
 
     /**
-     * Usado por assetCopy()
-     * @param in
-     * @param out
+     * Usado por assetCopy(), se encarga de crear el tunel de copia entre los ficheros contenidos
+     * en la carpeta "Assets" del paquete de aplicación.
+     * @param in fichero encontrado en la carpeta "Assets" del paquete de aplicación.
+     * @param out ruta a donde se queire copiar el contenido encontrado.
      * @throws IOException
      */
     private void copyFile(InputStream in, OutputStream out) throws IOException{
@@ -533,8 +374,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     /**
-     * Agrega el punto seleccionado a la pantalla y lo guarda como latitud y longitud
-     * para ser accedidos por otros métodos.
+     * dibuja el punto sobre el mapa y lo guarda con una latitud y longitud asociada.
      *
      * @param aLongitude Coordenada X del evento.
      * @param aLatitude  Coordenarda Y del evento.
@@ -546,14 +386,13 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miFramework.addPointObject("pushpin", interestingPointLong, interestingPointLat, Framework.DEGREE_COORDS,
                                           "", 0, ID_SELECTED_POINT, 0);
         Log.v(TAG, "pone marcador");
-        //notifyMessage(getNearbyPlaces());
-        notifyMessage(interestingPointLong +", "+ interestingPointLat);
+        notifyMessage(getNearbyPlaces());
         getMap();
         invalidate();
     }
 
     /**
-     * Retira los puntos de la pantalla.
+     * Elimina el punto sobre el mapa marcado por el usuario.
      */
     private void deleteSelectedPoint() {
         miFramework.deleteObjects(ID_SELECTED_POINT, ID_SELECTED_POINT);
@@ -597,11 +436,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         getMap();
         invalidate();
     }
+
     private void showNavigation_init() {
         ViewStub miViewStub = (ViewStub) findViewById(R.id.stub_details);
         miDetailsView = miViewStub.inflate();
     }
-
     public void showNavigation() {
         if(!miDetailsView.isActivated()) {
             showNavigation_init();
@@ -669,7 +508,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      * La navegación Gps consume muchos recursos y no es necesario si el usuario está fuera del área o solo quiere hacer una consulta.
      * @param cState : Hace referencia al estado deseado del servicio. True para encendido, false para apagado.
      */
-    private void toggleGPS(boolean cState) {
+    public void toggleGPS(boolean cState) {
         Alerts alertsDialog = new Alerts();
         progressDialog = new ProgressDialog(miContext);
         if(!isGPSon && cState) {
@@ -763,7 +602,230 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public void notifyMessage(String cMessage) {
         Toast.makeText(getContext(), cMessage, Toast.LENGTH_SHORT).show();
     }
+
     public void setMiRouteProfile(int profile) {
         miRouteProfile = new RouteProfile(profile);
+    }
+
+    // **********************
+    // Methods from SuperClass
+    // **********************
+
+    /**
+     * Override del método @OnTouchListener.onTouch para determinar los gestos del usuario al pulsar la pantalla.
+     *
+     * @param v
+     * @param event
+     * @return
+     * @MotionEvent.ACTION_DOWN registra cuando se toca la pantalla.
+     * @MotionEvent.ACTION_MOVE registra el movimiento mientras se está tocando la pantalla.
+     * @MotionEvent.ACTION_UP registra cuando se deja de tocar la pantalla.
+     * <p/>
+     * Al finalizar esta acción de eventos se verifíca la si diferencia entre @MotionEvent.ACTION_DOWN y MotionEvent.ACTION_UP
+     * es menor a @MIN_DIST_TO_POINT se pone un marcador en la pantalla mediante @setSelectedPoint. Si la diferencia es mayor, se hace un
+     * desplazamiento del mapa en la pantalla.
+     */
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if (miScaleGestureDetector == null || miFramework == null) {
+            return false;
+        }
+        miScaleGestureDetector.onTouchEvent(event);
+        if (miScaleGestureDetector.isInProgress()) {
+            return true;
+        }
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if (miTouchCount == 0) {
+                    miTouchCount = 1;
+                    miStartTouchPointX = event.getX();
+                    miStartTouchPointY = event.getY();
+                    return true;
+                }
+            case MotionEvent.ACTION_MOVE:
+                if (miTouchCount == 1) {
+                    miXOffset = event.getX() - miStartTouchPointX;
+                    miYOffset = event.getY() - miStartTouchPointY;
+                    invalidate();
+                }
+                return true;
+            case MotionEvent.ACTION_UP:
+                if (miTouchCount != 1) {
+                    break;
+                }
+                miXOffset = event.getX() - miStartTouchPointX;
+                miYOffset = event.getY() - miStartTouchPointY;
+
+                if (miXOffset > -MIN_DIST_TO_POINT && miXOffset < MIN_DIST_TO_POINT && miYOffset > -MIN_DIST_TO_POINT && miYOffset < MIN_DIST_TO_POINT) {
+                    double arrayOfDouble[] = new double[2];
+                    arrayOfDouble[0] = event.getX();
+                    arrayOfDouble[1] = event.getY();
+                    miFramework.convertCoords(arrayOfDouble, Framework.SCREEN_COORDS, Framework.DEGREE_COORDS);
+                    setSelectedPoint(arrayOfDouble[0], arrayOfDouble[1]);
+                    miTouchCount = 0;
+                    if (miSimulatingNavigation) {
+                        //  setSimulatedNavLocation(arrayOfDouble[0], arrayOfDouble[1]);
+                    }
+                } else {
+                    miTouchCount = 0;
+                    miFramework.pan((int) Math.floor(-miXOffset + 0.5), (int) Math.floor(-miYOffset + 0.5));
+                    miXOffset = 0;
+                    miYOffset = 0;
+                    getMap();
+                    invalidate();
+                }
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Override del método @View.OnDraw dibuja la vista del mapa obtenida del @Framework
+     * de CartoType al iniciar la aplicación, durante el desplazamiento, el acercamiento y la navegación.
+     *
+     * @param canvas the canvas on which the background will be drawn
+     */
+    @Override
+    protected void onDraw(Canvas canvas) {
+        //super.onDraw(canvas);
+        if (miBitmap == null) {
+            init();
+            miMatrix = canvas.getMatrix();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && canvas.isHardwareAccelerated()) {
+                int[] arrayOfInt = new int[2];
+                getLocationOnScreen(arrayOfInt);
+                miMatrix.preTranslate(arrayOfInt[0], arrayOfInt[1]);
+            }
+        }
+        if (miScale != 1.0 || miXOffset != 0 || miYOffset != 0) {
+            Matrix m = canvas.getMatrix();
+            m.set(miMatrix);
+            m.preTranslate(getWidth() / 2 + miXOffset, getHeight() / 2 + miYOffset);
+            m.preScale(miScale, miScale);
+            m.preTranslate(-getWidth() / 2, -getHeight() / 2);
+            canvas.setMatrix(m);
+        } else {
+            canvas.setMatrix(miMatrix);
+        }
+
+        if (miBitmap != null) {
+            canvas.drawBitmap(miBitmap, 0.0F, 0, null);
+        }
+    }
+
+    /**
+     * Override el método @onScale, Responde a los eventos de escalamiento, que es cuando el usuario hace un doble toque y separa o junta ambos toques.
+     * Lo cual se toma para efectos de realizar acercamiento o alejar la vista del mapa.
+     *
+     * @param detector es el gesto del usuario.
+     * @return
+     */
+    @Override
+    public boolean onScale(ScaleGestureDetector detector) {
+        miScaleGestureDetector = detector;
+        miScale *= miScaleGestureDetector.getScaleFactor();
+        float x = miScaleGestureDetector.getFocusX();
+        float y = miScaleGestureDetector.getFocusY();
+        miXOffset += x - miPrevScaleFocusX;
+        miYOffset += y - miPrevScaleFocusY;
+        miPrevScaleFocusX = x;
+        miPrevScaleFocusY = y;
+        invalidate();
+        return true;
+    }
+
+    /**
+     * Override del método @onScaleBegin, que se ejecuta cuando el usuario inicia a ejecutar el gesto de escalamiento.
+     * Determina el punto de inicio del gesto.
+     *
+     * @param detector
+     * @return
+     */
+    @Override
+    public boolean onScaleBegin(ScaleGestureDetector detector) {
+        miScaleGestureDetector = detector;
+        miPrevScaleFocusX = miScaleGestureDetector.getFocusX();
+        miPrevScaleFocusY = miScaleGestureDetector.getFocusY();
+        miTouchCount = 2;
+        return true;
+    }
+
+    /**
+     * Override del método @onScaleEnd, que se ejecuta cuando el usuario termina de ejecutar el gesto de escalamiento.
+     * Aplicando el efecto de acercamiento o alejamiento a la vista del mapa.
+     *
+     * @param detector
+     */
+    @Override
+    public void onScaleEnd(ScaleGestureDetector detector) {
+        miScaleGestureDetector = detector;
+        if (miScale != 1) {
+            miFramework.zoom(miScale);
+        }
+        miScale = 1;
+        if (miXOffset != 0 || miYOffset != 0) {
+            miFramework.pan((int) Math.floor(-miXOffset + 0.5), (int) Math.floor(-miYOffset + 0.5));
+        }
+        miXOffset = 0;
+        miYOffset = 0;
+
+        miTouchCount = 0;
+        getMap();
+        invalidate();
+    }
+
+    /**
+     * Override del método @LocationListener.onLocationChanged, el cual es llamado cuando cambia la ubicación del usuario según los criterios definidos de @MIN_DISTANCE y @MIN_TIME
+     * al objeto de @LocationManager.
+     *
+     * @param cLocation
+     */
+    @Override
+    public void onLocationChanged(Location cLocation) {
+        if (cLocation.hasAccuracy()) {
+            progressDialog.hide();
+        }
+        Log.d(TAG, "Location update " + miCurrentLon + ", " + miCurrentLat);
+        miCurrentLon = cLocation.getLongitude();
+        miCurrentLat = cLocation.getLatitude();
+        displayCurrentLocation();
+        if (iWantNavigate) {
+            navigateStart();
+            iWantNavigate = false;
+        }
+        if (isNavigateStarted) {
+            int validity = Framework.POSITION_VALID | Framework.TIME_VALID;
+            if (cLocation.hasSpeed()) {
+                validity |= Framework.SPEED_VALID;
+            }
+            if (cLocation.hasBearing()) {
+                validity |= Framework.COURSE_VALID;
+            }
+            if (cLocation.hasAltitude()) {
+                validity |= Framework.HEIGHT_VALID;
+            }
+            double time = (cLocation.getTime()) / 1000;
+            double speed = cLocation.getSpeed() * 3.6;
+            setUpNavigation(validity, time, miCurrentLon, miCurrentLat, speed, cLocation.getBearing(), cLocation.getAltitude());
+            miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
+            displayCurrentLocation();
+        }
+
+    }
+
+    //Estos métodos de la superclase @LocationListener no se utilizaron pero son requisito de la interfaz.
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
     }
 }

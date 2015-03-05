@@ -3,14 +3,12 @@ package com.proyecto.uis.uismaps;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
@@ -73,6 +71,9 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     protected void onPause() {
         super.onPause();
         //Guarda el estado actual del mapa
+        miMapa.saveState();
+        miMapa.toggleGPS(false);
+        //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
 
     }
 
@@ -84,7 +85,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 miMapa.locateMe();
-                miMapa.notifyMessage("Ubicame!");
             }
         });
         SearchView searchView = new SearchView(this);
