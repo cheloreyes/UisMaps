@@ -65,10 +65,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private static final String MAP_UNIT = "display_units";
     private static final int PRED_SCALE = 2500000;
     private static final String TAG = "MapView";
-    private static final String uisMapsFolder = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
-    private static final String campusMap = uisMapsFolder + "/mapa/mapa.ctm1";
-    private static final String FILE_STYLE = uisMapsFolder + "/estilos/osm-style.xml";
-    private static final String FILE_FONT = uisMapsFolder + "/fuentes/DejaVuSans.ttf";
+    private static final String UIS_MAPS_FOLDER = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
+    private static final String CAMPUS_MAP = UIS_MAPS_FOLDER + "/mapa/mapa.ctm1";
+    private static final String FILE_STYLE = UIS_MAPS_FOLDER + "/estilos/osm-style.xml";
+    private static final String FILE_FONT = UIS_MAPS_FOLDER + "/fuentes/DejaVuSans.ttf";
 
     // **********************
     // Fields
@@ -104,7 +104,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private ScaleGestureDetector miScaleGestureDetector;
     private Turn miSecondTurn;
     private double miSecondTurnDistance;
-    private boolean miSimulatingNavigation;
     private float miStartTouchPointX;
     private float miStartTouchPointY;
     private int miTouchCount;
@@ -164,7 +163,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
         int width = getWidth();
         int height = getHeight();
-        miMapFile = campusMap;
+        miMapFile = CAMPUS_MAP;
         File f = new File(miMapFile);
 
         Log.v(TAG, "Creando nuevo framework");
@@ -289,17 +288,17 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private void folderCheck()
     {
         //Existe la carpeta principal?
-        File dir = new File(uisMapsFolder);
+        File dir = new File(UIS_MAPS_FOLDER);
         if(!dir.exists()) {
             dir.mkdirs();
         }
         //Existe la carpeta Log?
-        dir = new File(uisMapsFolder + "/log");
+        dir = new File(UIS_MAPS_FOLDER + "/log");
         if(!dir.exists()) {
             dir.mkdirs();
         }
         //Existe el archivo mapa?
-        File f = new File(campusMap);
+        File f = new File(CAMPUS_MAP);
         if(!f.exists()) {
             assetCopy("mapa");
             Log.i(TAG, "Mapa no encontrado, se copia de asset");
@@ -325,7 +324,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      */
     private void assetCopy(String assetItem)
     {
-        File sdCardDir = new File(uisMapsFolder + "/" + assetItem);
+        File sdCardDir = new File(UIS_MAPS_FOLDER + "/" + assetItem);
         if(!sdCardDir.exists()) {
             sdCardDir.mkdirs();
         }
@@ -344,7 +343,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             OutputStream out = null;
             try {
                 in = assetManager.open(assetItem + "/" + files[i]);
-                out = new FileOutputStream(uisMapsFolder + "/" + assetItem + "/" + files[i]);
+                out = new FileOutputStream(UIS_MAPS_FOLDER + "/" + assetItem + "/" + files[i]);
                 copyFile(in, out);
                 in.close();
                 in=null;
@@ -663,9 +662,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                     miFramework.convertCoords(arrayOfDouble, Framework.SCREEN_COORDS, Framework.DEGREE_COORDS);
                     setSelectedPoint(arrayOfDouble[0], arrayOfDouble[1]);
                     miTouchCount = 0;
-                    if (miSimulatingNavigation) {
-                        //  setSimulatedNavLocation(arrayOfDouble[0], arrayOfDouble[1]);
-                    }
                 } else {
                     miTouchCount = 0;
                     miFramework.pan((int) Math.floor(-miXOffset + 0.5), (int) Math.floor(-miYOffset + 0.5));
