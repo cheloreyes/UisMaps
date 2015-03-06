@@ -27,4 +27,8 @@
     <string name="title">Universidad Industrial de Santander</string>
     <string name="no_places_nearby">No se an encontrado lugares cercanos al punto seleccionado.</string>
     <string name="inside_campus">No estas dentro del campus, UisMaps solo puede localizarte allí!</string>
+    <string name="current_accuracy">Precisión:</string>
+    <string name="meters">mts</string>
+    <string name="missing_start_route">No podemos mostrar la ruta: Por favor seleccione un punto de inicio e intente nuevamente.</string>
+    <string name="missing_end_route">No podemos mostrar la ruta: Por favor seleccione un punto de destino e intente nuevamente.</string>
 </resources>

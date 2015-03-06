@@ -2,4 +2,8 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+
+    <color name="my_material_green">#4caf50</color>
+    <color name="my_material_light_green">#8bc34a</color>
 </resources>

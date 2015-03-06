@@ -23,4 +23,5 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile files('libs/cartotype.jar')
+    compile 'com.melnykov:floatingactionbutton:1.2.0'
 }

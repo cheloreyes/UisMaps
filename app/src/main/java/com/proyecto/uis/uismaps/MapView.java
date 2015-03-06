@@ -43,10 +43,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // Constants
     // **********************
 
-    private static final double MAX_XA = -73.12329138853613;
-    private static final double MAX_XB = -73.1155327517166;
-    private static final double MAX_YA = 7.143398173714375;
-    private static final double MAX_YB = 7.1382743178385315;
+    private static final double MAX_XA = -73.1233; //-73.12329138853613
+    private static final double MAX_XB = -73.11553; //-73.1155327517166
+    private static final double MAX_YA = 7.144; //7.143398173714375
+    private static final double MAX_YB = 7.136; //7.1382743178385315
     private static final int MIN_DISTANCE = 3;
     public static final int MIN_DIST_TO_POINT = 13;
     private static final int MIN_TIME = 2000;
@@ -75,6 +75,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // **********************
 
     private final Context miContext;
+    private boolean isDisplayingRoute;
     private int dpiScreen;
     private String iNavTimeLeft;
     private boolean iWantNavigate = false;
@@ -86,6 +87,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private Bitmap miBitmap;
     private byte[] miBitmapData;
     private ByteBuffer miBuffer;
+    private float miCurrentAccurancy;
     private double miCurrentLat;
     private double miCurrentLon;
     private View miDetailsView;
@@ -99,7 +101,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private boolean miPerspective;
     private float miPrevScaleFocusX;
     private float miPrevScaleFocusY;
+    private double miRouteEndLat;
+    private double miRouteEndLon;
     private RouteProfile miRouteProfile;
+    private double miRouteStartLat;
+    private double miRouteStartLon;
     private float miScale = 1;
     private ScaleGestureDetector miScaleGestureDetector;
     private Turn miSecondTurn;
@@ -152,7 +158,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      */
     public void init()
     {
-        //miRouteProfile = new RouteProfile(1);
         setKeepScreenOn(true);
         miScaleGestureDetector = new ScaleGestureDetector(miContext,this);
 
@@ -174,6 +179,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         //Para las funciones de navegacion con un factor de correción de 5 metros y 15 seg.
         miFramework.setNavigatorMinimumFixDistance(5);
         miFramework.setNavigatorTimeTolerance(15);
+        setMiRouteProfile(DEFAULT_PROFILE);
+
 
         //Aplica los estados de Escala, rotacion, perspectiva, latitud etc.. de la ultima sesion.
         restoreState();
@@ -386,6 +393,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                                           "", 0, ID_SELECTED_POINT, 0);
         Log.v(TAG, "pone marcador");
         notifyMessage(getNearbyPlaces());
+        //notifyMessage(aLongitude +"," + aLatitude);
+        MainActivity.showFloatingMenu(true);
         getMap();
         invalidate();
     }
@@ -546,7 +555,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             miFramework.deleteObjects(ID_CURRENT_LOCATION, ID_CURRENT_LOCATION);
             miFramework.addPointObject("route-position", miCurrentLon, miCurrentLat,
                                               Framework.DEGREE_COORDS,
-                                              miContext.getString(R.string.current_location), 0, ID_CURRENT_LOCATION, 0);
+                                              "", 0, ID_CURRENT_LOCATION, 0);
+            MainActivity.setInformationText(miContext.getString(R.string.current_accuracy) + miCurrentAccurancy + " " + miContext.getString(R.string.meters));
             getMap();
             invalidate();
         }
@@ -556,10 +566,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      * Ubica al usuario en el mapa.
      */
     public void locateMe() {
-        toggleGPS(true);
+        if(!isGPSon)toggleGPS(true);
         if(miCurrentLon != 0 && miCurrentLat != 0) {
-            if(MAX_XA < miCurrentLon && miCurrentLon < MAX_XB) {
-                if(MAX_YA < miCurrentLat && miCurrentLat < MAX_YB) {
+            if(miCurrentLon > MAX_XA && miCurrentLon < MAX_XB) {
+                if(miCurrentLat < MAX_YA && miCurrentLat > MAX_YB) {
+                    miFramework.setScale(1700);
                     miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
                     displayCurrentLocation();
                 }
@@ -604,6 +615,78 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
     public void setMiRouteProfile(int profile) {
         miRouteProfile = new RouteProfile(profile);
+        miFramework.addProfile(miRouteProfile);
+        miFramework.setMainProfile(miRouteProfile);
+    }
+
+    public void setRouteStart() {
+        miRouteStartLon = interestingPointLong;
+        miRouteStartLat = interestingPointLat;
+        deleteSelectedPoint();
+        miFramework.deleteObjects(ID_ROUTE_START, ID_ROUTE_START);
+        miFramework.addPointObject("route_start", miRouteStartLon, miRouteStartLat,
+                                          Framework.DEGREE_COORDS, "Punto de inicio",0,ID_ROUTE_START,0);
+        if(isDisplayingRoute) {
+            miFramework.endNavigation();
+            showRoute();
+        }
+        else {
+            if(miRouteStartLat != 0 && miCurrentLon != 0) {
+                showRoute();
+            }
+        }
+        getMap();
+        invalidate();
+
+    }
+    public void deleteRouteStart() {
+        miRouteStartLon = 0.0;
+        miRouteStartLat = 0.0;
+        miFramework.deleteObjects(ID_ROUTE_START, ID_ROUTE_START);
+    }
+    public void setRouteEnd() {
+        miRouteEndLon = interestingPointLong;
+        miRouteEndLat = interestingPointLat;
+        deleteSelectedPoint();
+        miFramework.deleteObjects(ID_ROUTE_END, ID_ROUTE_END);
+        miFramework.addPointObject("route_end", miRouteEndLon, miRouteEndLat, Framework.DEGREE_COORDS, "", 0, ID_ROUTE_END, 0);
+        if(isDisplayingRoute) {
+            miFramework.endNavigation();
+            showRoute();
+        } else {
+            if (miRouteEndLon != 0 && miRouteEndLat != 0) {
+                showRoute();
+            }
+        }
+        getMap();
+        invalidate();
+    }
+    public void deleteRouteEnd() {
+        miRouteEndLon = 0.0;
+        miRouteEndLat = 0.0;
+        miFramework.deleteObjects(ID_ROUTE_END, ID_ROUTE_END);
+    }
+
+    private void showRoute() {
+        miFramework.displayRoute(true);
+        if (miRouteStartLat == 0 || miRouteStartLon == 0) {
+            notifyMessage(miContext.getString(R.string.missing_start_route));
+        }
+        if (miRouteEndLat == 0 || miRouteEndLon == 0) {
+            notifyMessage(miContext.getString(R.string.missing_end_route));
+        }
+        int result = miFramework.startNavigation(miRouteStartLon, miRouteStartLat, Framework.DEGREE_COORDS, miRouteEndLon, miRouteEndLat, Framework.DEGREE_COORDS);
+        //miFramework.chooseRoute(1);
+        //miFramework.displayRoute(false);
+        if (result != 0) {
+            notifyMessage(miContext.getString(R.string.navigation_error));
+            isDisplayingRoute = false;
+        }
+        else {
+            isDisplayingRoute = true;
+        }
+        getMap();
+        invalidate();
     }
 
     // **********************
@@ -764,8 +847,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         }
         miXOffset = 0;
         miYOffset = 0;
-
         miTouchCount = 0;
+        notifyMessage(miFramework.getScale() + "");
         getMap();
         invalidate();
     }
@@ -784,6 +867,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         Log.d(TAG, "Location update " + miCurrentLon + ", " + miCurrentLat);
         miCurrentLon = cLocation.getLongitude();
         miCurrentLat = cLocation.getLatitude();
+        miCurrentAccurancy = cLocation.getAccuracy();
         displayCurrentLocation();
         if (iWantNavigate) {
             navigateStart();

@@ -8,22 +8,31 @@ import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
+import android.view.Gravity;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
+
+import com.melnykov.fab.FloatingActionButton;
 
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener{
 
     public static final int MATCH_PARENT = RelativeLayout.LayoutParams.MATCH_PARENT;
     public static final int WRAP_CONTENT = RelativeLayout.LayoutParams.WRAP_CONTENT;
+    public static final int END_ROUTE_BUTTON_ID = 3;
     private static final int FIND_ME_BUTTON_ID = 1;
+    public static final int START_ROUTE_BUTTON_ID = 2;
 
+    private static TextView informationText;
+    private static FloatingActionButton setRouteEndButton;
+    private static FloatingActionButton setRouteStartButton;
     private RelativeLayout containerLayout;
     private DisplayMetrics miDisplayMetrics;
-    private MapView miMapa;
     private LayoutManager miLayoutManager;
+    private MapView miMapa;
     private SearchView searchView;
 
     @Override
@@ -79,27 +88,44 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     public void setMyContent() {
         containerLayout = new RelativeLayout(this);
-        TextView titleTextView = new TextView(this);
-        ImageButton findMeButton = new ImageButton(this);
-        findMeButton.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                miMapa.locateMe();
-            }
-        });
+
         SearchView searchView = new SearchView(this);
-
-        titleTextView.setTextAppearance(this, android.R.style.TextAppearance_Material_Medium);
-        titleTextView.setText(this.getString(R.string.title));
-
         searchView.setBackgroundColor(Color.LTGRAY);
 
-        findMeButton.setImageResource(android.R.drawable.ic_menu_mylocation);
-       // findMeButton.setId(FIND_ME_BUTTON_ID);
+        informationText = new TextView(this);
+        informationText.setTextAppearance(this, android.R.style.TextAppearance_DeviceDefault);
+        informationText.setText("Info:");
 
+        //Crea y configura los botones de localizar, establecer punto de partida y punto de llegada.
+        FloatingActionButton findMeButton = new FloatingActionButton(this);
+        findMeButton.setColorNormal(getResources().getColor(R.color.my_material_green));
+        findMeButton.setColorPressed(getResources().getColor(R.color.my_material_light_green));
+        findMeButton.setImageResource(android.R.drawable.ic_menu_mylocation);
+        findMeButton.setOnClickListener(this);
+        findMeButton.setId(FIND_ME_BUTTON_ID);
+
+        setRouteStartButton = new FloatingActionButton(this);
+        setRouteStartButton.setColorNormal(getResources().getColor(R.color.my_material_green));
+        setRouteStartButton.setColorPressed(getResources().getColor(R.color.my_material_light_green));
+        setRouteStartButton.setImageResource(android.R.drawable.ic_dialog_map);
+        setRouteStartButton.setOnClickListener(this);
+        setRouteStartButton.setId(START_ROUTE_BUTTON_ID);
+        setRouteStartButton.setVisibility(View.INVISIBLE);
+
+        setRouteEndButton = new FloatingActionButton(this);
+        setRouteEndButton.setColorNormal(getResources().getColor(R.color.my_material_green));
+        setRouteEndButton.setColorPressed(getResources().getColor(R.color.my_material_light_green));
+        setRouteEndButton.setImageResource(android.R.drawable.ic_menu_send);
+        setRouteEndButton.setOnClickListener(this);
+        setRouteEndButton.setId(END_ROUTE_BUTTON_ID);
+        setRouteEndButton.setVisibility(View.INVISIBLE);
+
+        //Crea y configura los layouts que contiene cada elemento
         RelativeLayout.LayoutParams mapViewLayout = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         RelativeLayout.LayoutParams searchViewLayaout = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
         RelativeLayout.LayoutParams findMeButtonLayout = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+        RelativeLayout.LayoutParams rbLayout = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+        RelativeLayout.LayoutParams informationTextLayout = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
 
         searchViewLayaout.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         searchViewLayaout.addRule(RelativeLayout.CENTER_VERTICAL);
@@ -109,14 +135,48 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         findMeButtonLayout.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         findMeButtonLayout.setMargins(px(0), px(0), px(10), px(10));
 
+        rbLayout.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        rbLayout.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        rbLayout.setMargins(px(0), px(0), px(10), px(10));
+
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        layoutParams.setMargins(px(5),px(5),px(5),px(5));
+
+        informationTextLayout.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        informationTextLayout.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        informationTextLayout.setMargins(px(10),px(0),px(0),px(10));
+
+        LinearLayout ll = new LinearLayout(this);
+        ll.setOrientation(LinearLayout.VERTICAL);
+        ll.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        ll.setGravity(Gravity.RIGHT);
+        ll.addView(setRouteEndButton, layoutParams);
+        ll.addView(setRouteStartButton, layoutParams);
+        ll.addView(findMeButton, layoutParams);
+
+
+        //Añade cada elemento al Layout que contiene el resto.
         containerLayout.addView(miMapa, mapViewLayout);
         containerLayout.addView(searchView, searchViewLayaout);
-        containerLayout.addView(findMeButton, findMeButtonLayout);
+        containerLayout.addView(ll, findMeButtonLayout);
+        containerLayout.addView(informationText,informationTextLayout);
 
         setContentView(containerLayout);
 
     }
-
+    public static void showFloatingMenu(boolean hide) {
+        if (hide) {
+            setRouteStartButton.setVisibility(View.VISIBLE);
+            setRouteEndButton.setVisibility(View.VISIBLE);
+        }
+        else {
+            setRouteStartButton.setVisibility(View.INVISIBLE);
+            setRouteEndButton.setVisibility(View.INVISIBLE);
+        }
+    }
+    public static void setInformationText(String text) {
+        informationText.setText(text);
+    }
 
     /**
      * Devuelve la cantidad de pixeles deseados deacuerdo a la resolución de la pantalla, dependiendo si es
@@ -135,8 +195,14 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         switch (v.getId()) {
             case FIND_ME_BUTTON_ID:
-              //  miMapa.locateMe();
-              //  miMapa.notifyMessage("Ubicame!");
+                miMapa.locateMe();
+                //miMapa.notifyMessage("Ubicame!");
+                break;
+            case START_ROUTE_BUTTON_ID:
+                miMapa.setRouteStart();
+                break;
+            case END_ROUTE_BUTTON_ID:
+                miMapa.setRouteEnd();
                 break;
         }
     }
