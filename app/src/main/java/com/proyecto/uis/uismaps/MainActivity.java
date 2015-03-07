@@ -3,12 +3,13 @@ package com.proyecto.uis.uismaps;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Gravity;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -30,6 +31,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private static FloatingActionButton setRouteEndButton;
     private static FloatingActionButton setRouteStartButton;
     private RelativeLayout containerLayout;
+    private boolean doubleBackToExitPressedOnce;
     private DisplayMetrics miDisplayMetrics;
     private LayoutManager miLayoutManager;
     private MapView miMapa;
@@ -49,7 +51,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         //setContentView(miMapa);
         setMyContent();
         //LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,3000,10,miMapa);
+        //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 3000, 10, miMapa);
     }
 
 
@@ -196,6 +198,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         switch (v.getId()) {
             case FIND_ME_BUTTON_ID:
                 miMapa.locateMe();
+                miMapa.setRouteStart();
                 //miMapa.notifyMessage("Ubicame!");
                 break;
             case START_ROUTE_BUTTON_ID:
@@ -205,5 +208,26 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 miMapa.setRouteEnd();
                 break;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        miMapa.removeMapObjects();
+        showFloatingMenu(false);
+        if (doubleBackToExitPressedOnce) {
+            super.onBackPressed();
+            return;
+        }
+
+        doubleBackToExitPressedOnce = true;
+        //Toast.makeText(this, this.getString(R.string.confirm_exit), Toast.LENGTH_SHORT).show();
+
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce=false;
+            }
+        }, 2000);
     }
 }

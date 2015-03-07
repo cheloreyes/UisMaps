@@ -38,31 +38,32 @@ import java.nio.ByteBuffer;
  * Implementa la vista del mapa CartoType
  */
 public class MapView extends View implements View.OnTouchListener, LocationListener,
-        ScaleGestureDetector.OnScaleGestureListener {
+                                                     ScaleGestureDetector.OnScaleGestureListener {
+    public static final int MAX_PLACES = 5;
     // **********************
     // Constants
     // **********************
-
-    private static final double MAX_XA = -73.1233; //-73.12329138853613
-    private static final double MAX_XB = -73.11553; //-73.1155327517166
-    private static final double MAX_YA = 7.144; //7.143398173714375
-    private static final double MAX_YB = 7.136; //7.1382743178385315
-    private static final int MIN_DISTANCE = 3;
     public static final int MIN_DIST_TO_POINT = 13;
-    private static final int MIN_TIME = 2000;
+    public static final int RADIO = 20;
     private static final String ACT_OPTIONS = "UisMapPreferencias";
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
     private static final int DPI_MIN = 160;
     private static final int GRAY_COLOR = 0xFFCCCCCC;
-    private static final int ID_CURRENT_LOCATION = 1;
-    private static final int ID_ROUTE_END = 3;
-    private static final int ID_ROUTE_START = 2;
-    private static final int ID_SELECTED_POINT = 1;
+    private static final int ID_CURRENT_LOCATION = 100;
+    private static final int ID_ROUTE_END = 103;
+    private static final int ID_ROUTE_START = 102;
+    private static final int ID_SELECTED_POINT = 101;
     private static final String MAP_ESCALE = "last_scale";
     private static final String MAP_LAT = "last_lat";
     private static final String MAP_LONG = "last_lon";
     private static final String MAP_ROTATION = "last_rotation";
     private static final String MAP_UNIT = "display_units";
+    private static final double MAX_XA = -73.1233; //-73.12329138853613
+    private static final double MAX_XB = -73.11553; //-73.1155327517166
+    private static final double MAX_YA = 7.144; //7.143398173714375
+    private static final double MAX_YB = 7.136; //7.1382743178385315
+    private static final int MIN_DISTANCE = 3;
+    private static final int MIN_TIME = 2000;
     private static final int PRED_SCALE = 2500000;
     private static final String TAG = "MapView";
     private static final String UIS_MAPS_FOLDER = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
@@ -75,13 +76,14 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // **********************
 
     private final Context miContext;
-    private boolean isDisplayingRoute;
     private int dpiScreen;
     private String iNavTimeLeft;
     private boolean iWantNavigate = false;
     private double interestingPointLat;
     private double interestingPointLong;
+    private boolean isDisplayingRoute;
     private boolean isGPSon = false;
+    private boolean hasAccurancy = false;
     private boolean isNavigateStarted = false;
     private boolean isNavigating = false;
     private Bitmap miBitmap;
@@ -126,8 +128,9 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
     /**
      * Constructor principal
+     *
      * @param iContext
-     * @param iDpi densidad de pixeles de la pantalla del dispositivo.
+     * @param iDpi     densidad de pixeles de la pantalla del dispositivo.
      */
 
     public MapView(Context iContext, int iDpi) {
@@ -139,6 +142,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
     /**
      * Constructor estandar
+     *
      * @param iContexto
      */
     public MapView(Context iContexto) {
@@ -156,10 +160,9 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     /**
      * Inicializa los componentes necesarios por el FrameWork de CartoType para dibujar el mapa.
      */
-    public void init()
-    {
+    public void init() {
         setKeepScreenOn(true);
-        miScaleGestureDetector = new ScaleGestureDetector(miContext,this);
+        miScaleGestureDetector = new ScaleGestureDetector(miContext, this);
 
         //Nos asegurarnos que existan los archivos y carpetas.
         folderCheck();
@@ -179,7 +182,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         //Para las funciones de navegacion con un factor de correción de 5 metros y 15 seg.
         miFramework.setNavigatorMinimumFixDistance(5);
         miFramework.setNavigatorTimeTolerance(15);
-        setMiRouteProfile(DEFAULT_PROFILE);
+        setRouteProfile(DEFAULT_PROFILE);
 
 
         //Aplica los estados de Escala, rotacion, perspectiva, latitud etc.. de la ultima sesion.
@@ -189,6 +192,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         getMap();
         invalidate(); //indica que se necesita redibujar la vista.
     }
+
     /**
      * getMap() Dibuja el mapa.
      */
@@ -196,6 +200,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miBitmap = miFramework.getMap();
     }
 
+    /**
+     * Obtiene el denomidador de la escala del mapa.
+     * @return
+     */
     public int getMapScale() {
         int mapScale;
         try {
@@ -208,6 +216,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
     /**
      * Obtiene el angulo de rotación del mapa.
+     *
      * @return el angulo de rotación del mapa, 0 si no se a inicializado.
      */
     private double getMapRotation() {
@@ -247,6 +256,45 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         editor.putLong(MAP_ROTATION, Double.doubleToLongBits((getMapRotation())));
         editor.putString(MAP_UNIT, miDistanceUnits);
         editor.commit();
+    }
+    /**
+     * Enciende o apaga el servicio GPS.
+     * Inicia @LocationManager con proveedor @GPS_PROVIDER con tiempo de actualización @MIN_TIME y distancia @MIN_DISTANCE.
+     * <p/>
+     * La navegación Gps consume muchos recursos y no es necesario si el usuario está fuera del área o solo quiere hacer una consulta.
+     *
+     * @param cState : Hace referencia al estado deseado del servicio. True para encendido, false para apagado.
+     */
+    public void toggleGPS(boolean cState) {
+        Alerts alertsDialog = new Alerts();
+        progressDialog = new ProgressDialog(miContext);
+        if (!isGPSon && cState) {
+            LocationManager vLocationManager = (LocationManager) miContext.getSystemService(Context.LOCATION_SERVICE);
+            vLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
+            if (vLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                progressDialog = alertsDialog.progressDialog(miContext);
+                progressDialog.show();
+                isGPSon = true;
+            } else {
+                PackageManager pm = miContext.getPackageManager();
+                boolean hasGPS = pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS);
+                if (hasGPS) {
+                    alertsDialog.configLocation(miContext);
+                } else {
+                    notifyMessage(miContext.getString(R.string.no_gps));
+                }
+            }
+        } else {
+            if (isGPSon && !cState) {
+                LocationManager vLocationManager = (LocationManager) miContext.getSystemService(Context.LOCATION_SERVICE);
+                vLocationManager.removeUpdates(this);
+                miFramework.deleteObjects(ID_CURRENT_LOCATION, ID_CURRENT_LOCATION);
+                miCurrentLon = 0.0;
+                miCurrentLat = 0.0;
+                isGPSon = false;
+                hasAccurancy = false;
+            }
+        }
     }
 
     /**
@@ -292,29 +340,28 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     /**
      * Comprueba que existan las carpetas y archivos en la memoria SD del dispositivo.
      */
-    private void folderCheck()
-    {
+    private void folderCheck() {
         //Existe la carpeta principal?
         File dir = new File(UIS_MAPS_FOLDER);
-        if(!dir.exists()) {
+        if (!dir.exists()) {
             dir.mkdirs();
         }
         //Existe la carpeta Log?
         dir = new File(UIS_MAPS_FOLDER + "/log");
-        if(!dir.exists()) {
+        if (!dir.exists()) {
             dir.mkdirs();
         }
         //Existe el archivo mapa?
         File f = new File(CAMPUS_MAP);
-        if(!f.exists()) {
+        if (!f.exists()) {
             assetCopy("mapa");
             Log.i(TAG, "Mapa no encontrado, se copia de asset");
         }
         //Existe la hoja de estilo?
         f = new File(FILE_STYLE);
-        if(!f.exists()) {
+        if (!f.exists()) {
             assetCopy("estilos");
-            Log.i(TAG,"Hoja de estilos no encontrada, se compia de asset");
+            Log.i(TAG, "Hoja de estilos no encontrada, se compia de asset");
         }
         f = new File(FILE_FONT);
         if (!f.exists()) {
@@ -327,12 +374,12 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     /**
      * Se encarga de crear los directorios y copiar los archivos necesarios del contenido del paquete
      * de aplicación.
+     *
      * @param assetItem es el fichero faltante encontrado por @folderCheck.
      */
-    private void assetCopy(String assetItem)
-    {
+    private void assetCopy(String assetItem) {
         File sdCardDir = new File(UIS_MAPS_FOLDER + "/" + assetItem);
-        if(!sdCardDir.exists()) {
+        if (!sdCardDir.exists()) {
             sdCardDir.mkdirs();
         }
         AssetManager assetManager = getResources().getAssets();
@@ -345,7 +392,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             e.printStackTrace();
         }
 
-        for(int i = 0; i<files.length; i++) {
+        for (int i = 0; i < files.length; i++) {
             InputStream in = null;
             OutputStream out = null;
             try {
@@ -353,10 +400,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                 out = new FileOutputStream(UIS_MAPS_FOLDER + "/" + assetItem + "/" + files[i]);
                 copyFile(in, out);
                 in.close();
-                in=null;
+                in = null;
                 out.flush();
                 out.close();
-                out=null;
+                out = null;
             } catch (IOException e) {
                 Log.e("Error al copiar de asset", e.toString());
                 e.printStackTrace();
@@ -367,16 +414,81 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     /**
      * Usado por assetCopy(), se encarga de crear el tunel de copia entre los ficheros contenidos
      * en la carpeta "Assets" del paquete de aplicación.
-     * @param in fichero encontrado en la carpeta "Assets" del paquete de aplicación.
+     *
+     * @param in  fichero encontrado en la carpeta "Assets" del paquete de aplicación.
      * @param out ruta a donde se queire copiar el contenido encontrado.
      * @throws IOException
      */
-    private void copyFile(InputStream in, OutputStream out) throws IOException{
+    private void copyFile(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[1024];
         int read;
         while ((read = in.read(buffer)) != -1) {
-            out.write(buffer,0,read);
+            out.write(buffer, 0, read);
         }
+    }
+
+    /**
+     * Establece el punto marcado por el usuario como punto inicial de la ruta, si existe un punto de destino, inicia la navegación.
+     */
+    public void setRouteStart() {
+        if(hasAccurancy) {
+            miRouteStartLon = miCurrentLon;
+            miRouteStartLat = miCurrentLat;
+        }
+        else {
+            miRouteStartLon = interestingPointLong;
+            miRouteStartLat = interestingPointLat;
+        }
+
+        deleteSelectedPoint();
+        miFramework.deleteObjects(ID_ROUTE_START, ID_ROUTE_START);
+        miFramework.addPointObject("route_start", miRouteStartLon, miRouteStartLat,
+                                          Framework.DEGREE_COORDS, "Punto de inicio", 0, ID_ROUTE_START, 0);
+        getMap();
+        invalidate();
+    }
+
+    /**
+     * Elimina el punto inicial de la ruta asignado.
+     */
+    public void deleteRouteStart() {
+        miRouteStartLon = 0.0;
+        miRouteStartLat = 0.0;
+        miFramework.deleteObjects(ID_ROUTE_START, ID_ROUTE_START);
+        getMap();
+        invalidate();
+    }
+
+    /**
+     * Establece el punto marcado por el usuario como punto de destino de la ruta, si existe un punto inical, inicia la navegación.
+     */
+    public void setRouteEnd() {
+        miRouteEndLon = interestingPointLong;
+        miRouteEndLat = interestingPointLat;
+        deleteSelectedPoint();
+        miFramework.deleteObjects(ID_ROUTE_END, ID_ROUTE_END);
+        miFramework.addPointObject("route_end", miRouteEndLon, miRouteEndLat, Framework.DEGREE_COORDS, "", 0, ID_ROUTE_END, 0);
+        if (isDisplayingRoute) {
+            miFramework.endNavigation();
+            showRoute();
+        } else {
+            if (miRouteEndLon != 0 && miRouteEndLat != 0 && miRouteStartLon != 0 && miRouteStartLat != 0) {
+                showRoute();
+            }
+        }
+        getMap();
+        invalidate();
+    }
+
+    /**
+     * Elimina el punto de destino de la ruta asignado.
+     */
+    public void deleteRouteEnd() {
+        miRouteEndLon = 0.0;
+        miRouteEndLat = 0.0;
+        miFramework.deleteObjects(ID_ROUTE_END, ID_ROUTE_END);
+        getMap();
+        invalidate();
     }
 
     /**
@@ -420,7 +532,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         double minutes = (int) (seconds * 60);
         seconds -= minutes * 60;
         iNavTimeLeft = String.format("%02d", (int) hours) + ":" + String.format("%02d", (int) minutes) + ":"
-                + String.format("%02d", (int) seconds);
+                               + String.format("%02d", (int) seconds);
 
         miFirstTurn = new Turn();
         miSecondTurn = new Turn();
@@ -449,8 +561,9 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         ViewStub miViewStub = (ViewStub) findViewById(R.id.stub_details);
         miDetailsView = miViewStub.inflate();
     }
+
     public void showNavigation() {
-        if(!miDetailsView.isActivated()) {
+        if (!miDetailsView.isActivated()) {
             showNavigation_init();
         }
         switch (miTurnAction) {
@@ -476,14 +589,13 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     public void navigateStart() {
-        setMiRouteProfile(DEFAULT_PROFILE);
-        if(routeEndLon == 0 && routeEndLat == 0) {
+        setRouteProfile(DEFAULT_PROFILE);
+        if (routeEndLon == 0 && routeEndLat == 0) {
             notifyMessage(miContext.getString(R.string.destination_not_know));
             isNavigating = false;
-        }
-        else {
+        } else {
             isNavigating = true;
-            if(!isNavigateStarted) {
+            if (!isNavigateStarted) {
                 if (isGPSon) {
                     if (miCurrentLon == 0 || miCurrentLat == 0) {
                         notifyMessage(miContext.getString(R.string.waiting_GPS));
@@ -494,8 +606,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                     toggleGPS(true);
                 }
                 int result = miFramework.startNavigation(miCurrentLon, miCurrentLat,
-                        Framework.DEGREE_COORDS, routeEndLon, routeEndLat,
-                        Framework.DEGREE_COORDS);
+                                                                Framework.DEGREE_COORDS, routeEndLon, routeEndLat,
+                                                                Framework.DEGREE_COORDS);
 
                 if (result != 0) {
                     notifyMessage(miContext.getString(R.string.navigation_error));
@@ -510,39 +622,22 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     /**
-     * Enciende o apaga el servicio GPS.
-     * Inicia @LocationManager con proveedor @GPS_PROVIDER con tiempo de actualización @MIN_TIME y distancia @MIN_DISTANCE.
-     *
-     * La navegación Gps consume muchos recursos y no es necesario si el usuario está fuera del área o solo quiere hacer una consulta.
-     * @param cState : Hace referencia al estado deseado del servicio. True para encendido, false para apagado.
+     * Ubica al usuario en el mapa.
      */
-    public void toggleGPS(boolean cState) {
-        Alerts alertsDialog = new Alerts();
-        progressDialog = new ProgressDialog(miContext);
-        if(!isGPSon && cState) {
-            LocationManager vLocationManager = (LocationManager) miContext.getSystemService(Context.LOCATION_SERVICE);
-            vLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
-            if(vLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                progressDialog = alertsDialog.progressDialog(miContext);
-                progressDialog.show();
-                isGPSon = true;
-            }
-            else {
-                PackageManager pm = miContext.getPackageManager();
-                boolean hasGPS = pm.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS);
-                if(hasGPS) {
-                    alertsDialog.configLocation(miContext);
-                }
-                else{
-                    notifyMessage(miContext.getString(R.string.no_gps));
-                }
-            }
+    public void locateMe() {
+        if (!isGPSon) {
+            toggleGPS(true);
         }
-        else {
-            if(isGPSon && !cState) {
-                LocationManager vLocationManager = (LocationManager) miContext.getSystemService(Context.LOCATION_SERVICE);
-                vLocationManager.removeUpdates(this);
-                isGPSon = false;
+        if (miCurrentLon != 0 && miCurrentLat != 0) {
+            if (miCurrentLon > MAX_XA && miCurrentLon < MAX_XB) {
+                if (miCurrentLat < MAX_YA && miCurrentLat > MAX_YB) {
+                    miFramework.setScale(1700);
+                    miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
+                    displayCurrentLocation();
+                }
+            } else {
+                notifyMessage(miContext.getString(R.string.not_inside_campus));
+                toggleGPS(false);
             }
         }
     }
@@ -551,7 +646,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      * Referencia la ubicacion del usuario como un icono en la pantalla.
      */
     private void displayCurrentLocation() {
-        if(miCurrentLon != 0 && miCurrentLat != 0 && miFramework != null) {
+        if (miCurrentLon != 0 && miCurrentLat != 0 && miFramework != null) {
             miFramework.deleteObjects(ID_CURRENT_LOCATION, ID_CURRENT_LOCATION);
             miFramework.addPointObject("route-position", miCurrentLon, miCurrentLat,
                                               Framework.DEGREE_COORDS,
@@ -563,27 +658,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     /**
-     * Ubica al usuario en el mapa.
-     */
-    public void locateMe() {
-        if(!isGPSon)toggleGPS(true);
-        if(miCurrentLon != 0 && miCurrentLat != 0) {
-            if(miCurrentLon > MAX_XA && miCurrentLon < MAX_XB) {
-                if(miCurrentLat < MAX_YA && miCurrentLat > MAX_YB) {
-                    miFramework.setScale(1700);
-                    miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
-                    displayCurrentLocation();
-                }
-            }
-            else {
-                notifyMessage(miContext.getString(R.string.inside_campus));
-            }
-        }
-
-    }
-
-    /**
-     * Busca los lugares cercanos al toque del usuario en la pantalla.
+     * Busca los lugares en un radio @RADIO del punto establecido por @setSelectedPoint obteniendo un maximo de elementos @MAX_PLACES.
+     *
      * @return un @String con el nombre del lugar si toca un edifico o informa si no se encuentran lugares.
      */
     public String getNearbyPlaces() {
@@ -591,100 +667,90 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         double[] point = new double[2];
         point[0] = interestingPointLong;
         point[1] = interestingPointLat;
-        miFramework.convertCoords(point,Framework.DEGREE_COORDS,Framework.SCREEN_COORDS);
-        MapObject[] nearby = miFramework.findInDisplay(point[0], point[1], 20, 5);
-        if(nearby != null && nearby.length > 0) {
-            int i=0;
-            for(MapObject iNearby : nearby) {
-                if(iNearby.getLabel().length() != 0) {
+        miFramework.convertCoords(point, Framework.DEGREE_COORDS, Framework.SCREEN_COORDS);
+        MapObject[] nearby = miFramework.findInDisplay(point[0], point[1], RADIO, MAX_PLACES);
+        if (nearby != null && nearby.length > 0) {
+            int i = 0;
+            for (MapObject iNearby : nearby) {
+                if (iNearby.getLabel().length() != 0) {
                     places = iNearby.getLabel();
                     i++;
 
                 }
             }
-            if(i == 0) {
+            if (i == 0) {
                 places = miContext.getString(R.string.no_places_nearby);
             }
         }
         return places;
     }
 
+    /**
+     * Despliega una pequeña ventana emergente con información sencilla a fin de informar al usuario rápidamente. la ventana desaparece
+     * automaticamente despues de un breve tiempo.
+     *
+     * @param cMessage información que se quiere mostrar.
+     */
     public void notifyMessage(String cMessage) {
         Toast.makeText(getContext(), cMessage, Toast.LENGTH_SHORT).show();
     }
 
-    public void setMiRouteProfile(int profile) {
+    /**
+     * Establece el perfil de la ruta, puede ser de coche o de caminar.
+     *
+     * @param profile según el tipo de ruta que se quiera, puede ser de coche o de caminar.
+     */
+    public void setRouteProfile(int profile) {
         miRouteProfile = new RouteProfile(profile);
         miFramework.addProfile(miRouteProfile);
         miFramework.setMainProfile(miRouteProfile);
     }
 
-    public void setRouteStart() {
-        miRouteStartLon = interestingPointLong;
-        miRouteStartLat = interestingPointLat;
-        deleteSelectedPoint();
-        miFramework.deleteObjects(ID_ROUTE_START, ID_ROUTE_START);
-        miFramework.addPointObject("route_start", miRouteStartLon, miRouteStartLat,
-                                          Framework.DEGREE_COORDS, "Punto de inicio",0,ID_ROUTE_START,0);
-        if(isDisplayingRoute) {
-            miFramework.endNavigation();
-            showRoute();
-        }
-        else {
-            if(miRouteStartLat != 0 && miCurrentLon != 0) {
-                showRoute();
-            }
-        }
-        getMap();
-        invalidate();
 
-    }
-    public void deleteRouteStart() {
-        miRouteStartLon = 0.0;
-        miRouteStartLat = 0.0;
-        miFramework.deleteObjects(ID_ROUTE_START, ID_ROUTE_START);
-    }
-    public void setRouteEnd() {
-        miRouteEndLon = interestingPointLong;
-        miRouteEndLat = interestingPointLat;
-        deleteSelectedPoint();
-        miFramework.deleteObjects(ID_ROUTE_END, ID_ROUTE_END);
-        miFramework.addPointObject("route_end", miRouteEndLon, miRouteEndLat, Framework.DEGREE_COORDS, "", 0, ID_ROUTE_END, 0);
-        if(isDisplayingRoute) {
-            miFramework.endNavigation();
-            showRoute();
-        } else {
-            if (miRouteEndLon != 0 && miRouteEndLat != 0) {
-                showRoute();
-            }
-        }
-        getMap();
-        invalidate();
-    }
-    public void deleteRouteEnd() {
-        miRouteEndLon = 0.0;
-        miRouteEndLat = 0.0;
-        miFramework.deleteObjects(ID_ROUTE_END, ID_ROUTE_END);
-    }
-
-    private void showRoute() {
-        miFramework.displayRoute(true);
+    /**
+     * Muestra la ruta a seguir para ir del punto de inicio @setRouteStart() al punto de destino @setRouteEnd() sobre el mapa
+     * una vez se han establecido. Puede que  no exista una ruta según el perfil asignado a @RouteProfile,
+     * si es así se notifica al usuario mediante @notifyMessage().
+     */
+    public void showRoute() {
+        int result = 1;
         if (miRouteStartLat == 0 || miRouteStartLon == 0) {
             notifyMessage(miContext.getString(R.string.missing_start_route));
         }
         if (miRouteEndLat == 0 || miRouteEndLon == 0) {
             notifyMessage(miContext.getString(R.string.missing_end_route));
         }
-        int result = miFramework.startNavigation(miRouteStartLon, miRouteStartLat, Framework.DEGREE_COORDS, miRouteEndLon, miRouteEndLat, Framework.DEGREE_COORDS);
+        if (miRouteStartLon != 0 && miRouteStartLat != 0 && miRouteEndLon != 0 && miRouteStartLat != 0) {
+            result = miFramework.startNavigation(miRouteStartLon, miRouteStartLat, Framework.DEGREE_COORDS, miRouteEndLon, miRouteEndLat, Framework.DEGREE_COORDS);
+        }
         //miFramework.chooseRoute(1);
         //miFramework.displayRoute(false);
         if (result != 0) {
             notifyMessage(miContext.getString(R.string.navigation_error));
+            miFramework.displayRoute(false);
             isDisplayingRoute = false;
-        }
-        else {
+        } else {
             isDisplayingRoute = true;
+            miFramework.displayRoute(true);
         }
+        getMap();
+        invalidate();
+    }
+
+    public void removeMapObjects() {
+        if(isGPSon) {
+           toggleGPS(false);
+        }
+        if(isDisplayingRoute) {
+
+        }
+        deleteRouteStart();
+        deleteRouteEnd();
+        miFramework.displayRoute(false);
+        miFramework.endNavigation();
+        miFramework.deleteObjects(ID_CURRENT_LOCATION, ID_CURRENT_LOCATION);
+        miFramework.deleteObjects(ID_SELECTED_POINT, ID_SELECTED_POINT);
+
         getMap();
         invalidate();
     }
@@ -863,12 +929,13 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public void onLocationChanged(Location cLocation) {
         if (cLocation.hasAccuracy()) {
             progressDialog.hide();
+            hasAccurancy = true;
+            locateMe();
         }
         Log.d(TAG, "Location update " + miCurrentLon + ", " + miCurrentLat);
         miCurrentLon = cLocation.getLongitude();
         miCurrentLat = cLocation.getLatitude();
         miCurrentAccurancy = cLocation.getAccuracy();
-        displayCurrentLocation();
         if (iWantNavigate) {
             navigateStart();
             iWantNavigate = false;
@@ -888,6 +955,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             double speed = cLocation.getSpeed() * 3.6;
             setUpNavigation(validity, time, miCurrentLon, miCurrentLat, speed, cLocation.getBearing(), cLocation.getAltitude());
             miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
+            displayCurrentLocation();
+        } else {
             displayCurrentLocation();
         }
 
