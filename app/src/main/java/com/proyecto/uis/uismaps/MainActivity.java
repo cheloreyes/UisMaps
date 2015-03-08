@@ -1,5 +1,6 @@
 package com.proyecto.uis.uismaps;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -33,7 +34,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private RelativeLayout containerLayout;
     private boolean doubleBackToExitPressedOnce;
     private DisplayMetrics miDisplayMetrics;
-    private LayoutManager miLayoutManager;
     private MapView miMapa;
     private SearchView searchView;
 
@@ -71,6 +71,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            startActivity(new Intent(getApplicationContext(), CouplingActivity.class));
             return true;
         }
 
