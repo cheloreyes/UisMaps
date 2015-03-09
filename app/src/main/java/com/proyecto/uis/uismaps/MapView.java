@@ -44,7 +44,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // Constants
     // **********************
     public static final int MIN_DIST_TO_POINT = 13;
-    public static final int RADIO = 20;
+    public static final int RADIO = 100;
     private static final String ACT_OPTIONS = "UisMapPreferencias";
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
     private static final int DPI_MIN = 160;
@@ -122,6 +122,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private double routeEndLat;
     private double routeEndLon;
 
+    private VoiceManager miVoice;
+
     // **********************
     // Constructors
     // **********************
@@ -138,6 +140,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         setOnTouchListener(this);
         dpiScreen = iDpi;
         miContext = iContext;
+        miVoice = new VoiceManager(miContext);
     }
 
     /**
@@ -674,6 +677,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             for (MapObject iNearby : nearby) {
                 if (iNearby.getLabel().length() != 0) {
                     places = iNearby.getLabel();
+                    miVoice.textToSpeech(places);
                     i++;
 
                 }
@@ -753,6 +757,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
         getMap();
         invalidate();
+    }
+    public void destroyVoice() {
+        miVoice.stop();
+        miVoice.shutdown();
     }
 
     // **********************

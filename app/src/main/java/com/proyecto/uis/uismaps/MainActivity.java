@@ -35,7 +35,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private boolean doubleBackToExitPressedOnce;
     private DisplayMetrics miDisplayMetrics;
     private MapView miMapa;
-    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,8 +84,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         //Guarda el estado actual del mapa
         miMapa.saveState();
         miMapa.toggleGPS(false);
+        miMapa.destroyVoice();
         //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
-
     }
 
     public void setMyContent() {
