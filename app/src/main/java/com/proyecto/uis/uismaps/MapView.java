@@ -61,7 +61,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private static final int MIN_DISTANCE = 1;
     public static final int MIN_SCALE = 500;
     private static final int MIN_TIME = 2000;
-    private static final int PRED_SCALE = 2500000;
+    private static final int PRED_SCALE = 16000;
     private static final String TAG = "MapView";
     private static final String UIS_MAPS_FOLDER = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
     private static final String CAMPUS_MAP = UIS_MAPS_FOLDER + "/mapa/mapa.ctm1";
@@ -119,6 +119,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private ProgressDialog progressDialog;
     private double routeEndLat;
     private double routeEndLon;
+
+    private ContentManager miContent;
 
     private VoiceManager miVoice;
 
@@ -510,7 +512,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         Log.v(TAG, "pone marcador");
         notifyMessage(getNearbyPlaces(interestingPointLong, interestingPointLat));
         //notifyMessage(aLongitude +"," + aLatitude);
-        MainActivity.showFloatingMenu(true);
+
+        miContent.showFloatingMenu(true);
         getMap();
         invalidate();
     }
@@ -656,7 +659,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             miFramework.addPointObject("route-position", miCurrentLon, miCurrentLat,
                                               Framework.DEGREE_COORDS,
                                               "", 0, ID_CURRENT_LOCATION, 0);
-            MainActivity.setInformationText(miContext.getString(R.string.current_accuracy) + miCurrentAccurancy + " " + miContext.getString(R.string.meters));
+            miContent.setInfoText(miContext.getString(R.string.current_accuracy) + miCurrentAccurancy + " " + miContext.getString(R.string.meters));
             getMap();
             invalidate();
         }
@@ -846,6 +849,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public void destroyVoice() {
         miVoice.stop();
         miVoice.shutdown();
+    }
+
+    public void setContentManager(ContentManager contentManager) {
+        miContent = contentManager;
     }
 
     // **********************
