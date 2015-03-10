@@ -23,6 +23,8 @@ import android.widget.Toast;
 
 import com.cartotype.Framework;
 import com.cartotype.MapObject;
+import com.cartotype.PathPoint;
+import com.cartotype.Rect;
 import com.cartotype.RouteProfile;
 import com.cartotype.Turn;
 
@@ -38,14 +40,13 @@ import java.nio.ByteBuffer;
  * Implementa la vista del mapa CartoType
  */
 public class MapView extends View implements View.OnTouchListener, LocationListener,
-                                                     ScaleGestureDetector.OnScaleGestureListener {
+                                                     ScaleGestureDetector.OnScaleGestureListener, UISMapsSettingsValues {
     public static final int MAX_PLACES = 5;
     // **********************
     // Constants
     // **********************
     public static final int MIN_DIST_TO_POINT = 13;
-    public static final int RADIO = 100;
-    private static final String ACT_OPTIONS = "UisMapPreferencias";
+    public static final int RADIO = 600;
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
     private static final int DPI_MIN = 160;
     private static final int GRAY_COLOR = 0xFFCCCCCC;
@@ -53,16 +54,12 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private static final int ID_ROUTE_END = 103;
     private static final int ID_ROUTE_START = 102;
     private static final int ID_SELECTED_POINT = 101;
-    private static final String MAP_ESCALE = "last_scale";
-    private static final String MAP_LAT = "last_lat";
-    private static final String MAP_LONG = "last_lon";
-    private static final String MAP_ROTATION = "last_rotation";
-    private static final String MAP_UNIT = "display_units";
     private static final double MAX_XA = -73.1233; //-73.12329138853613
     private static final double MAX_XB = -73.11553; //-73.1155327517166
     private static final double MAX_YA = 7.144; //7.143398173714375
     private static final double MAX_YB = 7.136; //7.1382743178385315
-    private static final int MIN_DISTANCE = 3;
+    private static final int MIN_DISTANCE = 1;
+    public static final int MIN_SCALE = 500;
     private static final int MIN_TIME = 2000;
     private static final int PRED_SCALE = 2500000;
     private static final String TAG = "MapView";
@@ -76,6 +73,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // **********************
 
     private final Context miContext;
+    private double currentScale;
     private int dpiScreen;
     private String iNavTimeLeft;
     private boolean iWantNavigate = false;
@@ -468,6 +466,9 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public void setRouteEnd() {
         miRouteEndLon = interestingPointLong;
         miRouteEndLat = interestingPointLat;
+        if(hasAccurancy) {
+            setRouteStart();
+        }
         deleteSelectedPoint();
         miFramework.deleteObjects(ID_ROUTE_END, ID_ROUTE_END);
         miFramework.addPointObject("route_end", miRouteEndLon, miRouteEndLat, Framework.DEGREE_COORDS, "", 0, ID_ROUTE_END, 0);
@@ -507,7 +508,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miFramework.addPointObject("pushpin", interestingPointLong, interestingPointLat, Framework.DEGREE_COORDS,
                                           "", 0, ID_SELECTED_POINT, 0);
         Log.v(TAG, "pone marcador");
-        notifyMessage(getNearbyPlaces());
+        notifyMessage(getNearbyPlaces(interestingPointLong, interestingPointLat));
         //notifyMessage(aLongitude +"," + aLatitude);
         MainActivity.showFloatingMenu(true);
         getMap();
@@ -637,6 +638,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                     miFramework.setScale(1700);
                     miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
                     displayCurrentLocation();
+                    miVoice.textToSpeech("Usted está " + getNearbyPlaces(miCurrentLon, miCurrentLat));
                 }
             } else {
                 notifyMessage(miContext.getString(R.string.not_inside_campus));
@@ -665,28 +667,111 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      *
      * @return un @String con el nombre del lugar si toca un edifico o informa si no se encuentran lugares.
      */
-    public String getNearbyPlaces() {
+    public String getNearbyPlaces(double longitud, double latitud) {
         String places = null;
+        currentScale = miFramework.getScale();
         double[] point = new double[2];
-        point[0] = interestingPointLong;
-        point[1] = interestingPointLat;
+        //point[0] = interestingPointLong;
+        //point[1] = interestingPointLat;
+        point[0] = longitud;
+        point[1] = latitud;
+        double[] distance = new double[2];
+        double[] bounds = new double[4];
         miFramework.convertCoords(point, Framework.DEGREE_COORDS, Framework.SCREEN_COORDS);
-        MapObject[] nearby = miFramework.findInDisplay(point[0], point[1], RADIO, MAX_PLACES);
+        MapObject[] nearby = miFramework.findInDisplay(point[0], point[1], (RADIO * (MIN_SCALE / currentScale)), MAX_PLACES);
         if (nearby != null && nearby.length > 0) {
             int i = 0;
             for (MapObject iNearby : nearby) {
                 if (iNearby.getLabel().length() != 0) {
-                    places = iNearby.getLabel();
-                    miVoice.textToSpeech(places);
+                    distance = getCenterNearby(iNearby);
+                    bounds = getBoudsNearby(iNearby);
+                    miFramework.convertCoords(bounds, Framework.MAP_COORDS, Framework.MAP_METER_COORDS);
+                    miFramework.convertCoords(distance,Framework.DEGREE_COORDS, Framework.MAP_METER_COORDS);
+                    miFramework.convertCoords(point,Framework.SCREEN_COORDS, Framework.MAP_METER_COORDS);
+                    if(places == null) {
+                        places = iNearby.getLabel() + " " + getNearbyDistance(point, distance, bounds);
+                    }
+                    else {
+                        places += " y  " + iNearby.getLabel() + " " + getNearbyDistance(point, distance, bounds);
+                    }
+                    //miVoice.textToSpeech(places);
                     i++;
-
                 }
             }
             if (i == 0) {
                 places = miContext.getString(R.string.no_places_nearby);
             }
+            if (i == 1) places = "en " + places;
+            if (i > 1) places = "entre: " + places;
         }
         return places;
+    }
+
+    private String getNearbyDistance(double[] currentLocation, double[] centerNearby, double[] bounds) {
+        double distance = 0.0;
+        //por pitagoras determino la distancia del usuario hasta el centro del edificio.
+        double a = centerNearby[0] - currentLocation[0];
+        double c = centerNearby[1] - currentLocation[1];
+        double b = Math.sqrt(Math.pow(a,2) + Math.pow(c,2));
+
+        //pitagoras para determinar la distancia del centro a las esquinas del edificio.
+        double aEdificio = bounds[0] - centerNearby[0];
+        double cEdificio = bounds[1] - centerNearby[1];
+        double bEdificio = Math.sqrt(Math.pow(aEdificio, 2) + Math.pow(cEdificio, 2));
+
+        // si está en alguno de los frentes del edificio determino la distancia a él.
+        if(currentLocation[0] > bounds[2] && currentLocation[0] < bounds[0])
+        {
+            distance = b - Math.abs(bounds[1] - centerNearby[1]);
+            Log.v(TAG, "x > Xmin && x < Xmax" + b + "- " + bounds[1]+"- "+centerNearby[1]);
+        }
+        else {
+            if(currentLocation[1] > bounds[3] && currentLocation[1] < bounds[1]) {
+                distance = b - Math.abs(bounds[0] - centerNearby[0]);
+                Log.v(TAG, "y > Ymin && y < Ymax");
+            }
+            else {
+                if(currentLocation[0] < bounds[2] || currentLocation [0] > bounds[0] ||
+                           currentLocation[1] < bounds[3] || currentLocation[1] > bounds[1]) {
+                    distance = Math.abs(b - bEdificio);
+                    Log.v(TAG, "ninguna de las anteriores");
+                }
+            }
+        }
+        distance = Math.round(Math.abs(distance));
+        if(distance > 50) {
+            return "";
+        }
+        else {
+            if(distance < 4) {
+                return " próxima";
+            }
+            return "a: " + distance + "metros aproximadamente";
+        }
+    }
+
+    private double[] getCenterNearby(MapObject aMapObject) {
+
+        PathPoint pathPoint = new PathPoint();
+        aMapObject.getCenter(pathPoint);
+        double[] center = new double[2];
+        center[0] = pathPoint.iX;
+        center[1] = pathPoint.iY;
+
+        miFramework.convertCoords(center, Framework.MAP_COORDS,
+                                        Framework.DEGREE_COORDS);
+
+        return center;
+    }
+    private double[] getBoudsNearby(MapObject aMapObject) {
+        Rect rect = new Rect();
+        aMapObject.getBounds(rect);
+        double[] bounds = new double[4];
+        bounds[0] = rect.iMaxX;
+        bounds[1] = rect.iMaxY;
+        bounds[2] = rect.iMinX;
+        bounds[3] = rect.iMinY;
+        return bounds;
     }
 
     /**
@@ -816,6 +901,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                     double arrayOfDouble[] = new double[2];
                     arrayOfDouble[0] = event.getX();
                     arrayOfDouble[1] = event.getY();
+                    //notifyMessage("(" + event.getX() + ", " + event.getY() +")");
                     miFramework.convertCoords(arrayOfDouble, Framework.SCREEN_COORDS, Framework.DEGREE_COORDS);
                     setSelectedPoint(arrayOfDouble[0], arrayOfDouble[1]);
                     miTouchCount = 0;
@@ -935,7 +1021,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      */
     @Override
     public void onLocationChanged(Location cLocation) {
-        if (cLocation.hasAccuracy()) {
+        if (cLocation.hasAccuracy() && !hasAccurancy) {
             progressDialog.hide();
             hasAccurancy = true;
             locateMe();

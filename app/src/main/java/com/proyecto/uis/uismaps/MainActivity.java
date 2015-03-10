@@ -1,10 +1,12 @@
 package com.proyecto.uis.uismaps;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
@@ -20,7 +22,7 @@ import android.widget.TextView;
 import com.melnykov.fab.FloatingActionButton;
 
 
-public class MainActivity extends ActionBarActivity implements View.OnClickListener{
+public class MainActivity extends ActionBarActivity implements View.OnClickListener, UISMapsSettingsValues{
 
     public static final int MATCH_PARENT = RelativeLayout.LayoutParams.MATCH_PARENT;
     public static final int WRAP_CONTENT = RelativeLayout.LayoutParams.WRAP_CONTENT;
@@ -35,6 +37,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private boolean doubleBackToExitPressedOnce;
     private DisplayMetrics miDisplayMetrics;
     private MapView miMapa;
+    private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,9 +49,12 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         miDisplayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(miDisplayMetrics);
 
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
         miMapa = new MapView(this, miDisplayMetrics.densityDpi);
         //setContentView(miMapa);
-        setMyContent();
+       setMyContent();
+
         //LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 3000, 10, miMapa);
     }
@@ -76,7 +82,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         return super.onOptionsItemSelected(item);
     }
-
 
     @Override
     protected void onPause() {
@@ -157,13 +162,16 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         ll.addView(findMeButton, layoutParams);
 
 
-        //Añade cada elemento al Layout que contiene el resto.
+        //Verifica si está activa la asistencia visual.
         containerLayout.addView(miMapa, mapViewLayout);
-        containerLayout.addView(searchView, searchViewLayaout);
-        containerLayout.addView(ll, findMeButtonLayout);
-        containerLayout.addView(informationText,informationTextLayout);
-
+        if(!preferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
+            containerLayout.addView(searchView, searchViewLayaout);
+            containerLayout.addView(ll, findMeButtonLayout);
+            containerLayout.addView(informationText,informationTextLayout);
+        }
         setContentView(containerLayout);
+
+
 
     }
     public static void showFloatingMenu(boolean hide) {

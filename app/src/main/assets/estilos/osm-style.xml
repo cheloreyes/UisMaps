@@ -903,11 +903,11 @@ For more information see http://www.cartotype.com.
 
     <!-- The vehicle position when routing -->
     <layer name='route-position' roadflags='#F000'>
-        <icon width='80m,36pt,256pt' canOverlap='true'>
-            <svg width='110' height='110'>
-                <circle fill='blue' cx='55' cy='55' r='50' opacity='0.2'/>
-                <circle fill='blue' cx='55' cy='55' r='10'/>
-                <circle fill='none' stroke='blue' cx='55' cy='55' r='49' stroke-width='2' opacity='0.8'/>
+        <icon width='40m,18pt,64pt' canOverlap='true'>
+            <svg width='55' height='55'>
+                <circle fill='blue' cx='25' cy='25' r='25' opacity='0.2'/>
+                <circle fill='blue' cx='25' cy='25' r='5'/>
+                <circle fill='none' stroke='blue' cx='25' cy='25' r='24' stroke-width='2' opacity='0.8'/>
             </svg>
         </icon>
         <label priority='-10'/>
