@@ -46,7 +46,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // Constants
     // **********************
     public static final int MIN_DIST_TO_POINT = 13;
-    public static final int RADIO = 600;
+    public static final int RADIO = 540;
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
     private static final int DPI_MIN = 160;
     private static final int GRAY_COLOR = 0xFFCCCCCC;
@@ -58,9 +58,9 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private static final double MAX_XB = -73.11553; //-73.1155327517166
     private static final double MAX_YA = 7.144; //7.143398173714375
     private static final double MAX_YB = 7.136; //7.1382743178385315
-    private static final int MIN_DISTANCE = 1;
+    private static final int MIN_DISTANCE = 2;
     public static final int MIN_SCALE = 500;
-    private static final int MIN_TIME = 2000;
+    private static final int MIN_TIME = 5000;
     private static final int PRED_SCALE = 16000;
     private static final String TAG = "MapView";
     private static final String UIS_MAPS_FOLDER = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
@@ -183,7 +183,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miFramework.setResolutionDpi(dpiScreen);
 
         //Para las funciones de navegacion con un factor de correción de 5 metros y 15 seg.
-        miFramework.setNavigatorMinimumFixDistance(5);
+        miFramework.setNavigatorMinimumFixDistance(1);
         miFramework.setNavigatorTimeTolerance(15);
         setRouteProfile(DEFAULT_PROFILE);
 
@@ -510,6 +510,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miFramework.addPointObject("pushpin", interestingPointLong, interestingPointLat, Framework.DEGREE_COORDS,
                                           "", 0, ID_SELECTED_POINT, 0);
         Log.v(TAG, "pone marcador");
+        //getNearbyPlaces(interestingPointLong, interestingPointLat);
         notifyMessage(getNearbyPlaces(interestingPointLong, interestingPointLat));
         //notifyMessage(aLongitude +"," + aLatitude);
 
@@ -638,9 +639,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         if (miCurrentLon != 0 && miCurrentLat != 0) {
             if (miCurrentLon > MAX_XA && miCurrentLon < MAX_XB) {
                 if (miCurrentLat < MAX_YA && miCurrentLat > MAX_YB) {
-                    miFramework.setScale(1700);
+                    //miFramework.setScale(1700);
                     miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
                     displayCurrentLocation();
+                    notifyMessage("("+miCurrentLon+", "+miCurrentLat+" )");
                     miVoice.textToSpeech("Usted está " + getNearbyPlaces(miCurrentLon, miCurrentLat));
                 }
             } else {
@@ -680,6 +682,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         point[1] = latitud;
         double[] distance = new double[2];
         double[] bounds = new double[4];
+
         miFramework.convertCoords(point, Framework.DEGREE_COORDS, Framework.SCREEN_COORDS);
         MapObject[] nearby = miFramework.findInDisplay(point[0], point[1], (RADIO * (MIN_SCALE / currentScale)), MAX_PLACES);
         if (nearby != null && nearby.length > 0) {
@@ -688,68 +691,116 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                 if (iNearby.getLabel().length() != 0) {
                     distance = getCenterNearby(iNearby);
                     bounds = getBoudsNearby(iNearby);
-                    miFramework.convertCoords(bounds, Framework.MAP_COORDS, Framework.MAP_METER_COORDS);
-                    miFramework.convertCoords(distance,Framework.DEGREE_COORDS, Framework.MAP_METER_COORDS);
-                    miFramework.convertCoords(point,Framework.SCREEN_COORDS, Framework.MAP_METER_COORDS);
+                    miFramework.convertCoords(bounds, Framework.MAP_COORDS, Framework.DEGREE_COORDS);
+                    miFramework.convertCoords(distance,Framework.DEGREE_COORDS, Framework.DEGREE_COORDS);
+                    miFramework.convertCoords(point,Framework.SCREEN_COORDS, Framework.DEGREE_COORDS);
                     if(places == null) {
                         places = iNearby.getLabel() + " " + getNearbyDistance(point, distance, bounds);
                     }
                     else {
                         places += " y  " + iNearby.getLabel() + " " + getNearbyDistance(point, distance, bounds);
                     }
-                    //miVoice.textToSpeech(places);
                     i++;
                 }
             }
+            //miVoice.textToSpeech(places);
             if (i == 0) {
                 places = miContext.getString(R.string.no_places_nearby);
             }
             if (i == 1) places = "en " + places;
             if (i > 1) places = "entre: " + places;
         }
+        Log.v(TAG, "Radio: " + (RADIO * (MIN_SCALE / currentScale)));
+        Log.v(TAG, "Retorna: " + places);
         return places;
     }
 
     private String getNearbyDistance(double[] currentLocation, double[] centerNearby, double[] bounds) {
+        double[] locationMts = currentLocation;
+        double[] centerMts = centerNearby;
+        double[] boundsMts = bounds;
+        miFramework.convertCoords(locationMts, Framework.DEGREE_COORDS, Framework.MAP_METER_COORDS);
+        miFramework.convertCoords(centerNearby, Framework.DEGREE_COORDS, Framework.MAP_METER_COORDS);
+        miFramework.convertCoords(bounds, Framework.DEGREE_COORDS, Framework.MAP_METER_COORDS);
         double distance = 0.0;
-        //por pitagoras determino la distancia del usuario hasta el centro del edificio.
-        double a = centerNearby[0] - currentLocation[0];
-        double c = centerNearby[1] - currentLocation[1];
+        double a = centerMts[0] - locationMts[0];
+        double c = centerMts[1] - locationMts[1];
         double b = Math.sqrt(Math.pow(a,2) + Math.pow(c,2));
 
-        //pitagoras para determinar la distancia del centro a las esquinas del edificio.
-        double aEdificio = bounds[0] - centerNearby[0];
-        double cEdificio = bounds[1] - centerNearby[1];
-        double bEdificio = Math.sqrt(Math.pow(aEdificio, 2) + Math.pow(cEdificio, 2));
+        double aE = boundsMts[0] - centerMts[0];
+        double cE = boundsMts[1] - centerMts[1];
+        double bEdificio = Math.sqrt(Math.pow(aE,2) + Math.pow(cE,2));
 
-        // si está en alguno de los frentes del edificio determino la distancia a él.
-        if(currentLocation[0] > bounds[2] && currentLocation[0] < bounds[0])
+        if( currentLocation[0] > bounds[2] && currentLocation[0] < bounds[0] && currentLocation[1] > bounds[3] && currentLocation[1] < bounds[1])
         {
-            distance = b - Math.abs(bounds[1] - centerNearby[1]);
-            Log.v(TAG, "x > Xmin && x < Xmax" + b + "- " + bounds[1]+"- "+centerNearby[1]);
+            Log.v(TAG, "Dentro del edificio");
+            return " ";
         }
         else {
-            if(currentLocation[1] > bounds[3] && currentLocation[1] < bounds[1]) {
-                distance = b - Math.abs(bounds[0] - centerNearby[0]);
-                Log.v(TAG, "y > Ymin && y < Ymax");
+            if( currentLocation[0] > bounds[2] && currentLocation[0] < bounds[0] && currentLocation[1] < bounds[3] && currentLocation[1] < bounds[1]) {
+                distance = b - Math.abs((bounds[1] - bounds[3]) / 2);
+                Log.v(TAG, "X > Xmin && X < Xmax && Y < Ymin && Y < Ymax ... al sur del edificio.");
             }
             else {
-                if(currentLocation[0] < bounds[2] || currentLocation [0] > bounds[0] ||
-                           currentLocation[1] < bounds[3] || currentLocation[1] > bounds[1]) {
-                    distance = Math.abs(b - bEdificio);
-                    Log.v(TAG, "ninguna de las anteriores");
+                if(currentLocation[0] > bounds[2] && currentLocation[0] < bounds[0] && currentLocation[1] > bounds[3] && currentLocation[1] > bounds[1]) {
+                    Log.v(TAG, "X > Xmin && X < Xmax && Y > Ymin && Y > Ymax ... al norte del edificio.");
+                    distance = b - Math.abs((bounds[1] - bounds[3]) / 2);
+                    Log.v(TAG, "Distancia: " + b + " - (" + bounds[1] +" - " + bounds[3] + " ) ");
+                }
+                else {
+                    if(currentLocation[0] > bounds[2] && currentLocation[0] > bounds[0] && currentLocation[1] > bounds[3] && currentLocation[1] < bounds[1]) {
+                        Log.v(TAG, "X > Xmin && X > Xmax && Y > Ymin && Y < Ymax ... al este del edificio.");
+                        distance = b - Math.abs((bounds[0] - bounds[2]) / 2);
+                        Log.v(TAG, "Distancia: " + distance);
+                    }
+                    else {
+                        if (currentLocation[0] < bounds[2] && currentLocation[0] < bounds[0] && currentLocation[1] > bounds[3] && currentLocation[1] < bounds[1]) {
+                            Log.v(TAG, "X < Xmin && X < Xmax && Y > Ymin && Y < Ymax ... al oeste del edificio.");
+                            distance = b - Math.abs((bounds[0] - bounds[2]) / 2);
+                            Log.v(TAG, "Distancia: " + b);
+                        }
+                        else {
+                            if (currentLocation[0] < bounds[2] && currentLocation[1] > bounds[1]) {
+                                Log.v(TAG, "X < Xmin && Y > Ymax ... al Nor-oeste del edificio.");
+                                distance = b - bEdificio;
+                                Log.v(TAG, "Distancia: " + distance);
+                            }
+                            else {
+                                if (currentLocation[0] < bounds[2] && currentLocation[1] < bounds[3]) {
+                                    Log.v(TAG, "X < Xmin && Y < Ymin ... al Sur- oeste del edificio.");
+                                    distance = b - bEdificio;
+                                    Log.v(TAG, "Distancia: " + distance);
+                                }
+                                else {
+                                    if (currentLocation[0] > bounds[0] && currentLocation[1] > bounds[1]) {
+                                        Log.v(TAG, "X > Xmax && Y > Ymax ... al Nor-este del edificio.");
+                                        distance = b - bEdificio;
+                                        Log.v(TAG, "Distancia: " + distance);
+                                    }
+                                    else {
+                                        if (currentLocation[0] > bounds[0] && currentLocation[1] < bounds[3]) {
+                                            Log.v(TAG, "X > Xmax && Y < Ymin ... al Sur- este del edificio.");
+                                            distance = b - bEdificio;
+                                            Log.v(TAG, "Distancia: " + distance);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        }
-        distance = Math.round(Math.abs(distance));
-        if(distance > 50) {
-            return "";
-        }
-        else {
-            if(distance < 4) {
-                return " próxima";
+            distance = Math.round(distance);
+            Log.v(TAG, "Distancia: " + distance);
+            if(distance > 50) {
+                return " ";
             }
-            return "a: " + distance + "metros aproximadamente";
+            else {
+                if(distance < 3) {
+                    return " a menos de 3 metros aproximadamente";
+                }
+                return "a: " + distance + "metros aproximadamente";
+            }
         }
     }
 
@@ -1015,7 +1066,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         miXOffset = 0;
         miYOffset = 0;
         miTouchCount = 0;
-        notifyMessage(miFramework.getScale() + "");
+        Log.v(TAG, "Escala: "+ miFramework.getScale());
         getMap();
         invalidate();
     }
@@ -1034,8 +1085,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             locateMe();
         }
         Log.d(TAG, "Location update " + miCurrentLon + ", " + miCurrentLat);
-        miCurrentLon = cLocation.getLongitude();
-        miCurrentLat = cLocation.getLatitude();
+        miCurrentLon = cLocation.getLongitude() + 0.00000895;
+        miCurrentLat = cLocation.getLatitude() - 0.00004458;
         miCurrentAccurancy = cLocation.getAccuracy();
         if (iWantNavigate) {
             navigateStart();
