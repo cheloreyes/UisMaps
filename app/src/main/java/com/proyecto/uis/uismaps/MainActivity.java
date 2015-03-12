@@ -3,13 +3,17 @@ package com.proyecto.uis.uismaps;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.speech.RecognizerIntent;
 import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import java.util.ArrayList;
 
 
 public class MainActivity extends ActionBarActivity implements UISMapsSettingsValues{
@@ -38,6 +42,7 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         setContentView(miContent.getContainer());
 
         miMapa.setContentManager(miContent);
+        miContent.setCallingActivity(this);
         }
 
     @Override
@@ -107,5 +112,16 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
                 doubleBackToExitPressedOnce=false;
             }
         }, 2000);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == MediaRecorder.AudioSource.VOICE_RECOGNITION && resultCode == RESULT_OK) {
+            ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if(matches.size() > 0) {
+                miContent.setInfoText(matches.get(0) + " ");
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

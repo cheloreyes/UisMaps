@@ -14,7 +14,7 @@ import java.util.Locale;
  *
  * Created by cheloreyes on 9/03/15.
  */
-public class VoiceManager implements TextToSpeech.OnInitListener {
+public class VoiceManager implements TextToSpeech.OnInitListener{
 
     private final Context miContext;
     private boolean isEngineInitialized = false;

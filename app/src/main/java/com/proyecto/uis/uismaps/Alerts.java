@@ -35,4 +35,5 @@ public class Alerts {
         progressDialog.setMessage(contexto.getString(R.string.conecting));
         return progressDialog;
     }
+
 }

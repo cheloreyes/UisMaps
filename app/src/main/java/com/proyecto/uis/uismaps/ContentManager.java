@@ -1,8 +1,12 @@
 package com.proyecto.uis.uismaps;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaRecorder;
 import android.preference.PreferenceManager;
+import android.speech.RecognizerIntent;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +29,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     private static final int WRAP_CONTENT = RelativeLayout.LayoutParams.WRAP_CONTENT;
 
     private RelativeLayout.LayoutParams buttonsParams;
+    private Activity callerActivity;
     private RelativeLayout containerLayout;
     private FloatingActionButton findMeButton;
     private LinearLayout hideButtonsLayout;
@@ -37,6 +42,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     private FloatingActionButton routeStartButton;
     private RelativeLayout.LayoutParams searchParams;
     private SearchView searchView;
+    private VoiceManager listener;
 
     private SharedPreferences preferences;
 
@@ -208,7 +214,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
             case FIND_ME_BUTTON_ID:
                 miMapview.locateMe();
                 miMapview.setRouteStart();
-                //miMapa.notifyMessage("Ubicame!");
+                //startVoiceRecognition();
                 break;
             case START_ROUTE_BUTTON_ID:
                 miMapview.setRouteStart();
@@ -217,5 +223,27 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
                 miMapview.setRouteEnd();
                 break;
         }
+    }
+
+    /**
+     * Intenta una peticion para usar el reconocimiento de voz del sistema @VOICE_RECOGNITION,
+     * especificando que reconozca no solo el ingles y la cantidad de resultados que se quieren recibir.
+     *
+     * El resultado de esto es capturado en @Activity.onActivityResult con el código de @VOICE_RECOGNITION.
+     */
+    public void startVoiceRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, RecognizerIntent.EXTRA_LANGUAGE_MODEL);
+        intent.putExtra(RecognizerIntent.EXTRA_RESULTS, 1);
+
+        callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
+    }
+
+    /**
+     * Establece el @Activity donde se quiere iniciar el reconocimiento de voz, se prefiere usar el principal.
+     * @param activity actividad donde se espera el resultado
+     */
+    public void setCallingActivity(Activity activity) {
+        callerActivity = activity;
     }
 }
