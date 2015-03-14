@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 /**
  * Created by cheloreyes on 21-01-15.
@@ -715,6 +716,14 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         return places;
     }
 
+    /**
+     * Obtiene la distancia a los edificios cercanos encontrados por @getNearbyPlaces. los parámetros deben estar en
+     * @Framework.DEGREE_COORDS.
+     * @param currentLocation Ubicación actual del usuario, (longitud, latitud).
+     * @param centerNearby Centro del polígono (longitud, latitud).
+     * @param bounds Máximos y mímimos (X ,Y) del polígono.
+     * @return
+     */
     private String getNearbyDistance(double[] currentLocation, double[] centerNearby, double[] bounds) {
         double[] locationMts = currentLocation;
         double[] centerMts = centerNearby;
@@ -804,6 +813,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         }
     }
 
+    /**
+     * Obtiene el centro del polígono
+     * @param aMapObject Polígono del tipo @MapObject a determinar el centro.
+     * @return Retorna un arreglo de @Double con las coordenadas del centro (longitud, latitud).
+     */
     private double[] getCenterNearby(MapObject aMapObject) {
 
         PathPoint pathPoint = new PathPoint();
@@ -817,6 +831,12 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
         return center;
     }
+
+    /**
+     * Obtiene los límites del polígono del tipo @MapObject.
+     * @param aMapObject Poligono para determinar sus límites.
+     * @return Es un arreglo con Xmax, Ymax, Xmin, Ymin.
+     */
     private double[] getBoudsNearby(MapObject aMapObject) {
         Rect rect = new Rect();
         aMapObject.getBounds(rect);
@@ -897,13 +917,57 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         getMap();
         invalidate();
     }
+
+    /**
+     * Detiene el motor de voz utilizado para informar al usuario.
+     */
     public void destroyVoice() {
         miVoice.stop();
         miVoice.shutdown();
     }
 
+    /**
+     * Establece el contenedor de esta vista.
+     * @param contentManager
+     */
     public void setContentManager(ContentManager contentManager) {
         miContent = contentManager;
+    }
+
+    /**
+     * Buscador retorna el centro del edificio a buscar si existe, busca la coincidencia exacta al nombre.
+     * @param toFind Palabra a buscar.
+     * @param method Método utilizado, puede ser: @FrameWork.EXACT_STRING_MATCH_METHOD
+     *               Framework.FUZZY_STRING_MATCH_FLAG
+     *               Framework.PREFIX_STRING_MATCH_FLAG
+     * @param maxObjects Maximo de resultados.
+     */
+    public ArrayList<String> finder(String toFind, int method, int maxObjects) {
+        ArrayList<String> results = new ArrayList<>();
+        MapObject[] result = miFramework.find(toFind, method, maxObjects);
+        if(result != null && result.length != 0) {
+            int i = 0;
+            for( MapObject temp : result) {
+                if(temp.getLabel().length() != 0) {
+                    results.add(i, temp.getLabel());
+                }
+            }
+        }
+        return results;
+    }
+    public void foundFocus(String toFocus) {
+        double[] center = new double[2];
+        MapObject[] result = miFramework.find(toFocus, Framework.EXACT_STRING_MATCH_METHOD, 1);
+        if(result != null && result.length != 0) {
+            for( MapObject temp : result) {
+                center = getCenterNearby(temp);
+                Log.v(TAG, "Centro a: " +toFocus+ " en: ( "+center[0]+", "+center[1]+")");
+            }
+        }
+        setSelectedPoint(center[0], center[1]);
+        miFramework.setViewCenterLatLong(center[0], center[1]);
+        getMap();
+        invalidate();
     }
 
     // **********************

@@ -1,28 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:id="@+id/hiden_panel">
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
     <TextView
+        android:id="@+id/item_finder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/details_title"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/details_message"
-        android:layout_below="@id/details_title"
-        android:layout_alignParentLeft="true"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/route_timeleft"
-        android:layout_above="@id/details_message"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/route_distleft"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true" />
+        android:layout_margin="10dp"
+        android:textSize="11pt"/>
 </RelativeLayout>

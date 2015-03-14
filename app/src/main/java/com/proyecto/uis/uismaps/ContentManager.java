@@ -16,6 +16,7 @@ import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
+import com.proyecto.uis.uismaps.finder.Finder;
 
 /**
  * Esta clase maneja los componentes de la UI de la app, habilitando y deshabilitando la interfaz adaptada para
@@ -111,6 +112,10 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
      */
     private void textFieldManager() {
         searchView = new SearchView(miContext);
+        searchView.setIconifiedByDefault(true);
+        searchView.setId(106);
+        searchView.setBackgroundColor(getResources().getColor(R.color.my_material_green));
+        Finder finder = new Finder(miContext, searchView, miMapview);
 
     }
 
@@ -222,6 +227,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
             case END_ROUTE_BUTTON_ID:
                 miMapview.setRouteEnd();
                 break;
+
         }
     }
 
