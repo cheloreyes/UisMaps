@@ -6,6 +6,9 @@ package com.proyecto.uis.uismaps;
  */
 public interface UISMapsSettingsValues {
 
+    // **********************
+    // Constanst
+    // **********************
     public static final int END_ROUTE_BUTTON_ID = 3;
     public static final int FIND_ME_BUTTON_ID = 1;
     public static final int START_ROUTE_BUTTON_ID = 2;

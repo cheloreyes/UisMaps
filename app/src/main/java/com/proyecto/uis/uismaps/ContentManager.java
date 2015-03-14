@@ -5,10 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaRecorder;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -19,43 +23,57 @@ import com.melnykov.fab.FloatingActionButton;
 import com.proyecto.uis.uismaps.finder.Finder;
 
 /**
- * Esta clase maneja los componentes de la UI de la app, habilitando y deshabilitando la interfaz adaptada para
+ * ContentManager maneja los componentes de la UI de la app, habilitando y deshabilitando la interfaz adaptada para
  * las capacidades de voz.
  * Created by cheloreyes on 9/03/15.
  */
-public class ContentManager extends View implements UISMapsSettingsValues, View.OnClickListener {
+public class ContentManager extends View implements UISMapsSettingsValues, View.OnClickListener, View.OnTouchListener {
 
+    // **********************
+    // Constants
+    // **********************
     public static final int DPI_NEXUS5 = 480;
     private static final int MATCH_PARENT = RelativeLayout.LayoutParams.MATCH_PARENT;
     private static final int WRAP_CONTENT = RelativeLayout.LayoutParams.WRAP_CONTENT;
+    private static final String TAG = "ContentManager";
 
+    // **********************
+    // Fields
+    // **********************
     private RelativeLayout.LayoutParams buttonsParams;
     private Activity callerActivity;
     private RelativeLayout containerLayout;
     private FloatingActionButton findMeButton;
+    private Handler handler;
     private LinearLayout hideButtonsLayout;
     private RelativeLayout.LayoutParams infoParams;
     private TextView infoText;
+    private long lastTapTime;
     private RelativeLayout.LayoutParams mapViewParams;
     private Context miContext;
     private MapView miMapview;
+    private int numOfTaps;
     private FloatingActionButton routeEndButton;
     private FloatingActionButton routeStartButton;
     private RelativeLayout.LayoutParams searchParams;
     private SearchView searchView;
-    private VoiceManager listener;
-
+    private VoiceManager iVoiceManager;
     private SharedPreferences preferences;
+    private long touchTime;
 
 
+    // **********************
+    // Constructor
+    // **********************
     /**
      *
      * @param context Context de la vista en que se crea el objeto.
      * @param mapView Objeto de la clase @MapView ya instanceado antes.
      */
-    public ContentManager(Context context, MapView mapView) {
+    public ContentManager(Context context, MapView mapView, VoiceManager voiceManager) {
         super(context);
         miContext = context;
+        iVoiceManager = voiceManager;
         containerLayout = new RelativeLayout(miContext);
         miMapview = mapView;
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
@@ -66,6 +84,9 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
     }
 
+    // **********************
+    // Methods
+    // **********************
     /**
      * Crea y configura los @TextView necesarios para la UI.
      */
@@ -183,6 +204,19 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
             containerLayout.addView(infoText, infoParams);
             containerLayout.refreshDrawableState();
         }
+        else {
+            initBlindCapabilities();
+        }
+    }
+
+    /**
+     * Establece al layout contenedor a registrar los eventos tactiles.
+     */
+    private void initBlindCapabilities() {
+        containerLayout.setOnTouchListener(this);
+        numOfTaps = 0;
+        lastTapTime = 0;
+        touchTime = 0;
     }
 
     /**
@@ -209,6 +243,31 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     }
 
     /**
+     * Establece el @Activity donde se quiere iniciar el reconocimiento de voz, se prefiere usar el principal.
+     * @param activity actividad donde se espera el resultado
+     */
+    public void setCallingActivity(Activity activity) {
+        callerActivity = activity;
+    }
+
+    /**
+     * Intenta una peticion para usar el reconocimiento de voz del sistema @VOICE_RECOGNITION,
+     * especificando que reconozca no solo el ingles y la cantidad de resultados que se quieren recibir.
+     *
+     * El resultado de esto es capturado en @Activity.onActivityResult con el código de @VOICE_RECOGNITION.
+     */
+    public void startVoiceRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, RecognizerIntent.EXTRA_LANGUAGE_MODEL);
+        intent.putExtra(RecognizerIntent.EXTRA_RESULTS, 1);
+
+        callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
+    }
+
+    // **********************
+    // Methods from SuperClass
+    // **********************
+    /**
      * Llamado cuando la vista a sido clikeada.
      *
      * @param v La vista que ha sido clikeada.
@@ -232,24 +291,47 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     }
 
     /**
-     * Intenta una peticion para usar el reconocimiento de voz del sistema @VOICE_RECOGNITION,
-     * especificando que reconozca no solo el ingles y la cantidad de resultados que se quieren recibir.
-     *
-     * El resultado de esto es capturado en @Activity.onActivityResult con el código de @VOICE_RECOGNITION.
+     * Método Override de @OnTouchListener, identifica cuantos toques se realizan en un intervalo de tiempo;
+     * Para determinar la acción a realizar, que pueden ser:
+     *  Al tocar una vez la pantalla: Indica la posicion del usuario utilizando el sintentizador de voz.
+     *  al tocar dos veces la pantalla: Inicia el reconocimiento de voz.
+     * @param v
+     * @param event
+     * @return
      */
-    public void startVoiceRecognition() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, RecognizerIntent.EXTRA_LANGUAGE_MODEL);
-        intent.putExtra(RecognizerIntent.EXTRA_RESULTS, 1);
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                touchTime = System.currentTimeMillis();
+                Log.v(TAG, "Action Down");
+                break;
+            case MotionEvent.ACTION_UP:
+                Log.v(TAG, "action Up");
+                if(System.currentTimeMillis() - touchTime > ViewConfiguration.getTapTimeout()) {
+                    numOfTaps = 0;
+                    lastTapTime = 0;
+                    break;
+                }
+                else numOfTaps = 1;
 
-        callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
-    }
-
-    /**
-     * Establece el @Activity donde se quiere iniciar el reconocimiento de voz, se prefiere usar el principal.
-     * @param activity actividad donde se espera el resultado
-     */
-    public void setCallingActivity(Activity activity) {
-        callerActivity = activity;
+                if(System.currentTimeMillis() - lastTapTime < ViewConfiguration.getDoubleTapTimeout()) {
+                    numOfTaps += 1;
+                }
+                lastTapTime = System.currentTimeMillis();
+                if(numOfTaps == 2) {
+                    Log.v(TAG, "Numero de toques: " + numOfTaps);
+                    numOfTaps = 0;
+                    iVoiceManager.textToSpeech(miContext.getString(R.string.start_voice_recognition));
+                    startVoiceRecognition();
+                }
+                else {
+                    if(numOfTaps == 1) {
+                        Log.v(TAG, "Numero de toques: " + numOfTaps);
+                       // miMapview.locateMe();
+                    }
+                }
+        }
+        return true;
     }
 }

@@ -14,6 +14,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -63,11 +64,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public static final int MIN_SCALE = 500;
     private static final int MIN_TIME = 5000;
     private static final int PRED_SCALE = 16000;
-    private static final String TAG = "MapView";
     private static final String UIS_MAPS_FOLDER = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
     private static final String CAMPUS_MAP = UIS_MAPS_FOLDER + "/mapa/mapa.ctm1";
     private static final String FILE_STYLE = UIS_MAPS_FOLDER + "/estilos/osm-style.xml";
     private static final String FILE_FONT = UIS_MAPS_FOLDER + "/fuentes/DejaVuSans.ttf";
+    private static final String TAG = "MapView";
 
     // **********************
     // Fields
@@ -122,8 +123,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private double routeEndLon;
 
     private ContentManager miContent;
-
     private VoiceManager miVoice;
+    private SharedPreferences UIpreferences;
 
     // **********************
     // Constructors
@@ -136,12 +137,13 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      * @param iDpi     densidad de pixeles de la pantalla del dispositivo.
      */
 
-    public MapView(Context iContext, int iDpi) {
+    public MapView(Context iContext, int iDpi, VoiceManager iVoiceManager) {
         super(iContext);
         setOnTouchListener(this);
         dpiScreen = iDpi;
         miContext = iContext;
-        miVoice = new VoiceManager(miContext);
+        UIpreferences = PreferenceManager.getDefaultSharedPreferences(miContext);
+        miVoice = iVoiceManager;
     }
 
     /**
@@ -392,11 +394,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         try {
             files = assetManager.list(assetItem);
         } catch (IOException e) {
-            Log.e("Error al leer carpeta assets", e.toString());
             e.printStackTrace();
         }
 
-        for (int i = 0; i < files.length; i++) {
+        for(int i = 0; i < files.length; i++) {
             InputStream in = null;
             OutputStream out = null;
             try {
@@ -409,7 +410,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                 out.close();
                 out = null;
             } catch (IOException e) {
-                Log.e("Error al copiar de asset", e.toString());
                 e.printStackTrace();
             }
         }
@@ -919,14 +919,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     /**
-     * Detiene el motor de voz utilizado para informar al usuario.
-     */
-    public void destroyVoice() {
-        miVoice.stop();
-        miVoice.shutdown();
-    }
-
-    /**
      * Establece el contenedor de esta vista.
      * @param contentManager
      */
@@ -975,7 +967,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // **********************
 
     /**
-     * Override del método @OnTouchListener.onTouch para determinar los gestos del usuario al pulsar la pantalla.
+     * Override del método @OnTouchListener.onTouch para determinar los gestos del usuario al pulsar la pantalla, si se activa
+     * la UI para invidentes, desactiva los gestos tactiles.
      *
      * @param v
      * @param event
@@ -990,7 +983,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        if (miScaleGestureDetector == null || miFramework == null) {
+        if (miScaleGestureDetector == null || miFramework == null || UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
             return false;
         }
         miScaleGestureDetector.onTouchEvent(event);

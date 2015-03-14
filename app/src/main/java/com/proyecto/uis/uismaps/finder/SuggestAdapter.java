@@ -13,15 +13,22 @@ import com.proyecto.uis.uismaps.R;
 
 import java.util.List;
 
-/**
+/**SuggestAdapter es un adaptador personalizado de sugerencias para UISMaps.
  * Created by cheloreyes on 12/03/15.
  */
 public class SuggestAdapter extends CursorAdapter {
-    private List<String> items;
-    private Context miContext;
-    private TextView textViewResults;
-    private MapView miMapView;
 
+    // **********************
+    // Fields
+    // **********************
+    private Context miContext;
+    private List<String> items;
+    private MapView miMapView;
+    private TextView textViewResults;
+
+    // **********************
+    // Constructor
+    // **********************
 
     public SuggestAdapter(Context context, Cursor c, List<String> list) {
         super(context, c, false);

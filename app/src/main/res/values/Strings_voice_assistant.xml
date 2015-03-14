@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wellcome">Hola! bienvenido a UISMaps.</string>
+    <string name="start_voice_recognition">Despues del tono, diga a donde quiere ir.</string>
+</resources>

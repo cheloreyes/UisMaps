@@ -19,6 +19,7 @@ import java.util.ArrayList;
 public class MainActivity extends ActionBarActivity implements UISMapsSettingsValues{
 
     private boolean doubleBackToExitPressedOnce;
+    private VoiceManager iVoiceManager;
     private DisplayMetrics miDisplayMetrics;
     private MapView miMapa;
     private SharedPreferences preferences;
@@ -35,14 +36,16 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         getWindowManager().getDefaultDisplay().getMetrics(miDisplayMetrics);
 
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        iVoiceManager = new VoiceManager(this);
 
-        miMapa = new MapView(this, miDisplayMetrics.densityDpi);
+        miMapa = new MapView(this, miDisplayMetrics.densityDpi, iVoiceManager);
 
-        miContent = new ContentManager(this, miMapa);
+        miContent = new ContentManager(this, miMapa, iVoiceManager);
         setContentView(miContent.getContainer());
 
         miMapa.setContentManager(miContent);
         miContent.setCallingActivity(this);
+
         }
 
     @Override
@@ -74,7 +77,7 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         //Guarda el estado actual del mapa
         miMapa.saveState();
         miMapa.toggleGPS(false);
-        miMapa.destroyVoice();
+        iVoiceManager.stop();
         //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
     }
 
@@ -91,6 +94,7 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
     protected void onResume() {
         super.onResume();
         miContent.setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
+
     }
 
     @Override
@@ -119,7 +123,8 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         if (requestCode == MediaRecorder.AudioSource.VOICE_RECOGNITION && resultCode == RESULT_OK) {
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if(matches.size() > 0) {
-                miContent.setInfoText(matches.get(0) + " ");
+                //miContent.setInfoText(matches.get(0) + " ");
+                iVoiceManager.textRecognizer(matches.get(0) + "");
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
