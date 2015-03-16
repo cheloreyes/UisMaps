@@ -36,9 +36,9 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         getWindowManager().getDefaultDisplay().getMetrics(miDisplayMetrics);
 
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        iVoiceManager = new VoiceManager(this);
 
         miMapa = new MapView(this, miDisplayMetrics.densityDpi, iVoiceManager);
+        iVoiceManager = new VoiceManager(this, miMapa);
 
         miContent = new ContentManager(this, miMapa, iVoiceManager);
         setContentView(miContent.getContainer());

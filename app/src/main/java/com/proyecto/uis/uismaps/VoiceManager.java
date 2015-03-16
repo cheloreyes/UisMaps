@@ -17,32 +17,42 @@ import java.util.Locale;
 public class VoiceManager implements TextToSpeech.OnInitListener{
 
     private final Context miContext;
-    private String[] buildings = new String[]{"Porteria Cra 27", "Centro Cultural  Luis A. Calvo", "Administración", "INSED", "Teatro al aire libre Jose Antonio Galan", "Administración 2",
+    private String[] buildings = new String[]{"Porteria carrera 27", "Auditorio Luis A. Calvo", "Administración", "INSED", "Teatro al aire libre Jose Antonio Galan", "Administración 2",
                                                      "Bienestar Universitario", "La perla", "Mantenimineto y Planta Física", "Ingeniería Mecánica", "Aula Máxima de Mecánica",
                                                      "Biblioteca", "Planta Telefónica", "Instituto de Lenguas", "Ingeniería Industrial", "Laboratorios Fisiologia y Morfologia Vegetal",
                                                      "Laboratorios Livianos", "Camilo Torres", "CENTIC", "CAPRUIS - FAVUIS", "Federico Mamitza Bayer", "Ingeniería Eléctrica y Electrónica",
                                                      "Laboratorios de Posgrados", "Ingeniería Quimica", "Aula Máxima de Ciencias", "CICELPA / CEIAM", "Laboratorios de Alta Tensión",
                                                      "Laboratorios de Hidraulica", "Laboratorios de Diseño Industrial", "Planta de Aceros", "Jorge Bautista Vesga",
-                                                     "Laboratorios Pesados", "Daniel Casas", "Residencias Estudiantiles", "Porteria cra 30", "Kiosco Campos deportivos",
+                                                     "Laboratorios Pesados", "Daniel Casas", "Residencias Estudiantiles", "Porteria carrera 30", "Kiosco Campos deportivos",
                                                      "Ciencias Humanas", "Jardinería", "Cancha de tenis", "Cancha 1 de marzo", "Cancha de Futbol sur", "Canchas múltiples",
-                                                     "Coliseo UIS", "Diamante de softbol", "CENIVAM", "Cafeteria Don Cafeto", "Porteria Acceso Cra 25", "Caracterización de Materiales",
+                                                     "Coliseo UIS", "Diamante de softbol", "CENIVAM", "Cafeteria Don Cafeto", "Porteria carrera 25", "Caracterización de Materiales",
                                                      "Soccer Hot Dogs", "parqueaderos subterraneo plazoleta", "Albañileria y bodegas"};
+    private String[] listFix = { "de", "a","al", "yo", "tu", "él", "ella", "ello",
+                                    "ellos", "ellas", "nosotros", "nosotras", "ustedes", "vosotros",
+                                    "vosotras", "mi", "conmigo", "ti", "contigo", "si", "quiero",
+                                    "me", "se", "te", "lo", "la", "le", "nos", "os", "se", "y", "e",
+                                    "ni", "mas", "pero", "sino", "o", "u", "porque", "pues", "si",
+                                    "ir", "como", "tan", "ante", "bajo", "con", "contra", "desde",
+                                    "entre", "hacia", "hasta", "para", "por", "según", "sin", "sobre",
+                                    "tras", "mediante", "durante", "llegar" };
     private boolean isEngineInitialized = false;
     private TextToSpeech miTts;
     private Locale colombia;
     private SharedPreferences preferences;
+    private MapView imaMapView;
 
 
     /**
      *
      * @param pContext
      */
-    public VoiceManager(Context pContext) {
+    public VoiceManager(Context pContext, MapView mapView) {
         miContext = pContext;
         miTts = new TextToSpeech(miContext,this);
         colombia = new Locale("es", "COL");
         miTts.setLanguage(colombia);
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
+        imaMapView = mapView;
     }
 
     /**
@@ -65,7 +75,10 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         }
     }
     public void textRecognizer(String sentence) {
-        boolean to = false;
+        Log.v("Voice", "Sentencia: " + sentence);
+        boolean to = true;
+        sentence = fixSentence(sentence);
+        Log.v("Voice", "Sentencia arreglada: " + sentence);
         String delimiters = "[ .,;?!¡¿\'\"\\[\\]]+";
         String[] words = sentence.split(delimiters);
         String where = null;
@@ -78,20 +91,29 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                         String[] places = buildings[j].split(delimiters);
                         for (int k = 0; k < places.length; k++) {
                             if(to){
-                                if(words[i].equalsIgnoreCase(places[k]) && !words[i].equalsIgnoreCase("laboratorios") &&!words[i].equalsIgnoreCase("de")){
-                                    Log.v("Voice", "Coincide: "+buildings[j]);
-                                    to = false;
+                                if(words[i].equalsIgnoreCase(places[k])){
+                                    if(i < words.length - 1){
+                                        to = true;
+                                    }
+                                    else{
+                                        Log.v("Voice", "Coincide: "+buildings[j]);
+                                        imaMapView.foundFocus(buildings[j]);
+                                        to = false;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-            if(words[i].equals("a") || words[i].equals("al")) {
-                to = true;
-            }
         }
 
+    }
+    private String fixSentence(String sentence) {
+        for (int i = 0; i < listFix.length; i++)
+            sentence = sentence.replaceAll("\\b" + listFix[i] + "\\b", "");
+
+        return sentence;
     }
 
     public void stop() {

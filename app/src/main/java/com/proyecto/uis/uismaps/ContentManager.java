@@ -291,10 +291,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     }
 
     /**
-     * Método Override de @OnTouchListener, identifica cuantos toques se realizan en un intervalo de tiempo;
-     * Para determinar la acción a realizar, que pueden ser:
-     *  Al tocar una vez la pantalla: Indica la posicion del usuario utilizando el sintentizador de voz.
-     *  al tocar dos veces la pantalla: Inicia el reconocimiento de voz.
+     * Método Override de @OnTouchListener,
      * @param v
      * @param event
      * @return
@@ -304,32 +301,19 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 touchTime = System.currentTimeMillis();
-                Log.v(TAG, "Action Down");
-                break;
-            case MotionEvent.ACTION_UP:
-                Log.v(TAG, "action Up");
-                if(System.currentTimeMillis() - touchTime > ViewConfiguration.getTapTimeout()) {
-                    numOfTaps = 0;
-                    lastTapTime = 0;
-                    break;
-                }
-                else numOfTaps = 1;
+                return true;
 
-                if(System.currentTimeMillis() - lastTapTime < ViewConfiguration.getDoubleTapTimeout()) {
-                    numOfTaps += 1;
-                }
-                lastTapTime = System.currentTimeMillis();
-                if(numOfTaps == 2) {
-                    Log.v(TAG, "Numero de toques: " + numOfTaps);
-                    numOfTaps = 0;
+            case MotionEvent.ACTION_UP:
+                if((System.currentTimeMillis() - touchTime) > ViewConfiguration.getLongPressTimeout()) {
+                    Log.v(TAG, "Long press.");
                     iVoiceManager.textToSpeech(miContext.getString(R.string.start_voice_recognition));
                     startVoiceRecognition();
+                    return false;
                 }
-                else {
-                    if(numOfTaps == 1) {
-                        Log.v(TAG, "Numero de toques: " + numOfTaps);
-                       // miMapview.locateMe();
-                    }
+                else{
+                    Log.v(TAG, "Single press.");
+                    miMapview.locateMe();
+                    return false;
                 }
         }
         return true;
