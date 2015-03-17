@@ -32,4 +32,5 @@
     <string name="missing_start_route">No podemos mostrar la ruta: Por favor seleccione un punto de inicio e intente nuevamente.</string>
     <string name="missing_end_route">No podemos mostrar la ruta: Por favor seleccione un punto de destino e intente nuevamente.</string>
     <string name="confirm_exit">Pulse dos veces \"Atrás\" para salir.</string>
+    <string name="navigation_turn_off">Apagando navegación.</string>
 </resources>

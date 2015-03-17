@@ -107,6 +107,9 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                 }
             }
         }
+        if(to){
+            textToSpeech(miContext.getString(R.string.place_no_found));
+        }
 
     }
     private String fixSentence(String sentence) {

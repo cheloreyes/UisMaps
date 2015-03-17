@@ -10,10 +10,12 @@ import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
@@ -48,10 +50,12 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     private LinearLayout hideButtonsLayout;
     private RelativeLayout.LayoutParams infoParams;
     private TextView infoText;
+    private boolean isInflater = false;
     private long lastTapTime;
     private RelativeLayout.LayoutParams mapViewParams;
     private Context miContext;
     private MapView miMapview;
+    private View navigationView;
     private int numOfTaps;
     private FloatingActionButton routeEndButton;
     private FloatingActionButton routeStartButton;
@@ -60,6 +64,10 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     private VoiceManager iVoiceManager;
     private SharedPreferences preferences;
     private long touchTime;
+    private TextView turnTypeMsg;
+    private TextView navInfoPlusText;
+    private TextView navInfoText;
+    private ImageView turnTypeImg;
 
 
     // **********************
@@ -262,6 +270,43 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         intent.putExtra(RecognizerIntent.EXTRA_RESULTS, 1);
 
         callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
+    }
+    public void inflateNavigation() {
+        LayoutInflater inflater = (LayoutInflater) miContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        navigationView = inflater.inflate(R.layout.navigation, null, false);
+        navInfoText = (TextView) navigationView.findViewById(R.id.infoTextView);
+        navInfoText = (TextView) navigationView.findViewById(R.id.plusInfoTextView);
+        turnTypeMsg = (TextView) navigationView.findViewById(R.id.turnTypeMessage);
+        turnTypeImg = (ImageView) navigationView.findViewById(R.id.turnTypeImage);
+        isInflater = true;
+    }
+    public boolean isNavigationView() {
+        return isInflater;
+    }
+    public void setTurnTypeMsg(String msg) {
+        turnTypeMsg.setText(msg);
+    }
+    public void setNavInfoText(String txt) {
+        navInfoText.setText(txt);
+    }
+    public void setNavInfoPlusText(String txt) {
+        navInfoPlusText.setText(txt);
+    }
+    public void setTurnTypeImg (int turnType) {
+        switch (turnType) {
+            case 0:
+
+                break;
+            case 1:
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
+
+        }
     }
 
     // **********************
