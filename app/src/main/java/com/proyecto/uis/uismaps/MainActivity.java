@@ -102,6 +102,7 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
     public void onBackPressed() {
         miMapa.removeMapObjects();
         miContent.showFloatingMenu(false);
+        miContent.navInfo_destroy();
         if (doubleBackToExitPressedOnce) {
             super.onBackPressed();
             return;

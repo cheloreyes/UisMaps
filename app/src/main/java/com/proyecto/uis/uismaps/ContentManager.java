@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.media.MediaRecorder;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -17,6 +18,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
@@ -57,6 +59,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     private MapView miMapview;
     private View navigationView;
     private int numOfTaps;
+    private PopupWindow popupWindow;
     private FloatingActionButton routeEndButton;
     private FloatingActionButton routeStartButton;
     private RelativeLayout.LayoutParams searchParams;
@@ -271,14 +274,30 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
 
         callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
     }
-    public void inflateNavigation() {
+    public void navInfo_init() {
         LayoutInflater inflater = (LayoutInflater) miContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        navigationView = inflater.inflate(R.layout.navigation, null, false);
+        navigationView = inflater.inflate(R.layout.navigation, null);
         navInfoText = (TextView) navigationView.findViewById(R.id.infoTextView);
         navInfoText = (TextView) navigationView.findViewById(R.id.plusInfoTextView);
         turnTypeMsg = (TextView) navigationView.findViewById(R.id.turnTypeMessage);
         turnTypeImg = (ImageView) navigationView.findViewById(R.id.turnTypeImage);
+        popupWindow = new PopupWindow(this, 1080, 600);
+
+        navigationView.setBackgroundColor(Color.WHITE);
+        navigationView.setAlpha(0.85f);
+        popupWindow.setContentView(navigationView);
+        popupWindow.setFocusable(false);
+        popupWindow.setTouchable(false);
+        popupWindow.showAtLocation(this, Gravity.TOP, 0, 240); //para la pantalla del n5
+        containerLayout.removeView(searchView);
+
         isInflater = true;
+    }
+    public void navInfo_destroy() {
+        if(popupWindow.isShowing()) {
+            popupWindow.dismiss();
+            setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
+        }
     }
     public boolean isNavigationView() {
         return isInflater;
@@ -326,7 +345,8 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
                 //startVoiceRecognition();
                 break;
             case START_ROUTE_BUTTON_ID:
-                miMapview.setRouteStart();
+               // miMapview.setRouteStart();
+                navInfo_init();
                 break;
             case END_ROUTE_BUTTON_ID:
                 miMapview.setRouteEnd();

@@ -47,7 +47,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // **********************
     public static final int MAX_PLACES = 50;
     public static final int MIN_DIST_TO_POINT = 13;
-    public static final int RADIO = 1000;
+    public static final int RADIO = 1080;
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
     private static final int DPI_MIN = 160;
     private static final int GRAY_COLOR = 0xFFCCCCCC;
@@ -579,7 +579,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     private void showNavigation_init() {
-        miContent.inflateNavigation();
+        miContent.navInfo_init();
         Log.v(TAG,"Inflate Navigation popup");
     }
 
