@@ -39,20 +39,19 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
     private TextToSpeech miTts;
     private Locale colombia;
     private SharedPreferences preferences;
-    private MapView imaMapView;
+    private MapView iMapView;
 
 
     /**
      *
      * @param pContext
      */
-    public VoiceManager(Context pContext, MapView mapView) {
+    public VoiceManager(Context pContext) {
         miContext = pContext;
         miTts = new TextToSpeech(miContext,this);
         colombia = new Locale("es", "COL");
         miTts.setLanguage(colombia);
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
-        imaMapView = mapView;
     }
 
     /**
@@ -97,7 +96,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                                     }
                                     else{
                                         Log.v("Voice", "Coincide: "+buildings[j]);
-                                        imaMapView.foundFocus(buildings[j]);
+                                        iMapView.foundFocus(buildings[j]);
                                         to = false;
                                     }
                                 }
@@ -125,6 +124,11 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
 
     public void shutdown() {
         miTts.shutdown();
+    }
+
+
+    public void setMapView(MapView mapView) {
+        iMapView = mapView;
     }
 
 

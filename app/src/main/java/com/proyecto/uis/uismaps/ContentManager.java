@@ -277,10 +277,6 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     public void navInfo_init() {
         LayoutInflater inflater = (LayoutInflater) miContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         navigationView = inflater.inflate(R.layout.navigation, null);
-        navInfoText = (TextView) navigationView.findViewById(R.id.infoTextView);
-        navInfoText = (TextView) navigationView.findViewById(R.id.plusInfoTextView);
-        turnTypeMsg = (TextView) navigationView.findViewById(R.id.turnTypeMessage);
-        turnTypeImg = (ImageView) navigationView.findViewById(R.id.turnTypeImage);
         popupWindow = new PopupWindow(this, 1080, 600);
 
         navigationView.setBackgroundColor(Color.WHITE);
@@ -291,10 +287,14 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         popupWindow.showAtLocation(this, Gravity.TOP, 0, 240); //para la pantalla del n5
         containerLayout.removeView(searchView);
 
+        turnTypeMsg = (TextView) popupWindow.getContentView().findViewById(R.id.turnTypeMessage);
+        navInfoText = (TextView) popupWindow.getContentView().findViewById(R.id.infoTextView);
+        navInfoPlusText = (TextView) popupWindow.getContentView().findViewById(R.id.plusInfoTextView);
+        turnTypeImg = (ImageView) popupWindow.getContentView().findViewById(R.id.turnTypeImage);
         isInflater = true;
     }
     public void navInfo_destroy() {
-        if(popupWindow.isShowing()) {
+        if(isInflater) {
             popupWindow.dismiss();
             setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
         }
@@ -306,24 +306,30 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         turnTypeMsg.setText(msg);
     }
     public void setNavInfoText(String txt) {
-        navInfoText.setText(txt);
+        if(navInfoText != null)navInfoText.setText(txt);
     }
     public void setNavInfoPlusText(String txt) {
-        navInfoPlusText.setText(txt);
+        if(navInfoPlusText != null)navInfoPlusText.setText(txt);
     }
     public void setTurnTypeImg (int turnType) {
         switch (turnType) {
             case 0:
-
+                turnTypeImg.setImageResource(R.mipmap.loading_arrow);
                 break;
             case 1:
+                turnTypeImg.setImageResource(R.mipmap.ahead_arrow);
                 break;
             case 2:
+                turnTypeImg.setImageResource(R.mipmap.right_arrow);
                 break;
             case 3:
+                turnTypeImg.setImageResource(R.mipmap.left_arrow);
                 break;
             case 4:
+                turnTypeImg.setImageResource(R.mipmap.soft_right_arrow);
                 break;
+            case 5:
+                turnTypeImg.setImageResource(R.mipmap.soft_left_arrow);
 
         }
     }
@@ -345,8 +351,8 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
                 //startVoiceRecognition();
                 break;
             case START_ROUTE_BUTTON_ID:
-               // miMapview.setRouteStart();
-                navInfo_init();
+                miMapview.setRouteStart();
+                //navInfo_init();
                 break;
             case END_ROUTE_BUTTON_ID:
                 miMapview.setRouteEnd();

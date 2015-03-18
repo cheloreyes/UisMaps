@@ -38,7 +38,8 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         miMapa = new MapView(this, miDisplayMetrics.densityDpi);
-        iVoiceManager = new VoiceManager(this, miMapa);
+        iVoiceManager = new VoiceManager(this);
+        iVoiceManager.setMapView(miMapa);
 
         miContent = new ContentManager(this, miMapa, iVoiceManager);
         setContentView(miContent.getContainer());
@@ -99,10 +100,17 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        iVoiceManager.shutdown();
+    }
+
+    @Override
     public void onBackPressed() {
         miMapa.removeMapObjects();
         miContent.showFloatingMenu(false);
         miContent.navInfo_destroy();
+        iVoiceManager.stop();
         if (doubleBackToExitPressedOnce) {
             super.onBackPressed();
             return;
@@ -117,7 +125,7 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
             public void run() {
                 doubleBackToExitPressedOnce=false;
             }
-        }, 2000);
+        }, 1000);
     }
 
     @Override
