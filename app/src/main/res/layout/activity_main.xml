@@ -1,8 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
+                xmlns:fab="http://schemas.android.com/apk/res-auto"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:orientation="vertical"
                 tools:context=".MainActivity">
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        xmlns:sothree="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/sliding_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        sothree:umanoPanelHeight="68dp"
+        sothree:umanoShadowHeight="4dp"
+        sothree:umanoParalaxOffset="500dp"
+        sothree:umanoFadeColor="@android:color/transparent"
+        sothree:umanoDragView="@+id/dragView"
+        sothree:umanoOverlay="true"
+        sothree:umanoInitialState="hidden">
+        <!-- MAIN CONTENT -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/map_container">
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:orientation="vertical"
+                android:gravity="bottom">
+                <com.melnykov.fab.FloatingActionButton
+                    android:id="@+id/loc_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginBottom="75dp"
+                    android:layout_gravity="right|bottom"
+                    android:src="@mipmap/gps_inactive"
+                    fab:fab_colorNormal="@color/my_material_green"
+                    fab:fab_colorPressed="@color/my_material_light_green"
+                    fab:fab_colorRipple="@color/ripple_material_dark" />
+            </LinearLayout>
+        </RelativeLayout>
+        <!-- SLIDING LAYOUT -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/white"
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="false"
+            android:id="@+id/dragView">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="68dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/title_slider"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:textSize="24sp"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:text="Title!"/>
+                <com.melnykov.fab.FloatingActionButton
+                    android:id="@+id/btn_slider"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    android:layout_gravity="center"
+                    android:src="@mipmap/add_point"
+                    fab:fab_colorNormal="@color/my_material_green"
+                    fab:fab_colorPressed="@color/my_material_light_green"
+                    fab:fab_colorRipple="@android:color/white"
+                    fab:fab_shadow="false"/>
+            </LinearLayout>
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="10dp"
+                android:id="@+id/img_slider"
+                android:src="@mipmap/loading_arrow">
+            </ImageView>
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:layout_marginRight="10dp"
+                    android:id="@+id/info_text_a"
+                    android:textSize="12sp"
+                    android:text="info text 1"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:layout_marginRight="10dp"
+                    android:id="@+id/info_text_b"
+                    android:textSize="12sp"
+                    android:text="info text 2"/>
+                </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="18sp"
+                android:gravity="center"
+                android:id="@+id/body_text"
+                android:text="Body text"/>
 
+        </LinearLayout>
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 </RelativeLayout>
