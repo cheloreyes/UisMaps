@@ -31,7 +31,7 @@ public class Notify implements UISMapsSettingsValues{
      */
     public void newNotification(String sms) {
         notification = sms;
-        if(iPreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
+        if(!iPreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
             visualNotification();
         }
         else{

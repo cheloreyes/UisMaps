@@ -1,5 +1,7 @@
 package com.proyecto.uis.uismaps;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -12,11 +14,23 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.SearchView;
+import android.widget.TextView;
+
+import com.melnykov.fab.FloatingActionButton;
+import com.proyecto.uis.uismaps.finder.Finder;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 import java.util.ArrayList;
 
 
 public class MainActivity extends ActionBarActivity implements UISMapsSettingsValues{
+
+    private static final String TAG = "MainUISMapsActivity";
 
     private boolean doubleBackToExitPressedOnce;
     private VoiceManager iVoiceManager;
@@ -24,6 +38,10 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
     private MapView miMapa;
     private SharedPreferences preferences;
     private ContentManager miContent;
+
+    private SlidingUpPanelLayout mLayout;
+    private Finder iFinder;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,13 +59,13 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         iVoiceManager = new VoiceManager(this);
         iVoiceManager.setMapView(miMapa);
 
-        miContent = new ContentManager(this, miMapa, iVoiceManager);
-        setContentView(miContent.getContainer());
 
-        miMapa.setContentManager(miContent);
+
+
+        init_Componets();
         miMapa.setVoiceManager(iVoiceManager);
+        miMapa.setContentManager(miContent);
         miContent.setCallingActivity(this);
-
         }
 
     @Override
@@ -95,7 +113,8 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
     @Override
     protected void onResume() {
         super.onResume();
-        miContent.setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
+        //miContent.setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
+        miContent.checkViews();
 
     }
 
@@ -108,13 +127,13 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
     @Override
     public void onBackPressed() {
         miMapa.removeMapObjects();
-        miContent.showFloatingMenu(false);
-        miContent.navInfo_destroy();
+        miContent.restoreContent();
         iVoiceManager.stop();
         if (doubleBackToExitPressedOnce) {
             super.onBackPressed();
             return;
         }
+
 
         doubleBackToExitPressedOnce = true;
         //Toast.makeText(this, this.getString(R.string.confirm_exit), Toast.LENGTH_SHORT).show();
@@ -138,5 +157,43 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+    private void init_Componets() {
+        mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        mLayout.setAnchorPoint(0.35f);
+        //mLayout.setPanelState(SlidingUpPanelLayout.PanelState.ANCHORED);
+        mLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+            @Override
+            public void onPanelSlide(View panel, float slideOffset) {
+            }
+            @Override
+            public void onPanelExpanded(View panel) {
+            }
+            @Override
+            public void onPanelCollapsed(View panel) {
+            }
+            @Override
+            public void onPanelAnchored(View panel) {
+            }
+            @Override
+            public void onPanelHidden(View panel) {
+            }
+        });
+
+        FrameLayout mapContainer = (FrameLayout) findViewById(R.id.map_container);
+        mapContainer.addView(miMapa);
+
+        FloatingActionButton btnLocation = (FloatingActionButton) findViewById(R.id.loc_btn);
+        FloatingActionButton btnSlider= (FloatingActionButton) findViewById(R.id.btn_slider);
+        ImageView imgSlider = (ImageView) findViewById(R.id.img_slider);
+        TextView titleText = (TextView)findViewById(R.id.title_slider);
+        TextView infoTextA = (TextView) findViewById(R.id.info_text_a);
+        TextView infoTextB = (TextView) findViewById(R.id.info_text_b);
+        TextView bodyText= (TextView) findViewById(R.id.body_text);
+        SearchView searchView = (SearchView) findViewById(R.id.action_search);
+
+        miContent = new ContentManager(this, miMapa, iVoiceManager, btnLocation, btnSlider,
+                                              imgSlider, titleText, infoTextA, infoTextB, bodyText, mLayout, mapContainer);
+        //iFinder = new Finder(this, searchView, miMapa);
     }
 }

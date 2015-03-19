@@ -4,27 +4,25 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
+import android.media.Image;
 import android.media.MediaRecorder;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
 import com.proyecto.uis.uismaps.finder.Finder;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 /**
  * ContentManager maneja los componentes de la UI de la app, habilitando y deshabilitando la interfaz adaptada para
@@ -39,38 +37,32 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     public static final int DPI_NEXUS5 = 480;
     private static final int MATCH_PARENT = RelativeLayout.LayoutParams.MATCH_PARENT;
     private static final int WRAP_CONTENT = RelativeLayout.LayoutParams.WRAP_CONTENT;
-    private static final String TAG = "ContentManager";
-
     // **********************
     // Fields
     // **********************
-    private RelativeLayout.LayoutParams buttonsParams;
     private Activity callerActivity;
-    private RelativeLayout containerLayout;
-    private FloatingActionButton findMeButton;
-    private Handler handler;
-    private LinearLayout hideButtonsLayout;
-    private RelativeLayout.LayoutParams infoParams;
-    private TextView infoText;
-    private boolean isInflater = false;
-    private long lastTapTime;
-    private RelativeLayout.LayoutParams mapViewParams;
+
+    private static final String TAG = "ContentManager";
+    private final SlidingUpPanelLayout iPanel;
+    private final FrameLayout iMapContainer;
+    private final FloatingActionButton iLocationBtn;
+    private final FloatingActionButton iRoutesBtn;
+    private final ImageView iImgInfo;
+    private final TextView iInfoTextA;
+    private final TextView iTileTxt;
+    private final TextView iInfoTextB;
+    private final TextView iBodyText;
+
+    private VoiceManager iVoiceManager;
+    private boolean isRouting = false;
+    private boolean isLocated = false;
+    private boolean isFirstPoint = true;
     private Context miContext;
     private MapView miMapview;
-    private View navigationView;
-    private int numOfTaps;
-    private PopupWindow popupWindow;
-    private FloatingActionButton routeEndButton;
-    private FloatingActionButton routeStartButton;
-    private RelativeLayout.LayoutParams searchParams;
-    private SearchView searchView;
-    private VoiceManager iVoiceManager;
     private SharedPreferences preferences;
+    private SearchView searchView;
     private long touchTime;
-    private TextView turnTypeMsg;
-    private TextView navInfoPlusText;
-    private TextView navInfoText;
-    private ImageView turnTypeImg;
+
 
 
     // **********************
@@ -81,142 +73,47 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
      * @param context Context de la vista en que se crea el objeto.
      * @param mapView Objeto de la clase @MapView ya instanceado antes.
      */
-    public ContentManager(Context context, MapView mapView, VoiceManager voiceManager) {
+    public ContentManager(Context context, MapView mapView, VoiceManager voiceManager, FloatingActionButton locationBtn, FloatingActionButton routesBtn, ImageView imgInfo
+    , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer) {
         super(context);
         miContext = context;
         iVoiceManager = voiceManager;
-        containerLayout = new RelativeLayout(miContext);
+        iPanel = panel;
+        iLocationBtn = locationBtn;
+        iRoutesBtn = routesBtn;
+        iImgInfo = imgInfo;
+        iTileTxt = title;
+        iInfoTextA = infoTextA;
+        iInfoTextB = infoTextB;
+        iBodyText = bodyText;
+        iMapContainer = mapContainer;
+
         miMapview = mapView;
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
-        textViewManager();
-        textFieldManager();
-        buttonManager();
-        layoutsManager();
-        setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
+        iPanel.setPanelState(PanelState.HIDDEN);
+        iLocationBtn.setOnClickListener(this);
+        iRoutesBtn.setOnClickListener(this);
     }
+
 
     // **********************
     // Methods
     // **********************
-    /**
-     * Crea y configura los @TextView necesarios para la UI.
-     */
-    private void textViewManager() {
-        infoText = new TextView(miContext);
-        infoText.setText(" ");
-    }
 
-    /**
-     * Crea y configura los @Button necesarios para la UI.
-     */
-    private void buttonManager() {
-        findMeButton = new FloatingActionButton(miContext);
-        routeStartButton = new FloatingActionButton(miContext);
-        routeEndButton = new FloatingActionButton(miContext);
-
-        findMeButton.setColorNormal(getResources().getColor(R.color.my_material_green));
-        findMeButton.setColorPressed(getResources().getColor(R.color.my_material_light_green));
-        findMeButton.setImageResource(android.R.drawable.ic_menu_mylocation);
-        findMeButton.setOnClickListener(this);
-        findMeButton.setId(FIND_ME_BUTTON_ID);
-        findMeButton.setShadow(false);
-
-        routeStartButton.setColorNormal(getResources().getColor(R.color.my_material_green));
-        routeStartButton.setColorPressed(getResources().getColor(R.color.my_material_light_green));
-        routeStartButton.setImageResource(android.R.drawable.ic_dialog_map);
-        routeStartButton.setOnClickListener(this);
-        routeStartButton.setId(START_ROUTE_BUTTON_ID);
-        routeStartButton.setVisibility(View.INVISIBLE);
-        routeStartButton.setShadow(false);
-
-        routeEndButton.setColorNormal(getResources().getColor(R.color.my_material_green));
-        routeEndButton.setColorPressed(getResources().getColor(R.color.my_material_light_green));
-        routeEndButton.setImageResource(android.R.drawable.ic_menu_send);
-        routeEndButton.setOnClickListener(this);
-        routeEndButton.setId(END_ROUTE_BUTTON_ID);
-        routeEndButton.setVisibility(View.INVISIBLE);
-        routeEndButton.setShadow(false);
-
-    }
-
-    /**
-     * Crea y configura los @TextField necesarios para la UI.
-     */
-    private void textFieldManager() {
-        searchView = new SearchView(miContext);
-        searchView.setIconifiedByDefault(true);
-        searchView.setId(106);
-        searchView.setBackgroundColor(getResources().getColor(R.color.my_material_green));
-        Finder finder = new Finder(miContext, searchView, miMapview);
-
-    }
-
-    /**
-     * Crea y configura los parámetros a los layouts para ubicar los componentes de la UI.
-     */
-    private void layoutsManager() {
-        hideButtonsLayout = new LinearLayout(miContext);
-
-        mapViewParams = new RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
-        searchParams = new RelativeLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
-        buttonsParams = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-        infoParams = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-
-        searchParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-        searchParams.addRule(RelativeLayout.CENTER_VERTICAL);
-        searchParams.setMargins(fixPixel(20), fixPixel(10), fixPixel(20), fixPixel(0));
-
-        //hideButtonsLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        hideButtonsLayout.setGravity(Gravity.RIGHT);
-        hideButtonsLayout.setGravity(Gravity.BOTTOM);
-        hideButtonsLayout.setOrientation(LinearLayout.VERTICAL);
-
-        buttonsParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-        buttonsParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-        buttonsParams.setMargins(fixPixel(5), fixPixel(5), fixPixel(10), fixPixel(20));
-
-        infoParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-        infoParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-        infoParams.setMargins(fixPixel(10), fixPixel(0), fixPixel(0), fixPixel(10));
-    }
-
-    /**
-     * Este método corrige el número de pixeles según la densidad de pixeles en el dispositivo.
-     * Ya que esto varía de un dispositivo a otro.
-     * @param pixels Número de pixeles deseado
-     * @return
-     */
-    private int fixPixel(int pixels)
-    {
-        int currentDpi = getResources().getDisplayMetrics().densityDpi;
-        int x = (currentDpi * pixels) / DPI_NEXUS5; //Se toma el DPI del nexus 5 porque es el dispositivo con que realiza el desarrollo.
-        return x;
-
-    }
-
-    /**
-     * Adiciona los componentes creados para la UI al layout que los contiene @containerLayout.
-     * @param isSimple true: Si se quiere la interfaz sencilla para ser usada mediante comandos de voz, entonces no adiciona los botones a la UI.
-     *                 false: Si no se quieren comandos de voz, se presenta la UI completa.
-     */
-    public void setMyContent(boolean isSimple) {
-        hideButtonsLayout.removeAllViews();
-        containerLayout.removeAllViews();
-
-        hideButtonsLayout.addView(routeEndButton);
-        hideButtonsLayout.addView(routeStartButton);
-        hideButtonsLayout.addView(findMeButton);
-
-        containerLayout.addView(miMapview, mapViewParams);
-
-        if (!isSimple) {
-            containerLayout.addView(searchView, searchParams);
-            containerLayout.addView(hideButtonsLayout, buttonsParams);
-            containerLayout.addView(infoText, infoParams);
-            containerLayout.refreshDrawableState();
-        }
-        else {
+    public void checkViews(){
+        if(preferences.getBoolean(EYESIGHT_ASSISTANT,false)){
+            if (iPanel.getPanelState() != PanelState.HIDDEN) {
+                iPanel.setPanelState(PanelState.HIDDEN);
+            }
+            iPanel.setTouchEnabled(false);
+            iLocationBtn.setEnabled(false);
+            iLocationBtn.setVisibility(INVISIBLE);
             initBlindCapabilities();
+        }
+        else{
+            iPanel.setTouchEnabled(true);
+            iLocationBtn.setEnabled(true);
+            iLocationBtn.setVisibility(VISIBLE);
         }
     }
 
@@ -224,41 +121,8 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
      * Establece al layout contenedor a registrar los eventos tactiles.
      */
     private void initBlindCapabilities() {
-        containerLayout.setOnTouchListener(this);
-        numOfTaps = 0;
-        lastTapTime = 0;
+        iMapContainer.setOnTouchListener(this);
         touchTime = 0;
-    }
-
-    /**
-     * Llamado para habilitar o deshabilitar los botones de @routeStartButton y @routeEndButton cuando se selecciona un punto del mapa, para habilitar la funcion de rutas.
-     * @param showIt indica si habilitar o deshabilitar los botones.
-     */
-    public void showFloatingMenu(boolean showIt) {
-        if (showIt) {
-            routeStartButton.setVisibility(View.VISIBLE);
-            routeEndButton.setVisibility(View.VISIBLE);
-        }
-        else {
-            routeStartButton.setVisibility(View.INVISIBLE);
-            routeEndButton.setVisibility(View.INVISIBLE);
-        }
-    }
-
-    public void setInfoText(String text) {
-        infoText.setText(text);
-    }
-
-    public ViewGroup getContainer() {
-        return containerLayout;
-    }
-
-    /**
-     * Establece el @Activity donde se quiere iniciar el reconocimiento de voz, se prefiere usar el principal.
-     * @param activity actividad donde se espera el resultado
-     */
-    public void setCallingActivity(Activity activity) {
-        callerActivity = activity;
     }
 
     /**
@@ -274,65 +138,47 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
 
         callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
     }
-    public void navInfo_init() {
-        LayoutInflater inflater = (LayoutInflater) miContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        navigationView = inflater.inflate(R.layout.navigation, null);
-        popupWindow = new PopupWindow(this, 1080, 600);
 
-        navigationView.setBackgroundColor(Color.WHITE);
-        navigationView.setAlpha(0.85f);
-        popupWindow.setContentView(navigationView);
-        popupWindow.setFocusable(false);
-        popupWindow.setTouchable(false);
-        popupWindow.showAtLocation(this, Gravity.TOP, 0, 240); //para la pantalla del n5
-        containerLayout.removeView(searchView);
+    public void setPanelContent(String title, String textInfoA, String textInfoB, String bodyText, Image img) {
 
-        turnTypeMsg = (TextView) popupWindow.getContentView().findViewById(R.id.turnTypeMessage);
-        navInfoText = (TextView) popupWindow.getContentView().findViewById(R.id.infoTextView);
-        navInfoPlusText = (TextView) popupWindow.getContentView().findViewById(R.id.plusInfoTextView);
-        turnTypeImg = (ImageView) popupWindow.getContentView().findViewById(R.id.turnTypeImage);
-        isInflater = true;
     }
-    public void navInfo_destroy() {
-        if(isInflater) {
-            popupWindow.dismiss();
-            setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
+    public void setPanelContent(String title) {
+        iPanel.setPanelState(PanelState.COLLAPSED);
+        if(title != null) iTileTxt.setText(title);
+        iPanel.setTouchEnabled(false);
+    }
+    public void restoreContent(){
+        isLocated = false;
+        isFirstPoint = true;
+        isRouting = false;
+        changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
+        if (iPanel != null && iPanel.getPanelState() != PanelState.HIDDEN) {
+            iPanel.setPanelState(PanelState.HIDDEN);
         }
     }
-    public boolean isNavigationView() {
-        return isInflater;
-    }
-    public void setTurnTypeMsg(String msg) {
-        turnTypeMsg.setText(msg);
-    }
-    public void setNavInfoText(String txt) {
-        if(navInfoText != null)navInfoText.setText(txt);
-    }
-    public void setNavInfoPlusText(String txt) {
-        if(navInfoPlusText != null)navInfoPlusText.setText(txt);
-    }
-    public void setTurnTypeImg (int turnType) {
-        switch (turnType) {
-            case 0:
-                turnTypeImg.setImageResource(R.mipmap.loading_arrow);
-                break;
-            case 1:
-                turnTypeImg.setImageResource(R.mipmap.ahead_arrow);
-                break;
-            case 2:
-                turnTypeImg.setImageResource(R.mipmap.right_arrow);
-                break;
-            case 3:
-                turnTypeImg.setImageResource(R.mipmap.left_arrow);
-                break;
-            case 4:
-                turnTypeImg.setImageResource(R.mipmap.soft_right_arrow);
-                break;
-            case 5:
-                turnTypeImg.setImageResource(R.mipmap.soft_left_arrow);
 
+    /**
+     * Establece el @Activity donde se quiere iniciar el reconocimiento de voz, se prefiere usar el principal.
+     * @param activity actividad donde se espera el resultado
+     */
+    public void setCallingActivity(Activity activity) {
+        callerActivity = activity;
+    }
+    private void changeRouteBtnIcon(boolean isLocate, boolean isFirstPoint, boolean isRouting) {
+        if(isRouting) {
+            iRoutesBtn.setImageResource(R.mipmap.cancel_route);
+        }
+        else{
+
+            if(isLocate || !isFirstPoint & !isRouting) {
+                iRoutesBtn.setImageResource(R.mipmap.route_point);
+            }
+            else{
+                iRoutesBtn.setImageResource(R.mipmap.add_point);
+            }
         }
     }
+
 
     // **********************
     // Methods from SuperClass
@@ -345,18 +191,37 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case FIND_ME_BUTTON_ID:
+            case R.id.loc_btn:
                 miMapview.locateMe();
+                if(isFirstPoint || !isRouting) {
                 miMapview.setRouteStart();
-                //startVoiceRecognition();
+                }
+                isLocated = miMapview.isHasAccurancy();
+                changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
                 break;
-            case START_ROUTE_BUTTON_ID:
-                miMapview.setRouteStart();
+
+            case R.id.btn_slider:
+                if(isFirstPoint){
+                    miMapview.setRouteStart();
+                    isFirstPoint = false;
+                    isLocated = miMapview.isHasAccurancy();
+                    changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
+
+                }else{
+                    if(isLocated || !isFirstPoint && !isRouting){
+                        miMapview.setRouteEnd();
+                        isRouting = miMapview.isDisplayingRoute();
+                        changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
+                    }
+                    else{
+                        miMapview.removeMapObjects();
+                        restoreContent();
+                    }
+                }
+
                 //navInfo_init();
                 break;
-            case END_ROUTE_BUTTON_ID:
-                miMapview.setRouteEnd();
-                break;
+
 
         }
     }

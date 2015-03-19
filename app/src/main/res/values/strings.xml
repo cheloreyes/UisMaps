@@ -37,4 +37,7 @@
     <string name="new_route">Calculando nueva ruta.</string>
     <string name="calculating">Calculando...</string>
     <string name="locate_notify">Usted está en:</string>
+    <string name="action_search">Buscar lugar.</string>
+    <string name="asStartPoint">marcado como punto de inicio.</string>
+    <string name="asEndPoint">marcado como destino.</string>
 </resources>

@@ -1,10 +1,13 @@
 package com.proyecto.uis.uismaps.finder;
 
+import android.app.SearchManager;
 import android.content.Context;
 import android.database.MatrixCursor;
 import android.widget.SearchView;
+
 import com.cartotype.Framework;
 import com.proyecto.uis.uismaps.MapView;
+
 import java.util.ArrayList;
 
 public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSuggestionListener{
