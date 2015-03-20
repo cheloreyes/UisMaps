@@ -34,6 +34,9 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     // **********************
     // Constants
     // **********************
+    private static final int OUT_OF_SERVICE = 0 ;
+    private static final int TEMPORARILY_UNAVAILABLE = 1;
+    private static final int AVALIABLE = 2;
     public static final int DPI_NEXUS5 = 480;
     private static final int MATCH_PARENT = RelativeLayout.LayoutParams.MATCH_PARENT;
     private static final int WRAP_CONTENT = RelativeLayout.LayoutParams.WRAP_CONTENT;
@@ -139,30 +142,27 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
     }
 
-    public void setPanelContent(String title, String textInfoA, String textInfoB, String bodyText, Image img) {
-
+    public void setPanelContent(String title, String textInfoA, String textInfoB, String bodyText, int img) {
+        iPanel.setPanelState(PanelState.ANCHORED);
+        iPanel.setTouchEnabled(false);
+        if(title != null) iTileTxt.setText(title);
+        if(textInfoA != null) iInfoTextA.setText(textInfoA);
+        if(textInfoB != null) iInfoTextB.setText(textInfoB);
+        iImgInfo.setImageResource(img);
     }
     public void setPanelContent(String title) {
         iPanel.setPanelState(PanelState.COLLAPSED);
-        if(title != null) iTileTxt.setText(title);
-        iPanel.setTouchEnabled(false);
-    }
-    public void restoreContent(){
-        isLocated = false;
-        isFirstPoint = true;
-        isRouting = false;
-        changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
-        if (iPanel != null && iPanel.getPanelState() != PanelState.HIDDEN) {
-            iPanel.setPanelState(PanelState.HIDDEN);
+        if(title != null) {
+            //Log.v(TAG, "Title Text size: "+iTileTxt.getTextSize());
+            if(title.length() > 25) {
+                iTileTxt.setTextSize(18.0f);
+            }
+            else {
+                iTileTxt.setTextSize(24.0f);
+            }
+            iTileTxt.setText(title);
         }
-    }
-
-    /**
-     * Establece el @Activity donde se quiere iniciar el reconocimiento de voz, se prefiere usar el principal.
-     * @param activity actividad donde se espera el resultado
-     */
-    public void setCallingActivity(Activity activity) {
-        callerActivity = activity;
+        iPanel.setTouchEnabled(false);
     }
     private void changeRouteBtnIcon(boolean isLocate, boolean isFirstPoint, boolean isRouting) {
         if(isRouting) {
@@ -179,6 +179,38 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         }
     }
 
+    public void restoreContent(){
+        isLocated = false;
+        isFirstPoint = true;
+        isRouting = false;
+        changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
+        if (iPanel != null && iPanel.getPanelState() != PanelState.HIDDEN) {
+            iPanel.setPanelState(PanelState.HIDDEN);
+        }
+    }
+    public void setStatusLocationBtn(int status){
+        int icon = 0;
+        switch (status){
+            case OUT_OF_SERVICE:
+                icon = R.mipmap.gps_inactive;
+                break;
+            case TEMPORARILY_UNAVAILABLE:
+                icon = R.mipmap.gps_inactive;
+                break;
+            case AVALIABLE:
+                icon = R.mipmap.gps_active;
+                break;
+        }
+        iLocationBtn.setImageResource(icon);
+    }
+    /**
+     * Establece el @Activity donde se quiere iniciar el reconocimiento de voz, se prefiere usar el principal.
+     * @param activity actividad donde se espera el resultado
+     */
+    public void setCallingActivity(Activity activity) {
+        callerActivity = activity;
+    }
+
 
     // **********************
     // Methods from SuperClass
@@ -193,11 +225,11 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         switch (v.getId()) {
             case R.id.loc_btn:
                 miMapview.locateMe();
-                if(isFirstPoint || !isRouting) {
-                miMapview.setRouteStart();
-                }
                 isLocated = miMapview.isHasAccurancy();
-                changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
+                if(isFirstPoint && !isRouting && isLocated) {
+                    miMapview.setRouteStart();
+                    changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
+                }
                 break;
 
             case R.id.btn_slider:

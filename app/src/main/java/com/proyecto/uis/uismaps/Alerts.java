@@ -31,7 +31,7 @@ public class Alerts {
     }
     public ProgressDialog progressDialog(Context contexto) {
         ProgressDialog progressDialog = new ProgressDialog(contexto);
-        progressDialog.setTitle(contexto.getString(R.string.conecting));
+        progressDialog.setTitle(contexto.getString(R.string.gps_device_on));
         progressDialog.setMessage(contexto.getString(R.string.conecting));
         return progressDialog;
     }

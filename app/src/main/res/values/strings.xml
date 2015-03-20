@@ -8,7 +8,7 @@
     <string name="waiting_GPS">Esperando ubicación GPS.</string>
     <string name="navigation_error">No se pudo iniciar la navegación.</string>
     <string name="gps_device_on">Iniciando servicio GPS, ésto puede tomar un tiempo.</string>
-    <string name="conecting">Conectando</string>
+    <string name="conecting">Conectando...</string>
     <string name="please_wait">Por favor espera</string>
     <string name="cancel">Cancelar</string>
     <string name="location_unable">Servicios de ubicación inhabilitados</string>
@@ -40,4 +40,5 @@
     <string name="action_search">Buscar lugar.</string>
     <string name="asStartPoint">marcado como punto de inicio.</string>
     <string name="asEndPoint">marcado como destino.</string>
+    <string name="navigation_title">Destino:</string>
 </resources>
