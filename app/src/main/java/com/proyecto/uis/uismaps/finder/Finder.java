@@ -1,9 +1,8 @@
 package com.proyecto.uis.uismaps.finder;
 
-import android.app.SearchManager;
 import android.content.Context;
 import android.database.MatrixCursor;
-import android.widget.SearchView;
+import android.support.v7.widget.SearchView;
 
 import com.cartotype.Framework;
 import com.proyecto.uis.uismaps.MapView;

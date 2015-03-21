@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.Image;
 import android.media.MediaRecorder;
+import android.os.Handler;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.util.Log;
@@ -34,18 +36,18 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     // **********************
     // Constants
     // **********************
+    public static final int START_POINT_BTN = 207;
+    public static final int END_POINT_BTN = 17;
+    public static final int CANCEL_BTN = 27;
     private static final int OUT_OF_SERVICE = 0 ;
     private static final int TEMPORARILY_UNAVAILABLE = 1;
     private static final int AVALIABLE = 2;
     public static final int DPI_NEXUS5 = 480;
-    private static final int MATCH_PARENT = RelativeLayout.LayoutParams.MATCH_PARENT;
-    private static final int WRAP_CONTENT = RelativeLayout.LayoutParams.WRAP_CONTENT;
+    private static final String TAG = "ContentManager";
     // **********************
     // Fields
     // **********************
-    private Activity callerActivity;
 
-    private static final String TAG = "ContentManager";
     private final SlidingUpPanelLayout iPanel;
     private final FrameLayout iMapContainer;
     private final FloatingActionButton iLocationBtn;
@@ -55,7 +57,10 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     private final TextView iTileTxt;
     private final TextView iInfoTextB;
     private final TextView iBodyText;
+    private final Vibrator iVibrator;
+    private int btn_switch = START_POINT_BTN;
 
+    private Activity callerActivity;
     private VoiceManager iVoiceManager;
     private boolean isRouting = false;
     private boolean isLocated = false;
@@ -89,13 +94,15 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         iInfoTextA = infoTextA;
         iInfoTextB = infoTextB;
         iBodyText = bodyText;
-        iMapContainer = mapContainer;
 
+        iMapContainer = mapContainer;
         miMapview = mapView;
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
         iPanel.setPanelState(PanelState.HIDDEN);
         iLocationBtn.setOnClickListener(this);
         iRoutesBtn.setOnClickListener(this);
+
+        iVibrator = (Vibrator) miContext.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
 
@@ -164,26 +171,23 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         }
         iPanel.setTouchEnabled(false);
     }
-    private void changeRouteBtnIcon(boolean isLocate, boolean isFirstPoint, boolean isRouting) {
-        if(isRouting) {
-            iRoutesBtn.setImageResource(R.mipmap.cancel_route);
-        }
-        else{
-
-            if(isLocate || !isFirstPoint & !isRouting) {
-                iRoutesBtn.setImageResource(R.mipmap.route_point);
-            }
-            else{
+    private void changeRouteBtnIcon() {
+        switch(btn_switch) {
+            case START_POINT_BTN:
                 iRoutesBtn.setImageResource(R.mipmap.add_point);
-            }
+                break;
+            case END_POINT_BTN:
+                iRoutesBtn.setImageResource(R.mipmap.route_point);
+                break;
+            case CANCEL_BTN:
+                iRoutesBtn.setImageResource(R.mipmap.cancel_route);
+                break;
         }
     }
 
     public void restoreContent(){
-        isLocated = false;
-        isFirstPoint = true;
-        isRouting = false;
-        changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
+        btn_switch = START_POINT_BTN;
+        changeRouteBtnIcon();
         if (iPanel != null && iPanel.getPanelState() != PanelState.HIDDEN) {
             iPanel.setPanelState(PanelState.HIDDEN);
         }
@@ -225,36 +229,35 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         switch (v.getId()) {
             case R.id.loc_btn:
                 miMapview.locateMe();
-                isLocated = miMapview.isHasAccurancy();
-                if(isFirstPoint && !isRouting && isLocated) {
+                if(miMapview.isHasAccurancy()) {
                     miMapview.setRouteStart();
-                    changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
+                    btn_switch = END_POINT_BTN;
+                    changeRouteBtnIcon();
                 }
                 break;
 
             case R.id.btn_slider:
-                if(isFirstPoint){
-                    miMapview.setRouteStart();
-                    isFirstPoint = false;
-                    isLocated = miMapview.isHasAccurancy();
-                    changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
-
-                }else{
-                    if(isLocated || !isFirstPoint && !isRouting){
-                        miMapview.setRouteEnd();
-                        isRouting = miMapview.isDisplayingRoute();
-                        changeRouteBtnIcon(isLocated, isFirstPoint, isRouting);
-                    }
-                    else{
-                        miMapview.removeMapObjects();
-                        restoreContent();
-                    }
+                if(miMapview.isHasAccurancy() || miMapview.isDisplayingRoute()|| miMapview.isNavigating()){
+                    btn_switch = CANCEL_BTN;
                 }
-
-                //navInfo_init();
+               switch(btn_switch) {
+                   case START_POINT_BTN:
+                       miMapview.setRouteStart();
+                       btn_switch = END_POINT_BTN;
+                       Log.v(TAG,"switch: "+btn_switch);
+                       changeRouteBtnIcon();
+                       break;
+                   case END_POINT_BTN:
+                       miMapview.setRouteEnd();
+                       btn_switch = CANCEL_BTN;
+                       changeRouteBtnIcon();
+                       break;
+                   case CANCEL_BTN:
+                       miMapview.removeMapObjects();
+                       restoreContent();
+                       break;
+               }
                 break;
-
-
         }
     }
 
@@ -269,11 +272,19 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 touchTime = System.currentTimeMillis();
+                new Handler().postDelayed(new Runnable() {
+
+                    @Override
+                    public void run() {
+                    }
+                }, 500);
+                iVibrator.vibrate(50);
                 return true;
 
             case MotionEvent.ACTION_UP:
                 if((System.currentTimeMillis() - touchTime) > ViewConfiguration.getLongPressTimeout()) {
                     Log.v(TAG, "Long press.");
+                    iVibrator.vibrate(200);
                     iVoiceManager.textToSpeech(miContext.getString(R.string.start_voice_recognition));
                     startVoiceRecognition();
                     return false;

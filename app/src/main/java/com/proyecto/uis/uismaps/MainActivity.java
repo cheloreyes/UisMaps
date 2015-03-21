@@ -1,7 +1,5 @@
 package com.proyecto.uis.uismaps;
 
-import android.app.SearchManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -11,19 +9,18 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.SearchView;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
 import com.proyecto.uis.uismaps.finder.Finder;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 import java.util.ArrayList;
 
@@ -41,6 +38,7 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
 
     private SlidingUpPanelLayout mLayout;
     private Finder iFinder;
+    private SearchView searchView;
 
 
     @Override
@@ -72,6 +70,8 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        iFinder = new Finder(this, searchView, miMapa);
         return true;
     }
 
@@ -89,39 +89,6 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        //Guarda el estado actual del mapa
-        miMapa.saveState();
-        miMapa.toggleGPS(false);
-        iVoiceManager.stop();
-        //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
-    }
-
-    /**
-     * Dispatch onResume() to fragments.  Note that for better inter-operation
-     * with older versions of the platform, at the point of this call the
-     * fragments attached to the activity are <em>not</em> resumed.  This means
-     * that in some cases the previous state may still be saved, not allowing
-     * fragment transactions that modify the state.  To correctly interact
-     * with fragments in their proper state, you should instead override
-     * {@link #onResumeFragments()}.
-     */
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //miContent.setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
-        miContent.checkViews();
-
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        iVoiceManager.shutdown();
     }
 
     @Override
@@ -148,6 +115,39 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        //Guarda el estado actual del mapa
+        miMapa.saveState();
+        miMapa.toggleGPS(false);
+        iVoiceManager.stop();
+        //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        iVoiceManager.shutdown();
+    }
+
+    /**
+     * Dispatch onResume() to fragments.  Note that for better inter-operation
+     * with older versions of the platform, at the point of this call the
+     * fragments attached to the activity are <em>not</em> resumed.  This means
+     * that in some cases the previous state may still be saved, not allowing
+     * fragment transactions that modify the state.  To correctly interact
+     * with fragments in their proper state, you should instead override
+     * {@link #onResumeFragments()}.
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //miContent.setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
+        miContent.checkViews();
+
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == MediaRecorder.AudioSource.VOICE_RECOGNITION && resultCode == RESULT_OK) {
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
@@ -158,6 +158,7 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
+
     private void init_Componets() {
         mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         mLayout.setAnchorPoint(0.35f);
@@ -190,10 +191,9 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         TextView infoTextA = (TextView) findViewById(R.id.info_text_a);
         TextView infoTextB = (TextView) findViewById(R.id.info_text_b);
         TextView bodyText= (TextView) findViewById(R.id.body_text);
-        SearchView searchView = (SearchView) findViewById(R.id.action_search);
 
         miContent = new ContentManager(this, miMapa, iVoiceManager, btnLocation, btnSlider,
                                               imgSlider, titleText, infoTextA, infoTextB, bodyText, mLayout, mapContainer);
-        //iFinder = new Finder(this, searchView, miMapa);
+
     }
 }
