@@ -285,13 +285,13 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
                 if((System.currentTimeMillis() - touchTime) > ViewConfiguration.getLongPressTimeout()) {
                     Log.v(TAG, "Long press.");
                     iVibrator.vibrate(200);
-                    iVoiceManager.textToSpeech(miContext.getString(R.string.start_voice_recognition));
+                    //iVoiceManager.textToSpeech(miContext.getString(R.string.start_voice_recognition));
                     startVoiceRecognition();
                     return false;
                 }
                 else{
                     Log.v(TAG, "Single press.");
-                    miMapview.locateMe();
+                    //miMapview.locateMe();
                     return false;
                 }
         }

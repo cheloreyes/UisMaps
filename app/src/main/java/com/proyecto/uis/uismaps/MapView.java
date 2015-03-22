@@ -438,13 +438,15 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         //getNearbyPlaces(interestingPointLong, interestingPointLat);
         //notifyMessage(getNearbyPlaces(interestingPointLong, interestingPointLat));
         //notifyMessage(aLongitude +"," + aLatitude);
-        neabyPoint = getNearbyPlaces(interestingPointLong, interestingPointLat);
-        currentPlace = neabyPoint.get(0);
-        if(lastPlace == null) lastPlace= currentPlace;
-        Log.v(TAG,"Imprime: "+neabyPoint.get(neabyPoint.size()-1).getLabel());
-        Log.v(TAG,"Imprime: "+neabyPoint.get(0).getLabel());
-        Log.v(TAG,"tamaño: " + neabyPoint.size());
-        miContent.setPanelContent(neabyPoint.get(0).getLabel());
+        if(!UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
+            neabyPoint = getNearbyPlaces(interestingPointLong, interestingPointLat);
+            currentPlace = neabyPoint.get(0);
+            if(lastPlace == null) lastPlace= currentPlace;
+            Log.v(TAG,"Imprime: "+neabyPoint.get(neabyPoint.size()-1).getLabel());
+            Log.v(TAG,"Imprime: "+neabyPoint.get(0).getLabel());
+            Log.v(TAG,"tamaño: " + neabyPoint.size());
+            miContent.setPanelContent(neabyPoint.get(0).getLabel());
+        }
         getMap();
         invalidate();
     }
@@ -1081,10 +1083,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             for( MapObject temp : result) {
                 center = getCenterNearby(temp);
                 Log.v(TAG, "Centro a: " +toFocus+ " en: ( "+center[0]+", "+center[1]+")");
+                setSelectedPoint(center[0], center[1]);
+                miFramework.setViewCenterLatLong(center[0], center[1]);
             }
         }
-        setSelectedPoint(center[0], center[1]);
-        miFramework.setViewCenterLatLong(center[0], center[1]);
         getMap();
         invalidate();
     }
