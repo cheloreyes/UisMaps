@@ -11,7 +11,7 @@ import android.preference.PreferenceFragment;
  * Estas preferencias se pueden recuperar usando @getDefaultSharedPreferences desde
  * este mismo paquete.
  */
-public class SettingsScreen extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener, UISMapsSettingsValues{
+public class SettingsScreen extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener, Constants {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

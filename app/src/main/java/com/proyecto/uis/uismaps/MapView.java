@@ -13,7 +13,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -42,7 +41,7 @@ import java.util.ArrayList;
  * Implementa la vista del mapa CartoType
  */
 public class MapView extends View implements View.OnTouchListener, LocationListener,
-                                                     ScaleGestureDetector.OnScaleGestureListener, UISMapsSettingsValues {
+                                                     ScaleGestureDetector.OnScaleGestureListener, Constants {
     // **********************
     // Constants
     // **********************
@@ -64,10 +63,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public static final int MIN_SCALE = 500;
     private static final int MIN_TIME = 5000;
     private static final int PRED_SCALE = 16000;
-    private static final String UIS_MAPS_FOLDER = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
-    private static final String CAMPUS_MAP = UIS_MAPS_FOLDER + "/mapa/mapa.ctm1";
-    private static final String FILE_STYLE = UIS_MAPS_FOLDER + "/estilos/osm-style.xml";
-    private static final String FILE_FONT = UIS_MAPS_FOLDER + "/fuentes/DejaVuSans.ttf";
     private static final String TAG = "MapView";
 
     // **********************

@@ -44,6 +44,12 @@
                     fab:fab_colorNormal="@color/my_material_green"
                     fab:fab_colorPressed="@color/my_material_light_green"
                     fab:fab_colorRipple="@color/ripple_material_dark" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/status_text"
+                    android:textSize="11dp"
+                    android:gravity="left|bottom"/>
             </LinearLayout>
         </RelativeLayout>
         <!-- SLIDING LAYOUT -->

@@ -25,7 +25,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import java.util.ArrayList;
 
 
-public class MainActivity extends ActionBarActivity implements UISMapsSettingsValues{
+public class MainActivity extends ActionBarActivity implements Constants {
 
     private static final String TAG = "MainUISMapsActivity";
 
@@ -56,9 +56,6 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         miMapa = new MapView(this, miDisplayMetrics.densityDpi);
         iVoiceManager = new VoiceManager(this);
         iVoiceManager.setMapView(miMapa);
-
-
-
 
         init_Componets();
         miMapa.setVoiceManager(iVoiceManager);
@@ -191,9 +188,10 @@ public class MainActivity extends ActionBarActivity implements UISMapsSettingsVa
         TextView infoTextA = (TextView) findViewById(R.id.info_text_a);
         TextView infoTextB = (TextView) findViewById(R.id.info_text_b);
         TextView bodyText= (TextView) findViewById(R.id.body_text);
+        TextView statusText = (TextView) findViewById(R.id.status_text);
 
         miContent = new ContentManager(this, miMapa, iVoiceManager, btnLocation, btnSlider,
-                                              imgSlider, titleText, infoTextA, infoTextB, bodyText, mLayout, mapContainer);
+                                              imgSlider, titleText, infoTextA, infoTextB, bodyText, mLayout, mapContainer, statusText);
 
     }
 }

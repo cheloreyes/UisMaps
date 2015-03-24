@@ -9,7 +9,7 @@ import android.widget.Toast;
  *  utilizando la sintesis de voz o notificaciones emergentes.
  * Created by cheloreyes on 18/03/15.
  */
-public class Notify implements UISMapsSettingsValues{
+public class Notify implements Constants {
     private Context iContext;
     private SharedPreferences iPreferences;
     private String notification;

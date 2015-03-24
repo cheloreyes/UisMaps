@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.Image;
 import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.Vibrator;
@@ -16,14 +15,11 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
-import com.proyecto.uis.uismaps.finder.Finder;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 /**
@@ -31,7 +27,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
  * las capacidades de voz.
  * Created by cheloreyes on 9/03/15.
  */
-public class ContentManager extends View implements UISMapsSettingsValues, View.OnClickListener, View.OnTouchListener {
+public class ContentManager extends View implements Constants, View.OnClickListener, View.OnTouchListener {
 
     // **********************
     // Constants
@@ -57,6 +53,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     private final TextView iTileTxt;
     private final TextView iInfoTextB;
     private final TextView iBodyText;
+    private final TextView iStatus;
     private final Vibrator iVibrator;
     private int btn_switch = START_POINT_BTN;
 
@@ -70,6 +67,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     private SharedPreferences preferences;
     private SearchView searchView;
     private long touchTime;
+    private CompassCtrl iCompass;
 
 
 
@@ -82,7 +80,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
      * @param mapView Objeto de la clase @MapView ya instanceado antes.
      */
     public ContentManager(Context context, MapView mapView, VoiceManager voiceManager, FloatingActionButton locationBtn, FloatingActionButton routesBtn, ImageView imgInfo
-    , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer) {
+    , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer, TextView statusText) {
         super(context);
         miContext = context;
         iVoiceManager = voiceManager;
@@ -94,7 +92,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         iInfoTextA = infoTextA;
         iInfoTextB = infoTextB;
         iBodyText = bodyText;
-
+        iStatus = statusText;
         iMapContainer = mapContainer;
         miMapview = mapView;
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
@@ -103,6 +101,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
         iRoutesBtn.setOnClickListener(this);
 
         iVibrator = (Vibrator) miContext.getSystemService(Context.VIBRATOR_SERVICE);
+        iCompass = new CompassCtrl(miContext);
     }
 
 
@@ -216,6 +215,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     }
 
 
+
     // **********************
     // Methods from SuperClass
     // **********************
@@ -228,6 +228,7 @@ public class ContentManager extends View implements UISMapsSettingsValues, View.
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.loc_btn:
+                //iStatus.setText("rotación: " + iCompass.getCurrentDegree());
                 miMapview.locateMe();
                 if(miMapview.isHasAccurancy()) {
                     miMapview.setRouteStart();

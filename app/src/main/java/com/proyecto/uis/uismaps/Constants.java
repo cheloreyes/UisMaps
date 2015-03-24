@@ -1,14 +1,24 @@
 package com.proyecto.uis.uismaps;
 
+import android.os.Environment;
+
 /**
  * Created by cheloreyes on 9/03/15.
  * Esta clase contiene las constantes de los ajustes de la app
  */
-public interface UISMapsSettingsValues {
+public interface Constants {
 
     // **********************
     // Constanst
     // **********************
+    /**
+     * Constantes de la ruta del directorio UISMaps
+     */
+    public static final String UIS_MAPS_FOLDER = Environment.getExternalStorageDirectory().getPath() + "/UISMaps";
+    public static final String CAMPUS_MAP = UIS_MAPS_FOLDER + "/mapa/mapa.ctm1";
+    public static final String FILE_STYLE = UIS_MAPS_FOLDER + "/estilos/osm-style.xml";
+    public static final String FILE_FONT = UIS_MAPS_FOLDER + "/fuentes/DejaVuSans.ttf";
+
     public static final int END_ROUTE_BUTTON_ID = 3;
     public static final int FIND_ME_BUTTON_ID = 1;
     public static final int START_ROUTE_BUTTON_ID = 2;

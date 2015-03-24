@@ -7,49 +7,104 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 /**
+ * La clase CompassCtrl controla los eventos de los sensores @TYPE_ACCELEROMETER y @TYPE_MAGNETIC_FIELD con el fin
+ * de determinar el norte geográfico en base al magnetismo terrestre, asemejando el funcionamiento
+ * de una brújula.
+ * Usar @getCurrentDegree para obtener el ángulo con respecto al norte, siendo 0 para el norte geográfico.
+ *
+ * Se recomienda usar @pauseSensor para detener los oyentes del @Sensor para una mejor gestión de la batería.
  * Created by cheloreyes on 17/03/15.
  */
 public class CompassCtrl implements SensorEventListener{
 
-    private SensorManager iSensorManager;
-    private Sensor iSensor;
-    private Context iContext;
+    // **********************
+    // Fields
+    // **********************
 
+    private SensorManager iSensorManager;
+    private Sensor iSensorAccelerometer;
+    private Sensor iSensorMagnometer;
+    private Context iContext;
+    private float[] lastAccelerometer = new float[3];
+    private float[] lastMagnometer = new float[3];
+    private boolean accelrometerSet = false;
+    private boolean magnometerSet = false;
+    private float[] mR = new float[9];
+    private float[] iOrientation = new float[3];
+    private float currentDegree = 0f;
+
+    // **********************
+    // Constructor
+    // **********************
+
+    /**
+     * Crea una nueva instancia de brújula tomando de referencia el contexto utilizado en la
+     * aplicación con el fin de acceder a sus servicios, en este caso al @sensor.
+     * @param context
+     */
     public CompassCtrl(Context context) {
         iContext = context;
         iSensorManager = (SensorManager) iContext.getSystemService(Context.SENSOR_SERVICE);
-        //iSensor = iSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+        iSensorAccelerometer = iSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        iSensorMagnometer = iSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        resumeSensors();
+    }
+
+    // **********************
+    // Methdos
+    // **********************
+
+    /**
+     * Pone en marcha al oyente de los sensores. Se utiliza al iniciar la aplicación o al reanudarla.
+     */
+    public void resumeSensors() {
+        iSensorManager.registerListener(this, iSensorAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+        iSensorManager.registerListener(this, iSensorMagnometer, SensorManager.SENSOR_DELAY_GAME);
     }
 
     /**
-     * Called when sensor values have changed.
-     * <p>See {@link android.hardware.SensorManager SensorManager}
-     * for details on possible sensor types.
-     * <p>See also {@link android.hardware.SensorEvent SensorEvent}.
-     * <p/>
-     * <p><b>NOTE:</b> The application doesn't own the
-     * {@link android.hardware.SensorEvent event}
-     * object passed as a parameter and therefore cannot hold on to it.
-     * The object may be part of an internal pool and may be reused by
-     * the framework.
-     *
-     * @param event the {@link android.hardware.SensorEvent SensorEvent}.
+     * Pausa al oyente de los sensores. Se utiliza al salir de la aplicación.
      */
+    public void pauseSensor() {
+        iSensorManager.unregisterListener(this, iSensorAccelerometer);
+        iSensorManager.unregisterListener(this, iSensorMagnometer);
+    }
+
+    // **********************
+    // Getter and Setter
+    // **********************
+
+    /**
+     * Obtiene el ángulo actual con respecto al norte en grados centigrados. 0 para el norte.
+     * @return
+     */
+    public float getCurrentDegree() {
+        return currentDegree;
+    }
+    // **********************
+    // Methods from super class
+    // **********************
+
     @Override
     public void onSensorChanged(SensorEvent event) {
-
+        if(event.sensor == iSensorAccelerometer) {
+            System.arraycopy(event.values, 0, lastAccelerometer, 0, event.values.length);
+            accelrometerSet = true;
+        }
+        else {
+            if(event.sensor == iSensorMagnometer) {
+                System.arraycopy(event.values, 0, lastMagnometer, 0, event.values.length);
+                magnometerSet = true;
+            }
+        }
+        if(accelrometerSet && magnometerSet) {
+            SensorManager.getRotationMatrix(mR, null, lastAccelerometer, lastMagnometer);
+            SensorManager.getOrientation(mR, iOrientation);
+            float radiants = iOrientation[0];
+            currentDegree = (float)(Math.toDegrees(radiants) + 360) % 360;
+        }
     }
 
-    /**
-     * Called when the accuracy of the registered sensor has changed.
-     * <p/>
-     * <p>See the SENSOR_STATUS_* constants in
-     * {@link android.hardware.SensorManager SensorManager} for details.
-     *
-     * @param sensor
-     * @param accuracy The new accuracy of this sensor, one of
-     *                 {@code SensorManager.SENSOR_STATUS_*}
-     */
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
