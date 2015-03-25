@@ -69,8 +69,6 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private long touchTime;
     private CompassCtrl iCompass;
 
-
-
     // **********************
     // Constructor
     // **********************
@@ -150,26 +148,34 @@ public class ContentManager extends View implements Constants, View.OnClickListe
 
     public void setPanelContent(String title, String textInfoA, String textInfoB, String bodyText, int img) {
         iPanel.setPanelState(PanelState.ANCHORED);
-        iPanel.setTouchEnabled(false);
-        if(title != null) iTileTxt.setText(title);
+        if(title != null) {
+            resizeText(title);
+            iTileTxt.setText(title);
+        }
         if(textInfoA != null) iInfoTextA.setText(textInfoA);
         if(textInfoB != null) iInfoTextB.setText(textInfoB);
         iImgInfo.setImageResource(img);
+        iPanel.setTouchEnabled(false);
     }
     public void setPanelContent(String title) {
         iPanel.setPanelState(PanelState.COLLAPSED);
         if(title != null) {
-            //Log.v(TAG, "Title Text size: "+iTileTxt.getTextSize());
-            if(title.length() > 25) {
-                iTileTxt.setTextSize(18.0f);
-            }
-            else {
-                iTileTxt.setTextSize(24.0f);
-            }
+            resizeText(title);
             iTileTxt.setText(title);
         }
         iPanel.setTouchEnabled(false);
     }
+
+    private void resizeText(String text) {
+        if(text != null) {
+            if (text.length() > 20) {
+                iTileTxt.setTextSize(18.0f);
+            } else {
+                iTileTxt.setTextSize(24.0f);
+            }
+        }
+    }
+
     private void changeRouteBtnIcon() {
         switch(btn_switch) {
             case START_POINT_BTN:
@@ -187,9 +193,11 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     public void restoreContent(){
         btn_switch = START_POINT_BTN;
         changeRouteBtnIcon();
+        setStatusLocationBtn(OUT_OF_SERVICE);
         if (iPanel != null && iPanel.getPanelState() != PanelState.HIDDEN) {
             iPanel.setPanelState(PanelState.HIDDEN);
         }
+        invalidate();
     }
     public void setStatusLocationBtn(int status){
         int icon = 0;
@@ -230,31 +238,32 @@ public class ContentManager extends View implements Constants, View.OnClickListe
             case R.id.loc_btn:
                 //iStatus.setText("rotación: " + iCompass.getCurrentDegree());
                 miMapview.locateMe();
-                if(miMapview.isHasAccurancy()) {
-                    miMapview.setRouteStart();
+                if(!miMapview.isHasAccurancy()) {
                     btn_switch = END_POINT_BTN;
                     changeRouteBtnIcon();
                 }
                 break;
 
             case R.id.btn_slider:
-                if(miMapview.isHasAccurancy() || miMapview.isDisplayingRoute()|| miMapview.isNavigating()){
+                if(miMapview.isNavigating()){
                     btn_switch = CANCEL_BTN;
                 }
                switch(btn_switch) {
                    case START_POINT_BTN:
                        miMapview.setRouteStart();
-                       btn_switch = END_POINT_BTN;
                        Log.v(TAG,"switch: "+btn_switch);
+                       btn_switch = END_POINT_BTN;
                        changeRouteBtnIcon();
                        break;
                    case END_POINT_BTN:
                        miMapview.setRouteEnd();
+                       Log.v(TAG,"switch: "+btn_switch);
                        btn_switch = CANCEL_BTN;
                        changeRouteBtnIcon();
                        break;
                    case CANCEL_BTN:
                        miMapview.removeMapObjects();
+                       Log.v(TAG,"switch: "+btn_switch);
                        restoreContent();
                        break;
                }

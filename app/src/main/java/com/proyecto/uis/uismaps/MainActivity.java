@@ -91,6 +91,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
     @Override
     public void onBackPressed() {
         miMapa.removeMapObjects();
+        miMapa.toggleGPS(false);
         miContent.restoreContent();
         iVoiceManager.stop();
         if (doubleBackToExitPressedOnce) {

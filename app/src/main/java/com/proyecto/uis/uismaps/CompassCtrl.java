@@ -5,6 +5,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 
 /**
  * La clase CompassCtrl controla los eventos de los sensores @TYPE_ACCELEROMETER y @TYPE_MAGNETIC_FIELD con el fin
@@ -101,7 +103,10 @@ public class CompassCtrl implements SensorEventListener{
             SensorManager.getRotationMatrix(mR, null, lastAccelerometer, lastMagnometer);
             SensorManager.getOrientation(mR, iOrientation);
             float radiants = iOrientation[0];
-            currentDegree = (float)(Math.toDegrees(radiants) + 360) % 360;
+            float degress = (float)(Math.toDegrees(radiants) + 360) % 360;
+            if(Math.abs(currentDegree + degress) > 85 && Math.abs(currentDegree + degress) < 95) {
+                currentDegree = -degress;
+            }
         }
     }
 
