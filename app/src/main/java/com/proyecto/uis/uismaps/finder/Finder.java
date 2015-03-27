@@ -3,11 +3,23 @@ package com.proyecto.uis.uismaps.finder;
 import android.content.Context;
 import android.database.MatrixCursor;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.SimpleCursorAdapter;
 
 import com.cartotype.Framework;
+import com.proyecto.uis.uismaps.Content.BodyAdapter;
 import com.proyecto.uis.uismaps.MapView;
+import com.proyecto.uis.uismaps.R;
+import com.proyecto.uis.uismaps.Thesaurus;
+import com.proyecto.uis.uismaps.db.DBHelper;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.TreeMap;
 
 public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSuggestionListener{
 
@@ -23,6 +35,8 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
     private Context iContext;
     private MapView iMapView;
     private SearchView iSearch;
+    private DBHelper iDbHelper;
+    private List<Spaces> iSpaces;
 
     // **********************
     // Constructor
@@ -39,28 +53,78 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         iMapView = mapView;
         iSearch.setOnQueryTextListener(this);
         iSearch.setOnSuggestionListener(this);
+        conectDataBase();
+    }
+
+    public Finder(Context context) {
+        iContext = context;
+        conectDataBase();
     }
 
     // **********************
     // Methods
     // **********************
+    private void conectDataBase() {
+        iDbHelper = new DBHelper(iContext);
+        try {
+            iDbHelper.createDataBase();
+        } catch (IOException e) {
+            throw new Error("No se creo base de datos");
+        }
+        try {
+            iDbHelper.openDataBase();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Carga la lista de resultados de la busqueda a @setSuggestionsAdapter para ser desplegados
      * como sugerencias al momento de buscar.
      * @param query
      */
     private void loadData(String query) {
-        String[] colums = new String[] {"_id","text"};
-        Object[] temp = new Object[] {0, "default"};
-        MatrixCursor cursor = new MatrixCursor(colums);
-        listResults = iMapView.finder(query, Framework.FUZZY_STRING_MATCH_METHOD, MAX_RESULTS);
-        for (int i=0; i < listResults.size(); i++) {
-            temp[0] = i;
-            temp[1] = listResults.get(i);
-            cursor.addRow(temp);
+        if(query.length() > 4) {
+            String[] colums = new String[] {"_id","text"};
+            Object[] temp = new Object[] {0, "default"};
+            MatrixCursor cursor = new MatrixCursor(colums);
+            //listResults = iMapView.finder(query, Framework.FUZZY_STRING_MATCH_METHOD, MAX_RESULTS);
+            listResults = toFind(query, 6);
+            for (int i=0; i < listResults.size(); i++) {
+                temp[0] = i;
+                temp[1] = listResults.get(i);
+                cursor.addRow(temp);
+            }
+            SuggestAdapter adapter = new SuggestAdapter(iContext, cursor, listResults);
+            iSearch.setSuggestionsAdapter(adapter);
         }
-        SuggestAdapter adapter = new SuggestAdapter(iContext, cursor, listResults);
-        iSearch.setSuggestionsAdapter(adapter);
+    }
+
+    /**
+     * toFind realiza la busqueda en la base de datos local SQLite, capturando el resultado en un arreglo del tipo @NearbyPlace
+     * y retornando un arreglo con las etiquetas de nombre encontradas.
+     * @param query cadena a buscar.
+     * @param sizeResult cantidad de resultados.
+     * @return un arreglo con la etiqueta de nombres encontrados.
+     */
+    private ArrayList<String> toFind(String query, int sizeResult) {
+        ArrayList<String> namePlaces = new ArrayList<>();
+        iSpaces = iDbHelper.getSpaces(query, sizeResult);
+        for(Spaces temp : iSpaces) {
+            namePlaces.add(temp.getName());
+        }
+        return namePlaces;
+    }
+    private String getBuilding(int position) {
+        return iSpaces.get(position).getBuilding();
+    }
+
+    public BodyAdapter getDependencesAdapter(String building) {
+        iSpaces = iDbHelper.getDependences(building);
+        return new BodyAdapter(iContext, iSpaces);
+    }
+    public String getImageURL(String building){
+        return iDbHelper.getUrlImg(building);
     }
 
     // **********************
@@ -96,9 +160,10 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
      */
     @Override
     public boolean onSuggestionClick(int position) {
-        String selectedResult = listResults.get(position);
+        Log.v("onSuggestionClick", "Pertenece al edificio: " + getBuilding(position));
+        String selectedResult = getBuilding(position);
         iSearch.clearFocus();
-        iMapView.foundFocus(selectedResult);
+        iMapView.foundFocus(selectedResult, false);
         return true;
     }
 

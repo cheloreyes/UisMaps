@@ -26,13 +26,14 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                                                      "Laboratorios Pesados", "Daniel Casas", "Residencias Estudiantiles", "Porteria carrera 30", "Kiosco Campos deportivos",
                                                      "Ciencias Humanas", "Jardinería", "Cancha de tenis", "Cancha 1 de marzo", "Cancha de Futbol sur", "Canchas múltiples",
                                                      "Coliseo UIS", "Diamante de softbol", "CENIVAM", "Cafeteria Don Cafeto", "Porteria carrera 25", "Caracterización de Materiales",
-                                                    "parqueaderos subterraneo plazoleta", "Albañileria y bodegas"};
+                                                     "Albañileria y bodegas"};
 
     private boolean isEngineInitialized = false;
     private TextToSpeech miTts;
     private Locale colombia;
     private SharedPreferences preferences;
     private MapView iMapView;
+    private int lastTurnType = 0;
 
 
     /**
@@ -53,16 +54,13 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
      */
     public void textToSpeech(String pText) {
         if(isEngineInitialized) {
-            if(pText != null) {
+            if(pText != null && !miTts.isSpeaking()) {
                 if( Build.VERSION.SDK_INT < 21) {
                     miTts.speak(pText, TextToSpeech.QUEUE_ADD, null);
                 }
                 else {
                     miTts.speak(pText, TextToSpeech.QUEUE_ADD, null, "");
                 }
-            }
-            while(miTts.isSpeaking()){
-
             }
         }
     }
@@ -89,7 +87,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                                         if(words[words.length - 1].equalsIgnoreCase(places[places.length - 1]))
                                         {
                                             Log.v("Voice", "La última palabra coincide");
-                                            iMapView.foundFocus(buildings[j]);
+                                            iMapView.foundFocus(buildings[j], true);
                                             to = false;
                                         }
                                         else{
@@ -108,6 +106,32 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
             //textToSpeech(miContext.getString(R.string.place_no_found));
             textToSpeech(sentence + ", No encontrado, Por favor intente nuevamente");
         }
+    }
+
+    public void navigation(int turnType, double degrees){
+        if(lastTurnType != turnType && lastTurnType != 0) {
+            String toSpeech = "";
+            switch (turnType) {
+                case R.mipmap.ahead_arrow:
+                    toSpeech = "Continúa adelante";
+                    break;
+                case R.mipmap.left_arrow:
+                    toSpeech = "Gira a la izquierda";
+                    break;
+                case R.mipmap.soft_left_arrow:
+                    toSpeech = "Gira a la izquierda";
+                    break;
+                case R.mipmap.right_arrow:
+                    toSpeech = "Gira a la derecha";
+                    break;
+                case R.mipmap.soft_right_arrow:
+                    toSpeech = "Gira a la derecha";
+                    break;
+            }
+            textToSpeech(toSpeech);
+        }
+        lastTurnType = turnType;
+
     }
 
     public void stop() {

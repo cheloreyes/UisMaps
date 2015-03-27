@@ -5,13 +5,15 @@ package com.proyecto.uis.uismaps.mapview;
  */
 public class NearbyPlace {
 
+    public static final int INSIDE = 0;
+    public static final int SOUTH = 1;
+    public static final int NORTH = 2;
+    public static final int EAST = 3;
+    public static final int WEST = 4;
+
     private String label;
     private double distance;
-    private boolean isInside = false;
-    private boolean leftHand = false;
-    private boolean rightHand = false;
-    private boolean ahead = false;
-    private boolean behind = false;
+    private int where;
 
     public NearbyPlace() {
     }
@@ -24,24 +26,8 @@ public class NearbyPlace {
         this.distance = distance;
     }
 
-    public void setInside(boolean isInside) {
-        this.isInside = isInside;
-    }
-
-    public void setLeftHand(boolean leftHand) {
-        this.leftHand = leftHand;
-    }
-
-    public void setRightHand(boolean rightHand) {
-        this.rightHand = rightHand;
-    }
-
-    public void setAhead(boolean ahead) {
-        this.ahead = ahead;
-    }
-
-    public void setBehind(boolean behind) {
-        this.behind = behind;
+    public void setWhere(int where) {
+        this.where = where;
     }
 
     public String getLabel() {
@@ -52,23 +38,7 @@ public class NearbyPlace {
         return distance;
     }
 
-    public boolean isInside() {
-        return isInside;
-    }
-
-    public boolean isLeftHand() {
-        return leftHand;
-    }
-
-    public boolean isRightHand() {
-        return rightHand;
-    }
-
-    public boolean isAhead() {
-        return ahead;
-    }
-
-    public boolean isBehind() {
-        return behind;
+    public int getWhere() {
+        return where;
     }
 }

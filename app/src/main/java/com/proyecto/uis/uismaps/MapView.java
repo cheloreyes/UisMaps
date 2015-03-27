@@ -11,7 +11,6 @@ import android.graphics.Matrix;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -36,7 +35,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 /**
@@ -51,6 +49,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public static final int MAX_PLACES = 50;
     public static final int MIN_DIST_TO_POINT = 13;
     public static final int RADIO = 1080;
+    public static final int MIN_SCALE = 500;
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
     private static final int DPI_MIN = 160;
     private static final int GRAY_COLOR = 0xFFCCCCCC;
@@ -58,14 +57,13 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private static final int ID_ROUTE_END = 103;
     private static final int ID_ROUTE_START = 102;
     private static final int ID_SELECTED_POINT = 101;
-    private static final double MAX_XA = -73.1233; //-73.12329138853613
-    private static final double MAX_XB = -73.11553; //-73.1155327517166
-    private static final double MAX_YA = 7.144; //7.143398173714375
-    private static final double MAX_YB = 7.136; //7.1382743178385315
-    private static final int MIN_DISTANCE = 1;
-    public static final int MIN_SCALE = 500;
-    private static final int MIN_TIME = 2000;
+    private static final int MIN_TIME = 5000;
+    private static final int MIN_DISTANCE = 5;
     private static final int PRED_SCALE = 14800;
+    private static final double MAX_XA = -73.1233; //-73.12329138853613
+    private static final double MAX_YA = 7.144; //7.143398173714375
+    private static final double MAX_XB = -73.11553; //-73.1155327517166
+    private static final double MAX_YB = 7.136; //7.1382743178385315
     private static final String TAG = "MapView";
 
     // **********************
@@ -73,68 +71,56 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // **********************
 
     private final Context miContext;
-    private CompassCtrl iCompass;
-    private SharedPreferences UIpreferences;
-    private NearbyPlace currentPlace;
-    private double currentScale;
+
+    private int lastScale = 4000;
     private int dpiScreen;
-    private double endNavLon;
-    private boolean hasAccurancy = false;
-    private String iNavTimeLeft;
-    private Notify iNotify;
-    private boolean iWantNavigate = false;
+    private int miTouchCount;
+    private int turnType;
+    private float miPrevScaleFocusX;
+    private float miPrevScaleFocusY;
+    private float miScale = 1;
+    private float miStartTouchPointX;
+    private float miStartTouchPointY;
+    private float miXOffset;
+    private float miYOffset;
+    private double currentScale;
+    private double routeEndLon;
     private double interestingPointLat;
     private double interestingPointLong;
+    private double miCurrentLon;
+    private double miCurrentLat;
+    private double miRouteEndLat;
+    private double miRouteEndLon;
+    private double miRouteStartLat;
+    private double miRouteStartLon;
+    private double routeEndLat;
+    private boolean iWantNavigate = false;
+    private boolean hasAccurancy = false;
     private boolean isDisplayingRoute = false;
     private boolean isGPSon = false;
     private boolean isNavigateStarted = false;
     private boolean isNavigating = false;
     private boolean itsInside = false;
-    private NearbyPlace lastPlace;
-    private Bitmap miBitmap;
-    private byte[] miBitmapData;
-    private ByteBuffer miBuffer;
-    private ContentManager miContent;
-    private float miCurrentAccurancy;
-    private double miCurrentLat;
-    private double miCurrentLon;
-    private View miDetailsView;
-    private String miDistanceUnits;
-    private Turn miFirstTurn;
-    private double miFirstTurnDistance;
-    private Framework miFramework;
-    private String miMapFile;
-    private Matrix miMatrix;
-    private int miNavigationState;
-    private float miPrevScaleFocusX;
-    private float miPrevScaleFocusY;
-    private double miRouteEndLat;
-    private double miRouteEndLon;
-    private RouteProfile miRouteProfile;
-    private double miRouteStartLat;
-    private double miRouteStartLon;
-    private float miScale = 1;
-    private ScaleGestureDetector miScaleGestureDetector;
-    private Turn miSecondTurn;
-    private double miSecondTurnDistance;
-    private float miStartTouchPointX;
-    private float miStartTouchPointY;
-    private int miTouchCount;
-    private VoiceManager miVoice;
-    private float miXOffset;
-    private float miYOffset;
-    private ProgressDialog progressDialog;
-    private double routeEndLat;
+    private boolean isFirstPointSet = false;
+    private boolean canSetPoints = true;
     private String smsDistToTurn;
-    private int turnType;
     private String smsFullDistance;
     private String smsInfoNav;
     private String smsInfoTurn;
-    private boolean isFirstPointSet = false;
-    private LocationManager iLocationManager;
-    private boolean canSetPoints = true;
-    private int lastScale = 4000;
-    private int routeIndex = 0;
+    private Notify iNotify;
+    private NearbyPlace lastPlace;
+    private Bitmap miBitmap;
+    private ContentManager miContent;
+    private View miDetailsView;
+    private String miDistanceUnits;
+    private Framework miFramework;
+    private Matrix miMatrix;
+    private ScaleGestureDetector miScaleGestureDetector;
+    private VoiceManager miVoice;
+    private ProgressDialog progressDialog;
+    private CompassCtrl iCompass;
+    private SharedPreferences UIpreferences;
+    private NearbyPlace currentPlace;
 
     // **********************
     // Constructors
@@ -188,7 +174,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
 
         int width = getWidth();
         int height = getHeight();
-        miMapFile = CAMPUS_MAP;
+        String miMapFile = CAMPUS_MAP;
         File f = new File(miMapFile);
         Log.v(TAG, "Creando nuevo framework");
         //Se crea la instancia del framework
@@ -209,7 +195,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     /**
      * getMap() Dibuja el mapa.
      */
-    private void getMap() {
+    public void getMap() {
         miBitmap = miFramework.getMap();
     }
 
@@ -253,7 +239,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         getMapPosition(mapPos);
         editor.putLong(MAP_LONG, Double.doubleToLongBits(mapPos[0]));
         editor.putLong(MAP_LAT, Double.doubleToLongBits(mapPos[1]));
-        //editor.putLong(MAP_ROTATION, Double.doubleToLongBits((getMapRotation())));
         editor.putString(MAP_UNIT, miDistanceUnits);
         editor.commit();
     }
@@ -268,6 +253,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public void toggleGPS(boolean cState) {
         Alerts alertsDialog = new Alerts();
         progressDialog = new ProgressDialog(miContext);
+        LocationManager iLocationManager;
         if (!isGPSon && cState) {
             iLocationManager = (LocationManager) miContext.getSystemService(Context.LOCATION_SERVICE);
             iLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
@@ -440,20 +426,21 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
            miFramework.deleteObjects(ID_SELECTED_POINT, ID_SELECTED_POINT);
            miFramework.addPointObject("pushpin", interestingPointLong, interestingPointLat, Framework.DEGREE_COORDS,
                    "", 0, ID_SELECTED_POINT, 0);
-           Log.v(TAG, "pone marcador");
-           //getNearbyPlaces(interestingPointLong, interestingPointLat);
-           //notifyMessage(getNearbyPlaces(interestingPointLong, interestingPointLat));
-           //notifyMessage(aLongitude +"," + aLatitude);
-           Log.v(TAG +"setSP", aLongitude +", "+aLatitude);
-           if(!UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
-               neabyPoint = getNearbyPlaces(interestingPointLong, interestingPointLat);
+           Log.v(TAG, "pone marcador en: " + aLongitude +", "+aLatitude);
+
+           neabyPoint = getNearbyPlaces(interestingPointLong, interestingPointLat);
+           if(neabyPoint.size() != 0){
                currentPlace = neabyPoint.get(0);
                if(lastPlace == null) lastPlace= currentPlace;
-               Log.v(TAG,"Imprime: "+neabyPoint.get(neabyPoint.size()-1).getLabel());
-               Log.v(TAG,"Imprime: "+neabyPoint.get(0).getLabel());
-               Log.v(TAG,"tamaño: " + neabyPoint.size());
-               miContent.setPanelContent(neabyPoint.get(0).getLabel());
+               if(!UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
+                   miContent.setPanelContent(neabyPoint.get(0).getLabel(), true);
+               }
+               else{
+                   iNotify.newNotification("Iniciando navegación hacia: "+ neabyPoint.get(0).getLabel());
+                   setRouteEnd();
+               }
            }
+
            getMap();
            invalidate();
        }
@@ -572,14 +559,13 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      * Inicia la navegación con el punto de destino establecido.
      */
     public void navigateStart() {
-        //setRouteProfile(DEFAULT_PROFILE);
         miFramework.setFollowMode(Framework.FOLLOW_MODE_NONE);
         miFramework.setNavigatorDistanceTolerance(5);
         miFramework.setNavigatorAutoReRoute(true);
         canSetPoints = false;
-        endNavLon = miRouteEndLon;
+        routeEndLon = miRouteEndLon;
         routeEndLat = miRouteEndLat;
-        if (endNavLon == 0 && routeEndLat == 0) {
+        if (routeEndLon == 0 && routeEndLat == 0) {
             notifyMessage(miContext.getString(R.string.destination_not_know));
             isNavigating = false;
         } else {
@@ -595,17 +581,18 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                     toggleGPS(true);
                 }
                 int result = miFramework.startNavigation(miCurrentLon, miCurrentLat,
-                                                                Framework.DEGREE_COORDS, endNavLon, routeEndLat,
+                                                                Framework.DEGREE_COORDS, routeEndLon, routeEndLat,
                                                                 Framework.DEGREE_COORDS);
 
                 if (result != 0) {
                     notifyMessage(miContext.getString(R.string.navigation_error));
                 } else {
                     isNavigateStarted = true;
+                    navigate(miCurrentLon, miCurrentLat);
+                    miFramework.setRotation(0);
                     showNavigation();
                 }
             }
-            miFramework.setRotation(0);
             getMap();
             invalidate();
         }
@@ -626,6 +613,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             deleteRouteEnd();
             isNavigateStarted = false;
         }
+        smsDistToTurn ="";
+        smsFullDistance ="";
+        smsInfoNav = "";
+        smsInfoTurn = "";
+       turnType = 0;
     }
 
     /**
@@ -636,12 +628,10 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     public void showNavigation() {
         Log.v(TAG, "Showing Navigation.");
         int imageTurn = 0;
-        if (!isNavigating) { //!miContent.isNavigationView()
-            showNavigation_init();
-        }
+
         switch (turnType) {
             case Turn.TURN_NONE:
-                imageTurn = R.mipmap.loading_arrow;
+                imageTurn = R.mipmap.ahead_arrow;
                 break;
             case Turn.TURN_AHEAD:
                 imageTurn = R.mipmap.ahead_arrow;
@@ -668,89 +658,95 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                 imageTurn = R.mipmap.soft_left_arrow;
                 break;
         }
-        smsFullDistance += " Tiempo estimado: " + iNavTimeLeft;
-        miContent.setPanelContent(smsInfoNav,smsInfoTurn, smsFullDistance, "", imageTurn);
+        //smsFullDistance += " Tiempo estimado: " + iNavTimeLeft;
+        if(UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)){
+            miVoice.navigation(imageTurn, 0.0);
+        } else {
+            miContent.setPanelContent(smsInfoNav,smsInfoTurn, smsFullDistance, "", imageTurn);
+        }
     }
 
-    /**
-     * Inicializa los asistentes de navegación.
-     */
-    private void showNavigation_init() {
-        smsFullDistance = "Calculando";
-        smsInfoNav = "Calculando";
-        smsInfoTurn = "Calculando";
-        smsDistToTurn = "Calculando";
-        turnType = 0;
-    }
 
-    /**
-     * Éste método responde a @miFramework.navigate y lleva el control de los giros en la
-     * ruta, determinando la distancia entre nodos, la velocidad de movimiento y la
-     * direccion del póximo giro (el cual es recivido por @showNavigation)
-     * @param aValidity
-     * @param aTime
-     * @param aLong
-     * @param aLat
-     * @param aSpeed
-     * @param aBearing
-     * @param aHeight
-     */
-    public void setUpNavigation(int aValidity, double aTime, double aLong,
-                                double aLat, double aSpeed, double aBearing, double aHeight) {
+    public void navigate(double lon, double lat) {
+        miFramework.displayRoute(false);
+        double turnAngle = 0.0;
+        int result = miFramework.startNavigation(lon, lat, Framework.DEGREE_COORDS, routeEndLon, routeEndLat, Framework.DEGREE_COORDS);
+        miFramework.displayRoute(true);
+        miFramework.deleteObjects(ID_CURRENT_LOCATION, ID_CURRENT_LOCATION);
+        PathPoint point = new PathPoint();
+        Route route = miFramework.getRoute(0);
+        Log.v("navigation", "No. Segmentos: " + route.getRouteSegmentCount());
+        for (int i = 0; i < route.getRouteSegmentCount(); i++) {
+            Log.v("navigation", "dist Segmento: " + i + " : " +route.getRouteSegment(i).getDistance());
+            Log.v("Navigation", "Segmento: " + i + " giro a: " + route.getRouteSegment(i).getTurnAngle());
+        }
+        RouteSegment firstSegment = route.getRouteSegment(0);
 
-        miFramework.navigate(aValidity, aTime, aLong, aLat, aSpeed, aBearing, aHeight);
-        double distance = miFramework.distanceToDestination();
-        smsFullDistance = setFormatDistance(distance) + " Para el destino.";
-        double seconds = miFramework.estimatedTimeToDestination();
-        double hours = (int) (seconds / 3600);
-        seconds -= hours * 3600;
-        double minutes = (int) (seconds * 60);
-        seconds -= minutes * 60;
-        iNavTimeLeft = String.format("%02d", (int) hours) + ":" + String.format("%02d", (int) minutes) + ":"
-                               + String.format("%02d", (int) seconds);
+        firstSegment.getPoint(0, (firstSegment.getPointCount(0) -1 ), point);
+        double[] intersection = new double[2];
+        intersection[0] = point.iX;
+        intersection[1] = point.iY;
+        miFramework.convertCoords(intersection, Framework.MAP_COORDS, Framework.DEGREE_COORDS);
+        double distToPoint = miFramework.getDistanceInMeters(lon, lat, intersection[0], intersection[1], Framework.DEGREE_COORDS);
 
-        miFirstTurn = new Turn();
-        miSecondTurn = new Turn();
-        miFirstTurnDistance = miFramework.getFirstTurn(miFirstTurn);
-        miSecondTurnDistance = miFramework.getSecondTurn(miSecondTurn);
-
+        Log.v("Nav", "primer segmento tiene :" + firstSegment.getPointCount(0) + " puntos y el " + (firstSegment.getPointCount(0) - 1) + " punto esta a: " + distToPoint);
+        whereIsPoint(lon, lat, intersection[0], intersection[1]);
+        angleToPoint(lon, lat, intersection[0], intersection[1]);
+        turnType = firstSegment.getTurnType();
+        smsDistToTurn = firstSegment.getDistance() + " Metros.";
+        if (route.getRouteSegmentCount() > 0) {
+            RouteSegment secondSegment = route.getRouteSegment(1);
+            turnAngle = secondSegment.getTurnAngle();
+            if(firstSegment.getDistance() <  15) {
+                turnType = secondSegment.getTurnType();
+            }
+        }
         smsInfoNav = "Destino: " + currentPlace.getLabel();
-
-        smsInfoTurn = null;
-        smsDistToTurn = null;
-        turnType = Turn.TURN_NONE;
-
-        //
-
-        //
-
-        Log.v(TAG, "Navegando: " + smsFullDistance );
-        Log.v(TAG, "Angulo del siguiente giro: " + miFirstTurn.iTurnAngle);
-        Log.v(TAG, "Distancia al siguiente giro: " + smsDistToTurn);
-        switch (miFramework.getNavigationState()) {
-            case Framework.NAVIGATION_STATE_NONE:
-                break;
-            case Framework.NAVIGATION_STATE_TURN:
-                turnType = miFirstTurn.iTurnType;
-                smsDistToTurn = setFormatDistance(miFirstTurnDistance);
-                if(!miSecondTurn.iContinue)
-                {
-                    //smsInfoTurn = "Entonces: "+miSecondTurn.TurnCommand() + " Luego: " + (int) miSecondTurnDistance + "m";
-                    smsInfoTurn = "A "+ smsDistToTurn + "Metros. " + miSecondTurn.TurnCommand();
-                }
-                break;
-            case Framework.NAVIGATION_STATE_TURN_ROUND:
-                break;
-            case Framework.NAVIGATION_STATE_RE_ROUTE_NEEDED:
-                break;
-            case Framework.NAVIGATION_STATE_ARRIVAL:
-                smsInfoNav ="Ha llegado a " + currentPlace.getLabel();
-                break;
+        smsInfoTurn = "A " + smsDistToTurn + " Gire: " + turnAngle;
+        smsFullDistance = setFormatDistance(route.getDistance()) + " Para el destino.";
+        if(miFramework.getDistanceInMeters(lon, lat, routeEndLon, routeEndLat, Framework.DEGREE_COORDS) < 5) {
+            smsInfoNav ="Ha llegado a " + currentPlace.getLabel();
         }
         showNavigation();
         getMap();
         invalidate();
     }
+    private int whereIsPoint(double iX, double iY, double pX, double pY) {
+        if(pX > iX && pY > iY){
+            Log.v(TAG,"I cuadrante");
+            return 1;
+        }
+        else{
+            if(pX > iX && pY < iY) {
+                Log.v(TAG,"II cuadrante");
+                return 2;
+            }
+            else{
+                if(pX < iX && pY < iY) {
+                    Log.v(TAG,"III cuadrante");
+                    return 3;
+                }
+                else {
+                    if(pX < iX && pY > iY) {
+                        Log.v(TAG,"IV cuadrante");
+                        return 4;
+                    }
+                    else{
+                        return 0;
+                    }
+                }
+            }
+        }
+
+    }
+    private void angleToPoint(double iX, double iY, double pX, double pY) {
+        double angle = 0.0;
+        angle = ((1-((pY - iY)/(pX - iX))) / (1 + ((pY - iY)/(pX - iX))));
+        angle = 1 / Math.tan(angle);
+        Log.v(TAG," angulo: " + angle);
+        //smsFullDistance = "Angulo al punto: " + angle;
+    }
+
 
     /**
      * Ajusta el formato de unidad de distancia.
@@ -782,8 +778,15 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                     }
             miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
             displayCurrentLocation();
-                    //notifyMessage("("+miCurrentLon+", "+miCurrentLat+" )");
-                    //notifyMessage(miContext.getString(R.string.locate_notify) + getNearbyPlaces(miCurrentLon, miCurrentLat));
+            if(UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)){
+                ArrayList<NearbyPlace> nearbys = getNearbyPlaces(miCurrentLon, miCurrentLat);
+                for (int i= 0; i<nearbys.size(); i++) {
+                    iNotify.newNotification(iCompass.whereIsTheBuilding(nearbys.get(i)) + " está "+ nearbys.get(i).getLabel() + ". Aproximadamente a" +
+                            +nearbys.get(i).getDistance());
+                    Log.v(TAG, iCompass.whereIsTheBuilding(nearbys.get(i)) + " está "+ nearbys.get(i).getLabel() + ". Aproximadamente a" +
+                            +nearbys.get(i).getDistance());
+                }
+            }
         }
     }
 
@@ -806,9 +809,8 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             }else {
                 Log.v(TAG + "Location", "No está dentro del campus. Ubicación: " + miCurrentLon + " , " + miCurrentLat);
                 iNotify.newNotification(miContext.getString(R.string.not_inside_campus));
-                //toggleGPS(false);
+                toggleGPS(false);
             }
-            //miContent.setInfoText(miContext.getString(R.string.current_accuracy) + miCurrentAccurancy + " " + miContext.getString(R.string.meters));
             getMap();
             invalidate();
         }
@@ -821,6 +823,9 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      */
     public ArrayList<NearbyPlace> getNearbyPlaces(double longitud, double latitud) {
         ArrayList<NearbyPlace> arrayPlaces = new ArrayList<>();
+        double[] currentLoc = new double[2];
+        currentLoc[0] = longitud;
+        currentLoc[1] = latitud;
         itsInside = false;
         currentScale = miFramework.getScale();
         double[] point = new double[2];
@@ -837,11 +842,11 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                             double[] distance = getCenterNearby(iNearby);
                             double[] bounds = getBoudsNearby(iNearby);
                             miFramework.convertCoords(bounds, Framework.MAP_COORDS, Framework.DEGREE_COORDS);
-                            miFramework.convertCoords(distance,Framework.DEGREE_COORDS, Framework.DEGREE_COORDS);
-                            miFramework.convertCoords(point,Framework.SCREEN_COORDS, Framework.DEGREE_COORDS);
+                            //miFramework.convertCoords(distance,Framework.DEGREE_COORDS, Framework.DEGREE_COORDS);
+                            //miFramework.convertCoords(point,Framework.SCREEN_COORDS, Framework.DEGREE_COORDS);
                             Log.v(TAG, "Encuentra: " + iNearby.getLabel());
                             currentPlace.setLabel(iNearby.getLabel());
-                            currentPlace.setDistance(getNearbyDistance(point, distance, bounds));
+                            currentPlace.setDistance(getNearbyDistance(currentLoc, distance, bounds));
                             arrayPlaces.add(currentPlace);
                             i++;
                         }
@@ -849,11 +854,32 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                 }
             //miVoice.textToSpeech(places);
             if (i == 0) {
+                Log.v(TAG, "No se encontraron lugares");
                 currentPlace.setLabel(miContext.getString(R.string.no_places_nearby));
                 arrayPlaces.add(i,currentPlace);
             }
         }
         Log.v(TAG, "Radio: " + (RADIO * (MIN_SCALE / currentScale)));
+        arrayPlaces = arrangeArray(arrayPlaces);
+        return arrayPlaces;
+    }
+
+    /**
+     * Este método ordena el @ArrayList resultante de @getNearbyPlaces del edificio mas cercano al mas lejano encontrado.
+     * @param arrayPlaces arreglo de edificios encontrados.
+     * @return arreglo ordenado por distancia.
+     */
+    private ArrayList<NearbyPlace> arrangeArray(ArrayList<NearbyPlace> arrayPlaces) {
+        NearbyPlace temp = new NearbyPlace();
+        for (int i = 0; i < arrayPlaces.size(); i++) {
+            for (int j = 1; j < arrayPlaces.size(); j++) {
+                if(arrayPlaces.get(i).getDistance() >= arrayPlaces.get(j).getDistance()) {
+                    temp = arrayPlaces.get(i);
+                    arrayPlaces.set(i,arrayPlaces.get(j));
+                    arrayPlaces.set(j,temp);
+                }
+            }
+        }
         return arrayPlaces;
     }
 
@@ -875,7 +901,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         if( currentLocation[0] > bounds[2] && currentLocation[0] < bounds[0] && currentLocation[1] > bounds[3] && currentLocation[1] < bounds[1])
         {
             Log.v(TAG, "Dentro del edificio");
-            currentPlace.setInside(true);
+            currentPlace.setWhere(NearbyPlace.INSIDE);
             itsInside = true;
             return -1;
         }
@@ -883,41 +909,49 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             if( currentLocation[0] > bounds[2] && currentLocation[0] < bounds[0] && currentLocation[1] < bounds[3] && currentLocation[1] < bounds[1]) {
                 distance = distanceToMe - distanceX;
                 Log.v(TAG, "X > Xmin && X < Xmax && Y < Ymin && Y < Ymax ... al sur del edificio.");
+                currentPlace.setWhere(NearbyPlace.SOUTH);
             }
             else {
                 if(currentLocation[0] > bounds[2] && currentLocation[0] < bounds[0] && currentLocation[1] > bounds[3] && currentLocation[1] > bounds[1]) {
                     Log.v(TAG, "X > Xmin && X < Xmax && Y > Ymin && Y > Ymax ... al norte del edificio.");
                     distance = distanceToMe - distanceX;
+                    currentPlace.setWhere(NearbyPlace.NORTH);
                 }
                 else {
                     if(currentLocation[0] > bounds[2] && currentLocation[0] > bounds[0] && currentLocation[1] > bounds[3] && currentLocation[1] < bounds[1]) {
                         Log.v(TAG, "X > Xmin && X > Xmax && Y > Ymin && Y < Ymax ... al este del edificio.");
                         distance = distanceToMe - distanceY;
+                        currentPlace.setWhere(NearbyPlace.EAST);
                     }
                     else {
                         if (currentLocation[0] < bounds[2] && currentLocation[0] < bounds[0] && currentLocation[1] > bounds[3] && currentLocation[1] < bounds[1]) {
                             Log.v(TAG, "X < Xmin && X < Xmax && Y > Ymin && Y < Ymax ... al oeste del edificio.");
                             distance = distanceToMe - distanceY;
+                            currentPlace.setWhere(NearbyPlace.WEST);
                         }
                         else {
                             if (currentLocation[0] < bounds[2] && currentLocation[1] > bounds[1]) {
                                 Log.v(TAG, "X < Xmin && Y > Ymax ... al Nor-oeste del edificio.");
                                 distance = distanceToMe - distanceCorner;
+                                currentPlace.setWhere(NearbyPlace.WEST);
                             }
                             else {
                                 if (currentLocation[0] < bounds[2] && currentLocation[1] < bounds[3]) {
                                     Log.v(TAG, "X < Xmin && Y < Ymin ... al Sur- oeste del edificio.");
                                     distance = distanceToMe - distanceCorner;
+                                    currentPlace.setWhere(NearbyPlace.WEST);
                                 }
                                 else {
                                     if (currentLocation[0] > bounds[0] && currentLocation[1] > bounds[1]) {
                                         Log.v(TAG, "X > Xmax && Y > Ymax ... al Nor-este del edificio.");
                                         distance = distanceToMe - distanceCorner;
+                                        currentPlace.setWhere(NearbyPlace.EAST);
                                     }
                                     else {
                                         if (currentLocation[0] > bounds[0] && currentLocation[1] < bounds[3]) {
                                             Log.v(TAG, "X > Xmax && Y < Ymin ... al Sur- este del edificio.");
                                             distance = distanceToMe - distanceCorner;
+                                            currentPlace.setWhere(NearbyPlace.EAST);
                                         }
                                     }
                                 }
@@ -986,7 +1020,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      * @param profile según el tipo de ruta que se quiera, puede ser de coche o de caminar.
      */
     public void setRouteProfile(int profile) {
-        miRouteProfile = new RouteProfile(profile);
+        RouteProfile miRouteProfile = new RouteProfile(profile);
         miFramework.addProfile(miRouteProfile);
         miFramework.setMainProfile(miRouteProfile);
     }
@@ -1018,9 +1052,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             isDisplayingRoute = true;
             canSetPoints = false;
             miFramework.displayRoute(true);
-            miContent.setPanelContent("Ruta de: " + lastPlace.getLabel() + " a " + currentPlace.getLabel());
-            Route activeRoute = miFramework.getRoute(0);
-            Log.v(TAG, "Ruta con: " + miFramework.getRouteCount() + " alternativas y " + activeRoute.getRouteSegmentCount() + " nodos");
+            miContent.setPanelContent("Ruta de: " + lastPlace.getLabel() + " a " + currentPlace.getLabel(), false);
         }
         getMap();
         invalidate();
@@ -1083,15 +1115,24 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      * Encuentra un lugar específico del mapa y utiliza @setSelectedPoint para marcarlo.
      * @param toFocus label del lugar.
      */
-    public void foundFocus(String toFocus) {
+    public void foundFocus(String toFocus, boolean autoNavigate) {
         double[] center = new double[2];
         MapObject[] result = miFramework.find(toFocus, Framework.FUZZY_STRING_MATCH_METHOD, 1);
         if(result != null && result.length != 0) {
             for( MapObject temp : result) {
                 center = getCenterNearby(temp);
-                Log.v(TAG, "Centro a: " +toFocus+ " en: ( "+center[0]+", "+center[1]+")");
+                //Log.v(TAG, "Centro a: " +toFocus+ " en: ( "+center[0]+", "+center[1]+")");
                 setSelectedPoint(center[0], center[1]);
                 miFramework.setViewCenterLatLong(center[0], center[1]);
+            }
+        }
+        if(autoNavigate){
+            if(isHasAccurancy()){
+                setRouteEnd();
+            }
+            else{
+                iNotify.newNotification("No estas localizado, pulsa una sola vez para que UISMaps pueda localizarte.");
+                removeMapObjects();
             }
         }
         getMap();
@@ -1297,30 +1338,14 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         Log.d(TAG + " oLC", "Location update " + miCurrentLon + ", " + miCurrentLat + " Accurracy: "+cLocation.getAccuracy());
         miCurrentLon = cLocation.getLongitude() + 0.00000895;
         miCurrentLat = cLocation.getLatitude() - 0.00004458;
-        miCurrentAccurancy = cLocation.getAccuracy();
         if (iWantNavigate) {
             navigateStart();
             iWantNavigate = false;
         }
         if (isNavigateStarted) {
-            int validity = Framework.POSITION_VALID | Framework.TIME_VALID;
-            if (cLocation.hasSpeed()) {
-                validity |= Framework.SPEED_VALID;
-            }
-            if (cLocation.hasBearing()) {
-                validity |= Framework.COURSE_VALID;
-            }
-            if (cLocation.hasAltitude()) {
-                validity |= Framework.HEIGHT_VALID;
-            }
-            double time = (cLocation.getTime()) / 1000;
-            double speed = cLocation.getSpeed() * 3.6;
-            Log.v(TAG + " oLC","setUpNavigation("+validity+", "+time+ ", "+ speed +", ");
-            setUpNavigation(validity, time, miCurrentLon, miCurrentLat, speed, cLocation.getBearing(), cLocation.getAltitude());
-            //miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat + 0.0001285098);
-            miFramework.setRotation(iCompass.getCurrentDegree());
+            navigate(miCurrentLon, miCurrentLat);
             miFramework.setScale(lastScale);
-            displayCurrentLocation();
+            //displayCurrentLocation();
         } else {
             //locateMe();
             displayCurrentLocation();

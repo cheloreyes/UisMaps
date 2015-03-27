@@ -5,8 +5,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
+
+import com.proyecto.uis.uismaps.mapview.NearbyPlace;
 
 /**
  * La clase CompassCtrl controla los eventos de los sensores @TYPE_ACCELEROMETER y @TYPE_MAGNETIC_FIELD con el fin
@@ -23,6 +27,7 @@ public class CompassCtrl implements SensorEventListener{
     // Fields
     // **********************
 
+    private ImageView iImageView = null;
     private SensorManager iSensorManager;
     private Sensor iSensorAccelerometer;
     private Sensor iSensorMagnometer;
@@ -33,7 +38,9 @@ public class CompassCtrl implements SensorEventListener{
     private boolean magnometerSet = false;
     private float[] mR = new float[9];
     private float[] iOrientation = new float[3];
+
     private float currentDegree = 0f;
+    private float cardinalPoint = 0f;
 
     // **********************
     // Constructor
@@ -51,6 +58,14 @@ public class CompassCtrl implements SensorEventListener{
         iSensorMagnometer = iSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         resumeSensors();
     }
+    public CompassCtrl (Context context, ImageView imageView) {
+        iImageView = imageView;
+        iContext = context;
+        iSensorManager = (SensorManager) iContext.getSystemService(Context.SENSOR_SERVICE);
+        iSensorAccelerometer = iSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        iSensorMagnometer = iSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        resumeSensors();
+    }
 
     // **********************
     // Methdos
@@ -62,6 +77,83 @@ public class CompassCtrl implements SensorEventListener{
     public void resumeSensors() {
         iSensorManager.registerListener(this, iSensorAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         iSensorManager.registerListener(this, iSensorMagnometer, SensorManager.SENSOR_DELAY_GAME);
+    }
+
+    public String whereIsTheBuilding(NearbyPlace building) {
+        String iSeeing = "";
+        Log.v("compass", "Norte a " + currentDegree);
+        if(currentDegree > 315 || currentDegree < 45){
+            switch (building.getWhere()){
+                case NearbyPlace.SOUTH:
+                    iSeeing = iContext.getString(R.string.ahead);
+                    break;
+                case NearbyPlace.NORTH:
+                    iSeeing = iContext.getString(R.string.behind);
+                    break;
+                case NearbyPlace.WEST:
+                    iSeeing = iContext.getString(R.string.righthand);
+                    break;
+                case NearbyPlace.EAST:
+                    iSeeing = iContext.getString(R.string.lefthand);
+                    break;
+            }
+        }
+        else{
+            if(currentDegree > 45 && currentDegree < 135){
+                switch (building.getWhere()){
+                    case NearbyPlace.SOUTH:
+                        iSeeing = iContext.getString(R.string.lefthand);
+                        break;
+                    case NearbyPlace.NORTH:
+                        iSeeing = iContext.getString(R.string.righthand);
+                        break;
+                    case NearbyPlace.WEST:
+                        iSeeing = iContext.getString(R.string.behind);
+                        break;
+                    case NearbyPlace.EAST:
+                        iSeeing = iContext.getString(R.string.ahead);
+                        break;
+                }
+            }
+            else
+            {
+                if(currentDegree > 135 && currentDegree < 225) {
+                    switch (building.getWhere()){
+                        case NearbyPlace.SOUTH:
+                            iSeeing = iContext.getString(R.string.behind);
+                            break;
+                        case NearbyPlace.NORTH:
+                            iSeeing = iContext.getString(R.string.ahead);
+                            break;
+                        case NearbyPlace.WEST:
+                            iSeeing = iContext.getString(R.string.lefthand);
+                            break;
+                        case NearbyPlace.EAST:
+                            iSeeing = iContext.getString(R.string.righthand);
+                            break;
+                    }
+                }
+                else {
+                    if(currentDegree > 225 && currentDegree < 315){
+                        switch (building.getWhere()){
+                            case NearbyPlace.SOUTH:
+                                iSeeing = iContext.getString(R.string.righthand);
+                                break;
+                            case NearbyPlace.NORTH:
+                                iSeeing = iContext.getString(R.string.lefthand);
+                                break;
+                            case NearbyPlace.WEST:
+                                iSeeing = iContext.getString(R.string.behind);
+                                break;
+                            case NearbyPlace.EAST:
+                                iSeeing = iContext.getString(R.string.ahead);
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        return iSeeing;
     }
 
     /**
@@ -82,6 +174,10 @@ public class CompassCtrl implements SensorEventListener{
      */
     public float getCurrentDegree() {
         return currentDegree;
+    }
+
+    public float getCardinalPoint() {
+        return cardinalPoint;
     }
     // **********************
     // Methods from super class
@@ -104,9 +200,22 @@ public class CompassCtrl implements SensorEventListener{
             SensorManager.getOrientation(mR, iOrientation);
             float radiants = iOrientation[0];
             float degress = (float)(Math.toDegrees(radiants) + 360) % 360;
-            if(Math.abs(currentDegree + degress) > 85 && Math.abs(currentDegree + degress) < 95) {
-                currentDegree = -degress;
+
+            if(Math.abs(currentDegree + degress) > 89 && Math.abs(currentDegree + degress) < 91) {
+                cardinalPoint = Math.round(-degress);
             }
+            if(iImageView != null){
+                RotateAnimation ra = new RotateAnimation(Math.round(-currentDegree), Math.round(-degress), Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                //Log.v("Brujula", "De: " + Math.round(currentDegree) +" a :" +  Math.round(-degress));
+                ra.setDuration(250);
+                ra.setFillAfter(true);
+                iImageView.startAnimation(ra);
+            }
+            if(Math.abs(degress + currentDegree) > 10){
+                currentDegree = degress;
+            }
+
+
         }
     }
 

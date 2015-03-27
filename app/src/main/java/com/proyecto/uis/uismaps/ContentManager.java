@@ -5,29 +5,30 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaRecorder;
-import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
+import com.proyecto.uis.uismaps.finder.Finder;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
+
+import java.util.HashMap;
 
 /**
  * ContentManager maneja los componentes de la UI de la app, habilitando y deshabilitando la interfaz adaptada para
  * las capacidades de voz.
  * Created by cheloreyes on 9/03/15.
  */
-public class ContentManager extends View implements Constants, View.OnClickListener, View.OnTouchListener {
+public class ContentManager extends View implements Constants, View.OnClickListener, View.OnLongClickListener {
 
     // **********************
     // Constants
@@ -40,6 +41,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private static final int AVALIABLE = 2;
     public static final int DPI_NEXUS5 = 480;
     private static final String TAG = "ContentManager";
+    public static final int ID_MAP_CONTAINER = 15;
     // **********************
     // Fields
     // **********************
@@ -55,9 +57,10 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private final TextView iBodyText;
     private final TextView iStatus;
     private final Vibrator iVibrator;
+    private final ListView iListView;
     private int btn_switch = START_POINT_BTN;
-
     private Activity callerActivity;
+
     private VoiceManager iVoiceManager;
     private boolean isRouting = false;
     private boolean isLocated = false;
@@ -68,6 +71,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private SearchView searchView;
     private long touchTime;
     private CompassCtrl iCompass;
+    private Finder iFinder;
 
     // **********************
     // Constructor
@@ -78,7 +82,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      * @param mapView Objeto de la clase @MapView ya instanceado antes.
      */
     public ContentManager(Context context, MapView mapView, VoiceManager voiceManager, FloatingActionButton locationBtn, FloatingActionButton routesBtn, ImageView imgInfo
-    , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer, TextView statusText) {
+    , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer, TextView statusText, ListView listView) {
         super(context);
         miContext = context;
         iVoiceManager = voiceManager;
@@ -97,9 +101,11 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iPanel.setPanelState(PanelState.HIDDEN);
         iLocationBtn.setOnClickListener(this);
         iRoutesBtn.setOnClickListener(this);
-
+        iListView = listView;
         iVibrator = (Vibrator) miContext.getSystemService(Context.VIBRATOR_SERVICE);
-        iCompass = new CompassCtrl(miContext);
+
+        iFinder = new Finder(miContext);
+        //iCompass = new CompassCtrl(miContext, imgInfo);
     }
 
 
@@ -128,7 +134,9 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      * Establece al layout contenedor a registrar los eventos tactiles.
      */
     private void initBlindCapabilities() {
-        iMapContainer.setOnTouchListener(this);
+        iMapContainer.setOnClickListener(this);
+        iMapContainer.setOnLongClickListener(this);
+        iMapContainer.setId(ID_MAP_CONTAINER);
         touchTime = 0;
     }
 
@@ -157,13 +165,23 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iImgInfo.setImageResource(img);
         iPanel.setTouchEnabled(false);
     }
-    public void setPanelContent(String title) {
+
+    public void setPanelContent(String title, boolean enablePanel) {
         iPanel.setPanelState(PanelState.COLLAPSED);
         if(title != null) {
             resizeText(title);
             iTileTxt.setText(title);
+            if(enablePanel){
+                iInfoTextA.setText("Dependencia");
+                iInfoTextB.setText("Espacio");
+                iInfoTextB.setTextSize(20.0f);
+                iInfoTextA.setTextSize(20.0f);
+                iListView.setAdapter(iFinder.getDependencesAdapter(title));
+            }
         }
-        iPanel.setTouchEnabled(false);
+        iPanel.setTouchEnabled(enablePanel);
+    }
+    private void setBuildingInfo(HashMap<String,String> dependences) {
     }
 
     private void resizeText(String text) {
@@ -238,6 +256,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
             case R.id.loc_btn:
                 //iStatus.setText("rotación: " + iCompass.getCurrentDegree());
                 miMapview.locateMe();
+                //miMapview.showNavigation();
                 if(!miMapview.isHasAccurancy()) {
                     btn_switch = END_POINT_BTN;
                     changeRouteBtnIcon();
@@ -268,43 +287,17 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                        break;
                }
                 break;
+            case ID_MAP_CONTAINER:
+                Log.v(TAG, "Click Simple");
+                miMapview.locateMe();
+                break;
         }
     }
 
-    /**
-     * Método Override de @OnTouchListener,
-     * @param v
-     * @param event
-     * @return
-     */
     @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                touchTime = System.currentTimeMillis();
-                new Handler().postDelayed(new Runnable() {
-
-                    @Override
-                    public void run() {
-                    }
-                }, 500);
-                iVibrator.vibrate(50);
-                return true;
-
-            case MotionEvent.ACTION_UP:
-                if((System.currentTimeMillis() - touchTime) > ViewConfiguration.getLongPressTimeout()) {
-                    Log.v(TAG, "Long press.");
-                    iVibrator.vibrate(200);
-                    //iVoiceManager.textToSpeech(miContext.getString(R.string.start_voice_recognition));
-                    startVoiceRecognition();
-                    return false;
-                }
-                else{
-                    Log.v(TAG, "Single press.");
-                    //miMapview.locateMe();
-                    return false;
-                }
-        }
+    public boolean onLongClick(View v) {
+        Log.v(TAG, "Long Click ");
+        startVoiceRecognition();
         return true;
     }
 }

@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.proyecto.uis.uismaps.MapView;
 import com.proyecto.uis.uismaps.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**SuggestAdapter es un adaptador personalizado de sugerencias para UISMaps.
@@ -23,7 +24,6 @@ public class SuggestAdapter extends CursorAdapter {
     // **********************
     private Context miContext;
     private List<String> items;
-    private MapView miMapView;
     private TextView textViewResults;
 
     // **********************

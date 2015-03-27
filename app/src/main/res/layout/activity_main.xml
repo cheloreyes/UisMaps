@@ -74,7 +74,7 @@
                     android:gravity="center_vertical"
                     android:padding="10dp"
                     android:layout_marginLeft="10dp"
-                    android:text="Title!"/>
+                    android:text=""/>
                 <com.melnykov.fab.FloatingActionButton
                     android:id="@+id/btn_slider"
                     android:layout_width="wrap_content"
@@ -107,7 +107,7 @@
                     android:layout_marginRight="10dp"
                     android:id="@+id/info_text_a"
                     android:textSize="12sp"
-                    android:text="info text 1"/>
+                    android:text=""/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -116,15 +116,13 @@
                     android:layout_marginRight="10dp"
                     android:id="@+id/info_text_b"
                     android:textSize="12sp"
-                    android:text="info text 2"/>
+                    android:text=""/>
                 </LinearLayout>
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:id="@+id/body_text"
-                android:text="Body text"/>
+            <ListView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/body_list">
+                </ListView>
 
         </LinearLayout>
     </com.sothree.slidinguppanel.SlidingUpPanelLayout>

@@ -43,4 +43,8 @@
     <string name="navigation_title">Destino:</string>
     <string name="action_categories">Categorías</string>
     <string name="switch_route">Cambiar ruta.</string>
+    <string name="ahead">Al frente.</string>
+    <string name="righthand">A la derecha.</string>
+    <string name="behind">Atrás.</string>
+    <string name="lefthand">A la izquierda.</string>
 </resources>

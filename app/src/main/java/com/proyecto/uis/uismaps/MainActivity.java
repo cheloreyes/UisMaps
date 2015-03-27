@@ -16,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
@@ -23,6 +24,7 @@ import com.proyecto.uis.uismaps.finder.Finder;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity implements Constants {
@@ -93,16 +95,13 @@ public class MainActivity extends ActionBarActivity implements Constants {
         miMapa.removeMapObjects();
         miMapa.toggleGPS(false);
         miContent.restoreContent();
-        iVoiceManager.stop();
+        iVoiceManager.shutdown();
         if (doubleBackToExitPressedOnce) {
             super.onBackPressed();
             return;
         }
-
-
         doubleBackToExitPressedOnce = true;
         //Toast.makeText(this, this.getString(R.string.confirm_exit), Toast.LENGTH_SHORT).show();
-
         new Handler().postDelayed(new Runnable() {
 
             @Override
@@ -117,8 +116,8 @@ public class MainActivity extends ActionBarActivity implements Constants {
         super.onPause();
         //Guarda el estado actual del mapa
         miMapa.saveState();
-        miMapa.toggleGPS(false);
-        iVoiceManager.stop();
+        //miMapa.toggleGPS(false);
+        //iVoiceManager.stop();
         //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
     }
 
@@ -161,38 +160,39 @@ public class MainActivity extends ActionBarActivity implements Constants {
         mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         mLayout.setAnchorPoint(0.35f);
         //mLayout.setPanelState(SlidingUpPanelLayout.PanelState.ANCHORED);
+        FrameLayout mapContainer = (FrameLayout) findViewById(R.id.map_container);
+        mapContainer.addView(miMapa);
+        FloatingActionButton btnLocation = (FloatingActionButton) findViewById(R.id.loc_btn);
+        final FloatingActionButton btnSlider= (FloatingActionButton) findViewById(R.id.btn_slider);
+        ImageView imgSlider = (ImageView) findViewById(R.id.img_slider);
+        TextView titleText = (TextView)findViewById(R.id.title_slider);
+        TextView infoTextA = (TextView) findViewById(R.id.info_text_a);
+        TextView infoTextB = (TextView) findViewById(R.id.info_text_b);
+        TextView statusText = (TextView) findViewById(R.id.status_text);
+        TextView bodyTextA= (TextView) findViewById(R.id.office);
+        ListView listView = (ListView) findViewById(R.id.body_list);
         mLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
             public void onPanelSlide(View panel, float slideOffset) {
             }
             @Override
             public void onPanelExpanded(View panel) {
+                btnSlider.setVisibility(View.INVISIBLE);
             }
             @Override
             public void onPanelCollapsed(View panel) {
+                btnSlider.setVisibility(View.VISIBLE);
             }
             @Override
             public void onPanelAnchored(View panel) {
+                btnSlider.setVisibility(View.VISIBLE);
             }
             @Override
             public void onPanelHidden(View panel) {
             }
         });
-
-        FrameLayout mapContainer = (FrameLayout) findViewById(R.id.map_container);
-        mapContainer.addView(miMapa);
-
-        FloatingActionButton btnLocation = (FloatingActionButton) findViewById(R.id.loc_btn);
-        FloatingActionButton btnSlider= (FloatingActionButton) findViewById(R.id.btn_slider);
-        ImageView imgSlider = (ImageView) findViewById(R.id.img_slider);
-        TextView titleText = (TextView)findViewById(R.id.title_slider);
-        TextView infoTextA = (TextView) findViewById(R.id.info_text_a);
-        TextView infoTextB = (TextView) findViewById(R.id.info_text_b);
-        TextView bodyText= (TextView) findViewById(R.id.body_text);
-        TextView statusText = (TextView) findViewById(R.id.status_text);
-
         miContent = new ContentManager(this, miMapa, iVoiceManager, btnLocation, btnSlider,
-                                              imgSlider, titleText, infoTextA, infoTextB, bodyText, mLayout, mapContainer, statusText);
-
+                                              imgSlider, titleText, infoTextA, infoTextB, bodyTextA, mLayout, mapContainer, statusText, listView);
+        //CompassCtrl compass = new CompassCtrl(this, imgSlider);
     }
 }
