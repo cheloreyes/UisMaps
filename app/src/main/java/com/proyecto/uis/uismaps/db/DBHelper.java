@@ -22,7 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * La clase DBHelper realiza
+ * La clase DBHelper permite consultar la base de datos local SQLite la cual contiene toda la información
+ * relacionada a los edificios del campus universitario como son las oficinas, aulas, laboratorios, talleres,
+ * auditorios, secretarías y demás entidades presentes en el campus principal de la universidad.
+ *
  * Created by CheloReyes on 24/03/15.
  */
 public class DBHelper extends SQLiteOpenHelper implements Constants {
@@ -124,34 +127,58 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         }
     }
 
+    /**
+     * Abre la base de datos para ser utilizada.
+     * @throws SQLException
+     */
     public void openDataBase() throws SQLException {
         String myPath = DB_PATH + DB_NAME;
         iDataBase = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
     }
 
+    /**
+     * Obtiene los posibles espacios requeridos.
+     * @param query sentencia a buscar.
+     * @param limit máximo de resultados.
+     * @return Lista de tipo @Spaces.
+     */
     public List<Spaces> getSpaces(String query, int limit) {
         Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE OfficeName LIKE '%" + query + "%' ORDER BY OfficeNumOfc LIMIT " + limit, null);
         Log.v("DB", "Buscando en la BD: "+query);
         return cursorToList(c);
     }
 
+    /**
+     * Obtiene las dependencias del edificio requerido.
+     * @param query Nombre del edificio.
+     * @return Lista de tipo @Spaces.
+     */
     public List<Spaces> getDependences(String query) {
         Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE EdificeName LIKE '%" + query + "%' AND OfficeNumOfc IS NOT NULL ORDER BY OfficeNumOfc", null);
         Log.v("DB", "Buscando en la BD: "+query);
         return cursorToList(c);
     }
-    public String getUrlImg(String query) {
-        String url = null;
-        Cursor c = iDataBase.rawQuery("SELECT ImageUrl FROM Edifice WHERE EdificeName IS '" + query +"'", null);
-        try{
-            url = c.getString(0);
+
+    /**
+     * Obtiene todos los edificios del campus universitario.
+     * @return Arreglo de tipo String.
+     */
+    public String[] getBuildingsList() {
+        Cursor c = iDataBase.rawQuery("SELECT EdificeName FROM Edifice", null);
+        String[] toReturn = new String[c.getCount()];
+       int i = 0;
+        while (c.moveToNext()) {
+            toReturn[i] = c.getString(0);
+            i++;
         }
-        catch (NullPointerException noUrl){
-            url = "localHost";
-        }
-        return url;
+        return toReturn;
     }
 
+    /**
+     * Almacena el resutlado de la consulta a la base de datos que es de tipo @Cursor en una @List de tipo @Spaces
+     * @param cursor Lista de tipo @Spaces.
+     * @return
+     */
     private List<Spaces> cursorToList(Cursor cursor) {
         List<Spaces> tempList = new ArrayList<>();
         while (cursor.moveToNext()) {

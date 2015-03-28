@@ -79,6 +79,12 @@ public class CompassCtrl implements SensorEventListener{
         iSensorManager.registerListener(this, iSensorMagnometer, SensorManager.SENSOR_DELAY_GAME);
     }
 
+    /**
+     * Según donde apunte el dispositivo al momento de llamar este método, es posible saber respecto al usuario donde
+     * está el edificio mas sercano encontrado por @MapView (si existe).
+     * @param building edificio encontrado de tipo @NearbyPlace
+     * @return String con la posición respecto al usuario.
+     */
     public String whereIsTheBuilding(NearbyPlace building) {
         String iSeeing = "";
         Log.v("compass", "Norte a " + currentDegree);

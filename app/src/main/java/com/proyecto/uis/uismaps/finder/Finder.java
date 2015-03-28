@@ -21,6 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
+/**
+ * Finder realiza las acciones de buscar en la base de datos tanto de @SearchView como de otras dependencias.
+ */
 public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSuggestionListener{
 
     // **********************
@@ -43,9 +46,9 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
     // **********************
     /**
      * Crea una nueva entidad de Finder.
-     * @param context Contexto en que es creada.
-     * @param searchView
-     * @param mapView
+     * @param context Referencia del contexto de donde se es instanceada.
+     * @param searchView Objeto específico de busquedas.
+     * @param mapView mapview.
      */
     public Finder(Context context, SearchView searchView, MapView mapView) {
         iContext = context;
@@ -64,8 +67,13 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
     // **********************
     // Methods
     // **********************
+
+    /**
+     * Establece la conexión a la base de datos instanceando un objeto de tipo @DBHelper y abriendola para su uso.
+     */
     private void conectDataBase() {
         iDbHelper = new DBHelper(iContext);
+        iDbHelper.close();
         try {
             iDbHelper.createDataBase();
         } catch (IOException e) {
@@ -84,12 +92,13 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
      * @param query
      */
     private void loadData(String query) {
+        query = new Thesaurus(query).getResult();
         if(query.length() > 4) {
             String[] colums = new String[] {"_id","text"};
             Object[] temp = new Object[] {0, "default"};
             MatrixCursor cursor = new MatrixCursor(colums);
             //listResults = iMapView.finder(query, Framework.FUZZY_STRING_MATCH_METHOD, MAX_RESULTS);
-            listResults = toFind(query, 6);
+            listResults = toFind(query, MAX_RESULTS);
             for (int i=0; i < listResults.size(); i++) {
                 temp[0] = i;
                 temp[1] = listResults.get(i);
@@ -115,17 +124,35 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         }
         return namePlaces;
     }
+
+    /**
+     * Obtiene el edificio asociado a la posición seleccionada de los resultado de @SearchView.
+     * @param position posicion en la lista.
+     * @return edificio relacionado.
+     */
     private String getBuilding(int position) {
         return iSpaces.get(position).getBuilding();
     }
 
+    /**
+     * Crea un adaptador de tipo @BodyAdapter para agregar la información de las dependencias del edificio.
+     * @param building Edificio que se requiere dependencias.
+     * @return adaptador de tipo @BodyAdapter.
+     */
     public BodyAdapter getDependencesAdapter(String building) {
         iSpaces = iDbHelper.getDependences(building);
         return new BodyAdapter(iContext, iSpaces);
     }
-    public String getImageURL(String building){
-        return iDbHelper.getUrlImg(building);
+
+    /**
+     * Obtiene todos los edificios del campus
+     * @return Arreglo con el nombre de los edificios del campus.
+     */
+    public String[] getBuildingList(){
+        return iDbHelper.getBuildingsList();
     }
+
+
 
     // **********************
     // Methods from SuperClass
@@ -163,7 +190,7 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         Log.v("onSuggestionClick", "Pertenece al edificio: " + getBuilding(position));
         String selectedResult = getBuilding(position);
         iSearch.clearFocus();
-        iMapView.foundFocus(selectedResult, false);
+        iMapView.foundFocus(selectedResult);
         return true;
     }
 

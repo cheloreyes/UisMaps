@@ -24,8 +24,8 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import java.util.HashMap;
 
 /**
- * ContentManager maneja los componentes de la UI de la app, habilitando y deshabilitando la interfaz adaptada para
- * las capacidades de voz.
+ * ContentManager controla los componentes de la UI de la app, habilitando y deshabilitando la interfaz adaptada para las personas con discapacidad
+ * visual, también permite el control del panel deslizante que permite desplegar información.
  * Created by cheloreyes on 9/03/15.
  */
 public class ContentManager extends View implements Constants, View.OnClickListener, View.OnLongClickListener {
@@ -42,6 +42,9 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     public static final int DPI_NEXUS5 = 480;
     private static final String TAG = "ContentManager";
     public static final int ID_MAP_CONTAINER = 15;
+    public static final int MAX_TEXT_LENGTH = 20;
+    public static final float MIN_SIZE = 18.0f;
+    public static final float MAX_SIZE = 24.0f;
     // **********************
     // Fields
     // **********************
@@ -62,9 +65,6 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private Activity callerActivity;
 
     private VoiceManager iVoiceManager;
-    private boolean isRouting = false;
-    private boolean isLocated = false;
-    private boolean isFirstPoint = true;
     private Context miContext;
     private MapView miMapview;
     private SharedPreferences preferences;
@@ -76,10 +76,23 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     // **********************
     // Constructor
     // **********************
+
     /**
-     *
-     * @param context Context de la vista en que se crea el objeto.
-     * @param mapView Objeto de la clase @MapView ya instanceado antes.
+     * Toma y guada como referencia todos los componentes de la UI.
+     * @param context
+     * @param mapView
+     * @param voiceManager
+     * @param locationBtn
+     * @param routesBtn
+     * @param imgInfo
+     * @param title
+     * @param infoTextA
+     * @param infoTextB
+     * @param bodyText
+     * @param panel
+     * @param mapContainer
+     * @param statusText
+     * @param listView
      */
     public ContentManager(Context context, MapView mapView, VoiceManager voiceManager, FloatingActionButton locationBtn, FloatingActionButton routesBtn, ImageView imgInfo
     , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer, TextView statusText, ListView listView) {
@@ -113,6 +126,9 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     // Methods
     // **********************
 
+    /**
+     * Habilita o desabilita los componentes de la UI según esté habilitada o no la interfaz para personas con discapacidad visual.
+     */
     public void checkViews(){
         if(preferences.getBoolean(EYESIGHT_ASSISTANT,false)){
             if (iPanel.getPanelState() != PanelState.HIDDEN) {
@@ -131,7 +147,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     }
 
     /**
-     * Establece al layout contenedor a registrar los eventos tactiles.
+     * Establece al layout contenedor a registrar los eventos tactiles. Cuando se habilita la interfaz especial.
      */
     private void initBlindCapabilities() {
         iMapContainer.setOnClickListener(this);
@@ -141,20 +157,13 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     }
 
     /**
-     * Intenta una peticion para usar el reconocimiento de voz del sistema @VOICE_RECOGNITION,
-     * especificando que reconozca no solo el ingles y la cantidad de resultados que se quieren recibir.
-     *
-     * El resultado de esto es capturado en @Activity.onActivityResult con el código de @VOICE_RECOGNITION.
+     * Establece el contenido del panel flotante con información completa, hastá la mitad, bloqueando su interacción.
+     * @param title Titulo a mostrar en la cabecera del panel.
+     * @param textInfoA Información sencilla.
+     * @param textInfoB Información sencilla.
+     * @param img Imagen.
      */
-    public void startVoiceRecognition() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, RecognizerIntent.EXTRA_LANGUAGE_MODEL);
-        intent.putExtra(RecognizerIntent.EXTRA_RESULTS, 1);
-
-        callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
-    }
-
-    public void setPanelContent(String title, String textInfoA, String textInfoB, String bodyText, int img) {
+    public void setPanelContent(String title, String textInfoA, String textInfoB, int img) {
         iPanel.setPanelState(PanelState.ANCHORED);
         if(title != null) {
             resizeText(title);
@@ -166,8 +175,12 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iPanel.setTouchEnabled(false);
     }
 
+    /**
+     * Establece el contenido del panel flotante en estado @PanelState.COLLAPSED, posibilitando su interacción según sea requerido.
+     * @param title Titulo a mostrar en la cabecera del panel.
+     * @param enablePanel Habilitar interacción.
+     */
     public void setPanelContent(String title, boolean enablePanel) {
-        iPanel.setPanelState(PanelState.COLLAPSED);
         if(title != null) {
             resizeText(title);
             iTileTxt.setText(title);
@@ -180,20 +193,29 @@ public class ContentManager extends View implements Constants, View.OnClickListe
             }
         }
         iPanel.setTouchEnabled(enablePanel);
-    }
-    private void setBuildingInfo(HashMap<String,String> dependences) {
+        iPanel.setPanelState(PanelState.COLLAPSED);
     }
 
+    /**
+     * Cambia el tamaño del texto mostrado en el título según la longitud de la cadena de texto.
+     * @param text
+     */
     private void resizeText(String text) {
         if(text != null) {
-            if (text.length() > 20) {
-                iTileTxt.setTextSize(18.0f);
+            if (text.length() > MAX_TEXT_LENGTH) {
+                iTileTxt.setTextSize(MIN_SIZE);
             } else {
-                iTileTxt.setTextSize(24.0f);
+                iTileTxt.setTextSize(MAX_SIZE);
             }
         }
     }
 
+    /**
+     * Cambia el icono del botón sobre el panel flotante según el tipo de acción a realizar, que puede ser:
+     *      * @START_POINT_BTN: Agregar punto de inicio.
+     *      * @END_POINT_BTN: Agregar punto de destino.
+     *      * @CANCEL_BTN: Cancelar .
+     */
     private void changeRouteBtnIcon() {
         switch(btn_switch) {
             case START_POINT_BTN:
@@ -208,6 +230,9 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         }
     }
 
+    /**
+     * Restaura el contenido de la UI.
+     */
     public void restoreContent(){
         btn_switch = START_POINT_BTN;
         changeRouteBtnIcon();
@@ -217,6 +242,11 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         }
         invalidate();
     }
+
+    /**
+     * Cambia el estado del botón de ubicar, resaltando su icono cuando está activo el GPS.
+     * @param status Estado del GPS.
+     */
     public void setStatusLocationBtn(int status){
         int icon = 0;
         switch (status){
@@ -240,6 +270,20 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         callerActivity = activity;
     }
 
+    /**
+     * Intenta una peticion para usar el reconocimiento de voz del sistema @VOICE_RECOGNITION,
+     * especificando que reconozca no solo el ingles y la cantidad de resultados que se quieren recibir.
+     *
+     * El resultado de esto es capturado en @Activity.onActivityResult con el código de @VOICE_RECOGNITION.
+     */
+    public void startVoiceRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, RecognizerIntent.EXTRA_LANGUAGE_MODEL);
+        intent.putExtra(RecognizerIntent.EXTRA_RESULTS, 1);
+
+        callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
+    }
+
 
 
     // **********************
@@ -257,7 +301,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 //iStatus.setText("rotación: " + iCompass.getCurrentDegree());
                 miMapview.locateMe();
                 //miMapview.showNavigation();
-                if(!miMapview.isHasAccurancy()) {
+                if(!miMapview.hasAccurancy()) {
                     btn_switch = END_POINT_BTN;
                     changeRouteBtnIcon();
                 }

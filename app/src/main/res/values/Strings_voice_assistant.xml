@@ -2,5 +2,6 @@
 <resources>
     <string name="wellcome">Hola! bienvenido a UISMaps.</string>
     <string name="start_voice_recognition">Despues del tono, diga a donde quiere ir.</string>
-    <string name="place_no_found">No encontramos el lugar donde quiere ir, por favor intente nuevamente.</string>
+    <string name="place_no_found">No encontrado, Por favor intente nuevamente.</string>
+    <string name="init_gps">Iniciando servicio GPS, por favor espere.</string>
 </resources>

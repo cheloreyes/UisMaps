@@ -116,6 +116,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         super.onPause();
         //Guarda el estado actual del mapa
         miMapa.saveState();
+        iVoiceManager.shutdown();
         //miMapa.toggleGPS(false);
         //iVoiceManager.stop();
         //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
@@ -141,9 +142,17 @@ public class MainActivity extends ActionBarActivity implements Constants {
         super.onResume();
         //miContent.setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
         miContent.checkViews();
+        iVoiceManager.shutdown();
+        iVoiceManager = new VoiceManager(this);
 
     }
 
+    /**
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == MediaRecorder.AudioSource.VOICE_RECOGNITION && resultCode == RESULT_OK) {
@@ -156,6 +165,9 @@ public class MainActivity extends ActionBarActivity implements Constants {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    /**
+     * Inicializa los componentes de la interfaz que luego son referidos a la istancia de @ContentManager para su disposición y control.
+     */
     private void init_Componets() {
         mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         mLayout.setAnchorPoint(0.35f);

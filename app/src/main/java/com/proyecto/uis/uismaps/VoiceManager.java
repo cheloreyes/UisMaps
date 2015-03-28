@@ -6,39 +6,32 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
-
+import com.proyecto.uis.uismaps.finder.Finder;
 import java.util.Locale;
 
 /**
- * Esta clase permite la función de texto a voz.
+ * La clase VoiceManager permite las opciones de sintetizador de voz y reconocimiento de voz
+ * de UISMaps como herramientas de ayuda para su utilización por personas con discapacidad visual,
+ * respondiendo a comandos de voz e indicando acciones a travez del sintetizador de voz.
  *
  * Created by cheloreyes on 9/03/15.
  */
 public class VoiceManager implements TextToSpeech.OnInitListener{
 
     private final Context miContext;
-    private String[] buildings = new String[]{"Porteria carrera 27", "Auditorio Luis A. Calvo", "Administración", "INSED", "Teatro al aire libre Jose Antonio Galan", "Administración 2",
-                                                     "Bienestar Universitario", "La perla", "Mantenimineto y Planta Física", "Ingeniería Mecánica", "Aula Máxima de Mecánica",
-                                                     "Biblioteca", "Planta Telefónica", "Instituto de Lenguas", "Ingeniería Industrial", "Laboratorios Fisiologia y Morfologia Vegetal",
-                                                     "Laboratorios Livianos", "Camilo Torres", "CENTIC", "CAPRUIS - FAVUIS", "Federico Mamitza Bayer", "Ingeniería Eléctrica y Electrónica",
-                                                     "Laboratorios de Posgrados", "Ingeniería Química", "Aula Máxima de Física", "CICELPA / CEIAM", "Laboratorios de Alta Tensión",
-                                                     "Laboratorios de Hidraulica", "Laboratorios de Diseño Industrial", "Planta de Aceros", "Jorge Bautista Vesga",
-                                                     "Laboratorios Pesados", "Daniel Casas", "Residencias Estudiantiles", "Porteria carrera 30", "Kiosco Campos deportivos",
-                                                     "Ciencias Humanas", "Jardinería", "Cancha de tenis", "Cancha 1 de marzo", "Cancha de Futbol sur", "Canchas múltiples",
-                                                     "Coliseo UIS", "Diamante de softbol", "CENIVAM", "Cafeteria Don Cafeto", "Porteria carrera 25", "Caracterización de Materiales",
-                                                     "Albañileria y bodegas"};
-
-    private boolean isEngineInitialized = false;
-    private TextToSpeech miTts;
-    private Locale colombia;
-    private SharedPreferences preferences;
-    private MapView iMapView;
     private int lastTurnType = 0;
-
+    private boolean isEngineInitialized = false;
+    private Finder iFinder;
+    private Locale colombia;
+    private MapView iMapView;
+    private TextToSpeech miTts;
+    private SharedPreferences preferences;
+    private String[] buildings;
 
     /**
-     *
-     * @param pContext
+     * Inicializa el motor de voz en referencia al contexto de la aplicación. Se establecen
+     * los parámetros de ubicación y lenguaje de habla.
+     * @param pContext contexto utilizado.
      */
     public VoiceManager(Context pContext) {
         miContext = pContext;
@@ -46,11 +39,14 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         colombia = new Locale("es", "COL");
         miTts.setLanguage(colombia);
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
+        iFinder = new Finder(miContext);
+        buildings = iFinder.getBuildingList();
     }
 
     /**
-     * Este método "habla" el texto específico, según la versión de android.
-     * @param pText Texto a que se quiere hablar.
+     * Este método "habla" el texto específico, agregando a la cola el texto nuevo si se es llamado durante
+     * la ejecución.
+     * @param pText Texto a que se quiere sintetizar.
      */
     public void textToSpeech(String pText) {
         if(isEngineInitialized) {
@@ -64,6 +60,12 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
             }
         }
     }
+
+    /**
+     * Captura el resultado de el reconocimiento de voz del sistema, el cual es tratado por @Thesaurus
+     * y es comparado con el listado de edificios del campus si coincide con alguno es referenciado por @MapView.
+     * @param sentence resultado de la acción de reconocimiento de voz.
+     */
     public void textRecognizer(String sentence) {
         Log.v("Voice", "Sentencia: " + sentence);
         boolean to = true;
@@ -73,6 +75,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         String delimiters = "[ .,;?!¡¿\'\"\\[\\]]+";
         String[] words = sentence.split(delimiters);
         String where = null;
+        Log.v("Voice", "Numero de palabras " + words.length);
         for (int i = 0; i< words.length; i++) {
             if(to){
                 for (int j= 0; j < buildings.length; j++) {
@@ -84,10 +87,10 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                                 if(words[i].equalsIgnoreCase(places[k])){
                                     Log.v("Voice", "coincide con: " + buildings[j]);
                                     if(i <= words.length - 1){
-                                        if(words[words.length - 1].equalsIgnoreCase(places[places.length - 1]))
+                                        if(words[words.length - 1].equalsIgnoreCase(places[places.length - 1]) || words.length < 2)
                                         {
                                             Log.v("Voice", "La última palabra coincide");
-                                            iMapView.foundFocus(buildings[j], true);
+                                            iMapView.foundFocus(buildings[j]);
                                             to = false;
                                         }
                                         else{
@@ -104,11 +107,18 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         }
         if(to){
             //textToSpeech(miContext.getString(R.string.place_no_found));
-            textToSpeech(sentence + ", No encontrado, Por favor intente nuevamente");
+            textToSpeech(sentence + miContext.getString(R.string.place_no_found));
         }
     }
 
-    public void navigation(int turnType, double degrees){
+    /**
+     * Sintetiza las acciones de navegación indicandole al usuario los comandos entregados por la
+     * función de navegación de @MapView.
+     * @param turnType El tipo de giro (Derecha, Izquierda, Adelante)
+     * @param degrees Angulo de giro.
+     * @param dist Distancia para el próximo giro.
+     */
+    public void navigation(int turnType, double degrees, double dist){
         if(lastTurnType != turnType && lastTurnType != 0) {
             String toSpeech = "";
             switch (turnType) {
@@ -128,21 +138,31 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                     toSpeech = "Gira a la derecha";
                     break;
             }
+            toSpeech = "A: " + dist +" metros aproximadamente." + toSpeech + "." + degrees +" grados.";
             textToSpeech(toSpeech);
         }
         lastTurnType = turnType;
 
     }
 
+    /**
+     * Si el motor de voz está en ejecución (miTts.isSpeaking)lo detiene.
+     */
     public void stop() {
         miTts.stop();
     }
 
+    /**
+     * Apaga el motor de voz
+     */
     public void shutdown() {
         miTts.shutdown();
     }
 
-
+    /**
+     * Inicializa mapView con un objeto ya instanceado anteriormente.
+     * @param mapView
+     */
     public void setMapView(MapView mapView) {
         iMapView = mapView;
     }
