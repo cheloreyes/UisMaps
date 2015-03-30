@@ -1,4 +1,4 @@
-package com.proyecto.uis.uismaps;
+package com.proyecto.uis.uismaps.Content;
 
 import android.app.Activity;
 import android.content.Context;
@@ -17,6 +17,11 @@ import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
+import com.proyecto.uis.uismaps.CompassCtrl;
+import com.proyecto.uis.uismaps.Constants;
+import com.proyecto.uis.uismaps.MapView;
+import com.proyecto.uis.uismaps.R;
+import com.proyecto.uis.uismaps.VoiceManager;
 import com.proyecto.uis.uismaps.finder.Finder;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;

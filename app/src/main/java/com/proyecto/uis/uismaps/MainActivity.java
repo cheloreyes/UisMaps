@@ -20,11 +20,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
+import com.proyecto.uis.uismaps.Content.ContentManager;
 import com.proyecto.uis.uismaps.finder.Finder;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.ArrayList;
-import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity implements Constants {
@@ -95,7 +95,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         miMapa.removeMapObjects();
         miMapa.toggleGPS(false);
         miContent.restoreContent();
-        iVoiceManager.shutdown();
+        iVoiceManager.stop();
         if (doubleBackToExitPressedOnce) {
             super.onBackPressed();
             return;
@@ -114,7 +114,6 @@ public class MainActivity extends ActionBarActivity implements Constants {
     @Override
     protected void onPause() {
         super.onPause();
-        //Guarda el estado actual del mapa
         miMapa.saveState();
         iVoiceManager.shutdown();
         //miMapa.toggleGPS(false);

@@ -5,7 +5,6 @@ import android.database.MatrixCursor;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.widget.ArrayAdapter;
-import android.widget.SimpleCursorAdapter;
 
 import com.cartotype.Framework;
 import com.proyecto.uis.uismaps.Content.BodyAdapter;
@@ -13,7 +12,7 @@ import com.proyecto.uis.uismaps.MapView;
 import com.proyecto.uis.uismaps.R;
 import com.proyecto.uis.uismaps.Thesaurus;
 import com.proyecto.uis.uismaps.db.DBHelper;
-
+import android.support.v4.widget.SimpleCursorAdapter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
     // **********************
     // Constants
     // **********************
-    public static final int MAX_RESULTS = 5;
+    public static final int MAX_RESULTS = 10;
 
     // **********************
     // Fields
@@ -93,6 +92,8 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
      */
     private void loadData(String query) {
         query = new Thesaurus(query).getResult();
+        String[] from = {"text"};
+        int[] to = {R.id.item_finder};
         if(query.length() > 4) {
             String[] colums = new String[] {"_id","text"};
             Object[] temp = new Object[] {0, "default"};
@@ -104,7 +105,7 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
                 temp[1] = listResults.get(i);
                 cursor.addRow(temp);
             }
-            SuggestAdapter adapter = new SuggestAdapter(iContext, cursor, listResults);
+            SimpleCursorAdapter adapter = new SimpleCursorAdapter(iContext, R.layout.details, cursor, from, to);
             iSearch.setSuggestionsAdapter(adapter);
         }
     }

@@ -1,7 +1,6 @@
 package com.proyecto.uis.uismaps.db;
 
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -9,14 +8,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.proyecto.uis.uismaps.Constants;
+import com.proyecto.uis.uismaps.FileManager;
 import com.proyecto.uis.uismaps.finder.Spaces;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +28,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
     // Constants
     // **********************
     private static int DB_VERSION = 1;
-    private static String DB_PATH = UIS_MAPS_FOLDER + "/database/";
-    private static String DB_NAME = "uis_maps.sqlite";
+
 
     // **********************
     // Fields
@@ -66,14 +60,10 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      */
     public void createDataBase() throws IOException {
         Log.v("DBHelper", "Crea base de datos");
-        boolean dbExist = checkDataBase();
-        if(!dbExist) {
+        if(!dataBaseExist()) {
+            FileManager fileManager = new FileManager(iContext);
+            fileManager.folderCheck();
             getReadableDatabase();
-            try {
-                copyDatabase();
-            } catch (IOException e) {
-                Log.v("DBHelper", "Error copiando la base de datos");
-            }
         }
     }
 
@@ -81,7 +71,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      * Comprueba si la base de datos ya existe para evitar copiar el archivo cada vez que se inicie la app.
      * @return true si existe ya la base de datos.
      */
-    private boolean checkDataBase() {
+    private boolean dataBaseExist() {
         SQLiteDatabase checkDB = null;
         try {
             String myPath = DB_PATH + DB_NAME;
@@ -95,36 +85,6 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
             return true;
         }
         return checkDB != null ? true : false;
-    }
-
-    /**
-     * Copia nuestra base de datos desde la carpeta "assets" del paquete de aplicación a la base de datos creada
-     * por @createDataBase en la carpeta del sistema, desde donde se puede acceder y manipular.
-     * @throws IOException
-     */
-    private void copyDatabase() throws IOException{
-        File sdCardDir = new File(DB_PATH);
-        if (!sdCardDir.exists()) {
-            sdCardDir.mkdirs();
-        }
-        AssetManager am = iContext.getResources().getAssets();
-        Log.v("DBHelper", "Copia la base de datos de assets");
-        try{
-            InputStream inputStream = am.open("database/" + DB_NAME );
-            //inputStream = iContext.getAssets().open("database/" + DB_NAME);
-            String outFile = DB_PATH + DB_NAME;
-            OutputStream outputStream = new FileOutputStream(outFile);
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = inputStream.read(buffer)) > 0){
-                outputStream.write(buffer, 0, length);
-            }
-            outputStream.flush();
-            outputStream.close();
-            inputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -143,7 +103,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      * @return Lista de tipo @Spaces.
      */
     public List<Spaces> getSpaces(String query, int limit) {
-        Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE OfficeName LIKE '%" + query + "%' ORDER BY OfficeNumOfc LIMIT " + limit, null);
+        Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE SpacesName LIKE '%" + query + "%' ORDER BY SpacesOfcNum LIMIT " + limit, null);
         Log.v("DB", "Buscando en la BD: "+query);
         return cursorToList(c);
     }
@@ -154,7 +114,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      * @return Lista de tipo @Spaces.
      */
     public List<Spaces> getDependences(String query) {
-        Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE EdificeName LIKE '%" + query + "%' AND OfficeNumOfc IS NOT NULL ORDER BY OfficeNumOfc", null);
+        Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE EdificeName LIKE '%" + query + "%' AND SpacesOfcNum IS NOT NULL ORDER BY SpacesOfcNum", null);
         Log.v("DB", "Buscando en la BD: "+query);
         return cursorToList(c);
     }
@@ -181,13 +141,15 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      */
     private List<Spaces> cursorToList(Cursor cursor) {
         List<Spaces> tempList = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            Spaces spaces = new Spaces();
-            spaces.setName(cursor.getString(0));
-            spaces.setBuilding(cursor.getString(1));
-            spaces.setOffice(cursor.getString(2));
-            spaces.setUaa(cursor.getString(3));
-            tempList.add(spaces);
+        if(cursor != null) {
+            while (cursor.moveToNext()) {
+                Spaces spaces = new Spaces();
+                spaces.setName(cursor.getString(0));
+                spaces.setBuilding(cursor.getString(1));
+                spaces.setOffice(cursor.getString(2));
+                spaces.setUaa(cursor.getString(3));
+                tempList.add(spaces);
+            }
         }
         return tempList;
     }

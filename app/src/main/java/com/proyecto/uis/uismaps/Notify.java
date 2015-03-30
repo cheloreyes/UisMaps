@@ -3,6 +3,7 @@ package com.proyecto.uis.uismaps;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.speech.tts.Voice;
 import android.widget.Toast;
 
 /** Notify es una pequeña clase encargada de notificar al usuario según convenga, ya sea
@@ -19,10 +20,10 @@ public class Notify implements Constants {
      * Crea una notificación teniendo en cuenta el contexto en que se solicita.
      * @param context Contexto de la aplicación.
      */
-    public Notify(Context context) {
+    public Notify(Context context, VoiceManager voiceManager) {
         iContext = context;
         iPreferences = PreferenceManager.getDefaultSharedPreferences(iContext);
-        iVoiceManager = new VoiceManager(iContext);
+        iVoiceManager = voiceManager;
     }
 
     /**

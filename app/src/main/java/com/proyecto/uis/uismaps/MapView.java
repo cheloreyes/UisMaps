@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -14,7 +13,6 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.format.Time;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -29,13 +27,10 @@ import com.cartotype.Route;
 import com.cartotype.RouteProfile;
 import com.cartotype.RouteSegment;
 import com.cartotype.Turn;
+import com.proyecto.uis.uismaps.Content.ContentManager;
 import com.proyecto.uis.uismaps.mapview.NearbyPlace;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 
 /**
@@ -113,7 +108,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private Framework miFramework;
     private Matrix miMatrix;
     private ScaleGestureDetector miScaleGestureDetector;
-    private VoiceManager miVoice;
+    private VoiceManager iVoiceManager;
     private ProgressDialog progressDialog;
     private CompassCtrl iCompass;
     private SharedPreferences UIpreferences;
@@ -131,17 +126,17 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     /**
      * Constructor principal
      *
-     * @param iContext
+     * @param context
      * @param iDpi     densidad de pixeles de la pantalla del dispositivo.
      */
 
-    public MapView(Context iContext, int iDpi) {
-        super(iContext);
+    public MapView(Context context, int iDpi) {
+        super(context);
         setOnTouchListener(this);
         dpiScreen = iDpi;
-        this.iContext = iContext;
+        iContext = context;
         UIpreferences = PreferenceManager.getDefaultSharedPreferences(this.iContext);
-        iNotify = new Notify(this.iContext);
+
     }
 
     /**
@@ -165,12 +160,14 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
      * Inicializa los componentes necesarios por el FrameWork de CartoType para dibujar el mapa.
      */
     public void init() {
-        setKeepScreenOn(true);
         iCompass = new CompassCtrl(iContext);
+        FileManager fileManager = new FileManager(iContext);
+        iNotify = new Notify(this.iContext, iVoiceManager);
+        setKeepScreenOn(true);
         miScaleGestureDetector = new ScaleGestureDetector(iContext, this);
 
         //Nos asegurarnos que existan los archivos y carpetas.
-        folderCheck();
+        fileManager.folderCheck();
         //Color de fondo para las zonas que no cubre el mapa.
         setBackgroundColor(GRAY_COLOR);
 
@@ -322,95 +319,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         if (map_lat != 0 && map_lon != 0) {
             Log.v(TAG, "MapSetUp() con centro en: Lat= " + map_lat + "Lon= " + map_lon);
             miFramework.setViewCenterLatLong(map_lon, map_lat);
-        }
-    }
-
-    /**
-     * Comprueba que existan las carpetas y archivos en la memoria SD del dispositivo.
-     */
-    private void folderCheck() {
-        //Existe la carpeta principal?
-        File dir = new File(UIS_MAPS_FOLDER);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        //Existe la carpeta Log?
-        dir = new File(UIS_MAPS_FOLDER + "/log");
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        //Existe el archivo mapa?
-        File f = new File(CAMPUS_MAP);
-        if (!f.exists()) {
-            assetCopy("mapa");
-            Log.i(TAG, "Mapa no encontrado, se copia de asset");
-        }
-        //Existe la hoja de estilo?
-        f = new File(FILE_STYLE);
-        if (!f.exists()) {
-            assetCopy("estilos");
-            Log.i(TAG, "Hoja de estilos no encontrada, se compia de asset");
-        }
-        f = new File(FILE_FONT);
-        if (!f.exists()) {
-            assetCopy("fuentes");
-            Log.i(TAG, "archivo de fuentes no encontrado, se compia de asset");
-
-        }
-    }
-
-    /**
-     * Se encarga de crear los directorios y copiar los archivos necesarios del contenido del paquete
-     * de aplicación.
-     *
-     * @param assetItem es el fichero faltante encontrado por @folderCheck.
-     */
-    private void assetCopy(String assetItem) {
-        File sdCardDir = new File(UIS_MAPS_FOLDER + "/" + assetItem);
-        if (!sdCardDir.exists()) {
-            sdCardDir.mkdirs();
-        }
-        AssetManager assetManager = getResources().getAssets();
-        String[] files = null;
-
-        try {
-            files = assetManager.list(assetItem);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if(files != null) {
-            for(int i = 0; i < files.length; i++) {
-                InputStream in = null;
-                OutputStream out = null;
-                try {
-                    in = assetManager.open(assetItem + "/" + files[i]);
-                    out = new FileOutputStream(UIS_MAPS_FOLDER + "/" + assetItem + "/" + files[i]);
-                    copyFile(in, out);
-                    in.close();
-                    in = null;
-                    out.flush();
-                    out.close();
-                    out = null;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
-     * Usado por assetCopy(), se encarga de crear el tunel de copia entre los ficheros contenidos
-     * en la carpeta "Assets" del paquete de aplicación.
-     *
-     * @param in  fichero encontrado en la carpeta "Assets" del paquete de aplicación.
-     * @param out ruta a donde se queire copiar el contenido encontrado.
-     * @throws IOException
-     */
-    private void copyFile(InputStream in, OutputStream out) throws IOException {
-        byte[] buffer = new byte[1024];
-        int read;
-        while ((read = in.read(buffer)) != -1) {
-            out.write(buffer, 0, read);
         }
     }
 
@@ -671,14 +579,14 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         //fullDist += " Tiempo estimado: " + iNavTimeLeft;
         if(UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)){
             if(startNavVoice){
-                miVoice.textToSpeech("Iniciando navegación hacia: " + currentPlace.getLabel());
+                iVoiceManager.textToSpeech("Iniciando navegación hacia: " + currentPlace.getLabel());
                 startNavVoice = false;
             }
             if(System.currentTimeMillis() - lastTime > 180000) {
                 lastTime = System.currentTimeMillis();
-                miVoice.textToSpeech(fullDistance + " metros. para su destino.");
+                iVoiceManager.textToSpeech(fullDistance + " metros. para su destino.");
             }
-            miVoice.navigation(imageTurn, turnAngle, distToTurn);
+            iVoiceManager.navigation(imageTurn, turnAngle, distToTurn);
         } else {
             miContent.setPanelContent(titleNav, infoTurn, fullDist, imageTurn);
         }
@@ -862,7 +770,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                         }
                     }
                 }
-            //miVoice.textToSpeech(places);
             if (i == 0) {
                 Log.v(TAG, "No se encontraron lugares");
                 currentPlace.setLabel(iContext.getString(R.string.no_places_nearby));
@@ -1374,6 +1281,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     }
 
     public void setVoiceManager(VoiceManager voiceManager) {
-        this.miVoice = voiceManager;
+        this.iVoiceManager = voiceManager;
     }
 }

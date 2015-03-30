@@ -18,6 +18,8 @@ public interface Constants {
     public static final String CAMPUS_MAP = UIS_MAPS_FOLDER + "/mapa/mapa.ctm1";
     public static final String FILE_STYLE = UIS_MAPS_FOLDER + "/estilos/osm-style.xml";
     public static final String FILE_FONT = UIS_MAPS_FOLDER + "/fuentes/DejaVuSans.ttf";
+    public static final String DB_PATH = UIS_MAPS_FOLDER + "/database/";
+    public static final String DB_NAME = "uis_maps.sqlite";
 
     public static final int END_ROUTE_BUTTON_ID = 3;
     public static final int FIND_ME_BUTTON_ID = 1;
