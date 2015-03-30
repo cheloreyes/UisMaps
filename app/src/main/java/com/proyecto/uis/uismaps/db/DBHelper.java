@@ -5,12 +5,15 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.proyecto.uis.uismaps.Constants;
 import com.proyecto.uis.uismaps.FileManager;
 import com.proyecto.uis.uismaps.finder.Spaces;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -102,7 +105,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      * @param limit máximo de resultados.
      * @return Lista de tipo @Spaces.
      */
-    public List<Spaces> getSpaces(String query, int limit) {
+    public List<Spaces> spaces(String query, int limit) {
         Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE SpacesName LIKE '%" + query + "%' ORDER BY SpacesOfcNum LIMIT " + limit, null);
         Log.v("DB", "Buscando en la BD: "+query);
         return cursorToList(c);
@@ -113,7 +116,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      * @param query Nombre del edificio.
      * @return Lista de tipo @Spaces.
      */
-    public List<Spaces> getDependences(String query) {
+    public List<Spaces> dependences(String query) {
         Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE EdificeName LIKE '%" + query + "%' AND SpacesOfcNum IS NOT NULL ORDER BY SpacesOfcNum", null);
         Log.v("DB", "Buscando en la BD: "+query);
         return cursorToList(c);
@@ -123,7 +126,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      * Obtiene todos los edificios del campus universitario.
      * @return Arreglo de tipo String.
      */
-    public String[] getBuildingsList() {
+    public String[] buildingsList() {
         Cursor c = iDataBase.rawQuery("SELECT EdificeName FROM Edifice", null);
         String[] toReturn = new String[c.getCount()];
        int i = 0;
@@ -132,6 +135,31 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
             i++;
         }
         return toReturn;
+    }
+
+    public Bitmap imageBuilding(String building) {
+        byte[] image = new byte[1024];
+        Cursor c = iDataBase.rawQuery("SELECT Image FROM Edifice WHERE EdificeName='" + building + "'", null);
+        if(c != null) {
+            while (c.moveToNext()){
+                if(c.getBlob(0) != null) image = c.getBlob(0);
+            }
+            ByteArrayInputStream imageStream = new ByteArrayInputStream(image);
+            return BitmapFactory.decodeStream(imageStream);
+        }
+        return null;
+    }
+
+    public String descriptionBuilding(String building) {
+        String year = null;
+        String constructor = null;
+        Cursor c = iDataBase.rawQuery("SELECT Year, Builder FROM Edifice WHERE EdificeName LIKE'%" + building + "%'", null);
+        while (c.moveToNext()){
+            year = c.getString(0);
+            constructor = c.getString(1);
+        }
+        if(year != null && constructor != null) return "Construido por: " + constructor + ". \nEn el año: " + year;
+        else return null;
     }
 
     /**

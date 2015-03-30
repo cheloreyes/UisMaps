@@ -88,13 +88,26 @@
                     fab:fab_shadow="false"/>
             </LinearLayout>
             <ImageView
-                android:layout_width="110dp"
-                android:layout_height="110dp"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
                 android:layout_gravity="center"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="15dp"
+                android:layout_marginTop="7dp"
                 android:id="@+id/img_slider"
                 android:src="@mipmap/loading_arrow">
             </ImageView>
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/description_text"
+                    android:layout_weight="1"
+                    android:gravity="top|center_horizontal"
+                    android:padding="13dp"
+                    android:textSize="16sp"/>
+                </LinearLayout>
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"

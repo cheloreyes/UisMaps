@@ -182,6 +182,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         TextView statusText = (TextView) findViewById(R.id.status_text);
         TextView bodyTextA= (TextView) findViewById(R.id.office);
         ListView listView = (ListView) findViewById(R.id.body_list);
+        TextView descriptionTxt = (TextView) findViewById(R.id.description_text);
         mLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
             public void onPanelSlide(View panel, float slideOffset) {
@@ -203,7 +204,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
             }
         });
         miContent = new ContentManager(this, miMapa, iVoiceManager, btnLocation, btnSlider,
-                                              imgSlider, titleText, infoTextA, infoTextB, bodyTextA, mLayout, mapContainer, statusText, listView);
+                                              imgSlider, titleText, infoTextA, infoTextB, bodyTextA, mLayout, mapContainer, statusText, listView, descriptionTxt);
         //CompassCtrl compass = new CompassCtrl(this, imgSlider);
     }
 }

@@ -4,10 +4,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.MatrixCursor;
+import android.graphics.Bitmap;
 import android.media.MediaRecorder;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -66,6 +69,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private final TextView iStatus;
     private final Vibrator iVibrator;
     private final ListView iListView;
+    private final TextView iDesciption;
     private int btn_switch = START_POINT_BTN;
     private Activity callerActivity;
 
@@ -100,7 +104,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      * @param listView
      */
     public ContentManager(Context context, MapView mapView, VoiceManager voiceManager, FloatingActionButton locationBtn, FloatingActionButton routesBtn, ImageView imgInfo
-    , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer, TextView statusText, ListView listView) {
+    , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer, TextView statusText, ListView listView,
+                          TextView description) {
         super(context);
         miContext = context;
         iVoiceManager = voiceManager;
@@ -115,6 +120,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iStatus = statusText;
         iMapContainer = mapContainer;
         miMapview = mapView;
+        iDesciption = description;
+
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
         iPanel.setPanelState(PanelState.HIDDEN);
         iLocationBtn.setOnClickListener(this);
@@ -186,19 +193,46 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      * @param enablePanel Habilitar interacción.
      */
     public void setPanelContent(String title, boolean enablePanel) {
+        Bitmap imgBuilding = null;
+        String description = null;
         if(title != null) {
             resizeText(title);
             iTileTxt.setText(title);
             if(enablePanel){
+                iInfoTextA.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
+                iInfoTextB.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
                 iInfoTextA.setText("Dependencia");
                 iInfoTextB.setText("Espacio");
                 iInfoTextB.setTextSize(20.0f);
                 iInfoTextA.setTextSize(20.0f);
                 iListView.setAdapter(iFinder.getDependencesAdapter(title));
+                if(iFinder.getiSpaces().size() == 0) {
+                    iInfoTextA.setVisibility(INVISIBLE);
+                    iInfoTextB.setVisibility(INVISIBLE);
+                }
+                else{
+                    iInfoTextA.setVisibility(VISIBLE);
+                    iInfoTextB.setVisibility(VISIBLE);
+                }
+                imgBuilding = iFinder.getImgBuilding(title);
+                if(imgBuilding != null) {
+                    iImgInfo.setImageBitmap(imgBuilding);
+                    iImgInfo.setScaleY(1.5f);
+                    iImgInfo.setScaleX(1.5f);
+                }
+                description = iFinder.getDescriptionBuilding(title);
+                if(description != null) iDesciption.setText(description);
             }
+            else {
+                iInfoTextA.setTextColor(miContext.getResources().getColor(R.color.primary_dark_material_dark));
+                iInfoTextB.setTextColor(miContext.getResources().getColor(R.color.primary_dark_material_dark));
+            }
+            iPanel.setTouchEnabled(enablePanel);
+            iPanel.setPanelState(PanelState.COLLAPSED);
         }
-        iPanel.setTouchEnabled(enablePanel);
-        iPanel.setPanelState(PanelState.COLLAPSED);
+        if(title == miContext.getString(R.string.no_places_nearby)){
+            iPanel.setTouchEnabled(false);
+        }
     }
 
     /**
@@ -288,8 +322,6 @@ public class ContentManager extends View implements Constants, View.OnClickListe
 
         callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
     }
-
-
 
     // **********************
     // Methods from SuperClass

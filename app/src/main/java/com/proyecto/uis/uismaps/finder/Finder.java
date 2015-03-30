@@ -2,11 +2,10 @@ package com.proyecto.uis.uismaps.finder;
 
 import android.content.Context;
 import android.database.MatrixCursor;
+import android.graphics.Bitmap;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 
-import com.cartotype.Framework;
 import com.proyecto.uis.uismaps.Content.BodyAdapter;
 import com.proyecto.uis.uismaps.MapView;
 import com.proyecto.uis.uismaps.R;
@@ -16,9 +15,7 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * Finder realiza las acciones de buscar en la base de datos tanto de @SearchView como de otras dependencias.
@@ -105,7 +102,7 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
                 temp[1] = listResults.get(i);
                 cursor.addRow(temp);
             }
-            SimpleCursorAdapter adapter = new SimpleCursorAdapter(iContext, R.layout.details, cursor, from, to);
+            SimpleCursorAdapter adapter = new SimpleCursorAdapter(iContext, R.layout.finder, cursor, from, to);
             iSearch.setSuggestionsAdapter(adapter);
         }
     }
@@ -119,7 +116,7 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
      */
     private ArrayList<String> toFind(String query, int sizeResult) {
         ArrayList<String> namePlaces = new ArrayList<>();
-        iSpaces = iDbHelper.getSpaces(query, sizeResult);
+        iSpaces = iDbHelper.spaces(query, sizeResult);
         for(Spaces temp : iSpaces) {
             namePlaces.add(temp.getName());
         }
@@ -141,7 +138,7 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
      * @return adaptador de tipo @BodyAdapter.
      */
     public BodyAdapter getDependencesAdapter(String building) {
-        iSpaces = iDbHelper.getDependences(building);
+        iSpaces = iDbHelper.dependences(building);
         return new BodyAdapter(iContext, iSpaces);
     }
 
@@ -150,9 +147,20 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
      * @return Arreglo con el nombre de los edificios del campus.
      */
     public String[] getBuildingList(){
-        return iDbHelper.getBuildingsList();
+        return iDbHelper.buildingsList();
     }
 
+    public Bitmap getImgBuilding( String building) {
+        return iDbHelper.imageBuilding(building);
+    }
+
+    public List<Spaces> getiSpaces() {
+        return iSpaces;
+    }
+
+    public String getDescriptionBuilding(String building) {
+        return iDbHelper.descriptionBuilding(building);
+    }
 
 
     // **********************
