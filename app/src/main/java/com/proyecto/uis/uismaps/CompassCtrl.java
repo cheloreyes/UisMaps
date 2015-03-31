@@ -114,10 +114,10 @@ public class CompassCtrl implements SensorEventListener{
                         iSeeing = iContext.getString(R.string.righthand);
                         break;
                     case NearbyPlace.WEST:
-                        iSeeing = iContext.getString(R.string.behind);
+                        iSeeing = iContext.getString(R.string.ahead);
                         break;
                     case NearbyPlace.EAST:
-                        iSeeing = iContext.getString(R.string.ahead);
+                        iSeeing = iContext.getString(R.string.behind);
                         break;
                 }
             }

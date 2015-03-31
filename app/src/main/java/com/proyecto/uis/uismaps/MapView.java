@@ -42,6 +42,9 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     // **********************
     // Constants
     // **********************
+    private static final int MIN_TIME = 2500;
+    private static final int MIN_DISTANCE = 2;
+
     public static final int MAX_PLACES = 50;
     public static final int MIN_DIST_TO_POINT = 13;
     public static final int RADIO = 1080;
@@ -53,8 +56,6 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
     private static final int ID_ROUTE_END = 103;
     private static final int ID_ROUTE_START = 102;
     private static final int ID_SELECTED_POINT = 101;
-    private static final int MIN_TIME = 5000;
-    private static final int MIN_DISTANCE = 5;
     private static final int PRED_SCALE = 15000;
     private static final double MAX_XA = -73.1233; //-73.12329138853613
     private static final double MAX_YA = 7.144; //7.143398173714375
@@ -346,7 +347,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
                }
                else{
                    if(hasAccurancy()){
-                       iNotify.newNotification("Iniciando navegación hacia: "+ neabyPoint.get(0).getLabel());
+                       //iNotify.newNotification("Iniciando navegación hacia: "+ neabyPoint.get(0).getLabel());
                        setRouteEnd();
                    }
                    else{
@@ -541,7 +542,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
         int imageTurn = 0;
         String titleNav = "Destino: " + currentPlace.getLabel();
         String infoTurn = "A " + distToTurn +" metros, " + turnIndication(turnAngle);
-        String fullDist = fullDistance + "m. Para su destino.";
+        String fullDist = fullDistance + " m. Para su destino.";
         if(fullDistance < 5) {
             fullDist = iContext.getString(R.string.arrive);
             titleNav = iContext.getString(R.string.arrive) + " a: " + currentPlace.getLabel();
@@ -585,6 +586,7 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             if(System.currentTimeMillis() - lastTime > 180000) {
                 lastTime = System.currentTimeMillis();
                 iVoiceManager.textToSpeech(fullDistance + " metros. para su destino.");
+                miFramework.setViewCenterLatLong(miCurrentLon, miCurrentLat);
             }
             iVoiceManager.navigation(imageTurn, turnAngle, distToTurn);
         } else {
@@ -696,15 +698,23 @@ public class MapView extends View implements View.OnTouchListener, LocationListe
             displayCurrentLocation();
             if(UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)){
                 ArrayList<NearbyPlace> nearbys = getNearbyPlaces(miCurrentLon, miCurrentLat);
-
-                for (int i= 0; i<nearbys.size(); i++) {
-                    iNotify.newNotification(iCompass.whereIsTheBuilding(nearbys.get(i)) + " está "+ nearbys.get(i).getLabel() + ". Aproximadamente a" +
-                            +nearbys.get(i).getDistance());
-                    Log.v(TAG, iCompass.whereIsTheBuilding(nearbys.get(i)) + " está "+ nearbys.get(i).getLabel() + ". Aproximadamente a" +
-                            +nearbys.get(i).getDistance());
-                }
+                iNotify.newNotification(whereIam(nearbys));
+                Log.v(TAG, whereIam(nearbys));
             }
         }
+    }
+    public String whereIam(ArrayList<NearbyPlace> nearby) {
+        String here = null;
+        for (NearbyPlace temp : nearby) {
+            if(temp.getDistance() < 0) {
+                return "Está en: "+ temp.getLabel();
+            }
+            else {
+                here += iCompass.whereIsTheBuilding(temp) + " Está " + temp.getLabel() + ". \n Aproximandamente a " + temp.getDistance() + " Metros.\n";
+
+            }
+        }
+        return here;
     }
 
     /**

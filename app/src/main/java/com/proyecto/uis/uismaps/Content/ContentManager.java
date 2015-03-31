@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.media.MediaRecorder;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
@@ -378,7 +379,14 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     @Override
     public boolean onLongClick(View v) {
         Log.v(TAG, "Long Click ");
-        startVoiceRecognition();
+        iVoiceManager.textToSpeech("Despues del tono, diga a donde quiere ir.");
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+               startVoiceRecognition();
+            }
+        }, 3000);
+        //startVoiceRecognition();
         return true;
     }
 }

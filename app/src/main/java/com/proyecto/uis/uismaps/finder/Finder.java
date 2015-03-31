@@ -162,6 +162,10 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         return iDbHelper.descriptionBuilding(building);
     }
 
+    public void closeDataBase() {
+        iDbHelper.close();
+    }
+
 
     // **********************
     // Methods from SuperClass

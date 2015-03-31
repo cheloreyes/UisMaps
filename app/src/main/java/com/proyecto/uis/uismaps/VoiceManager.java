@@ -2,11 +2,17 @@ package com.proyecto.uis.uismaps;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+import android.speech.tts.Voice;
 import android.util.Log;
 import com.proyecto.uis.uismaps.finder.Finder;
+import com.proyecto.uis.uismaps.mapview.NearbyPlace;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 
 /**
@@ -27,6 +33,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
     private TextToSpeech miTts;
     private SharedPreferences preferences;
     private String[] buildings;
+    private Thread speaking;
 
     /**
      * Inicializa el motor de voz en referencia al contexto de la aplicación. Se establecen
@@ -35,9 +42,9 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
      */
     public VoiceManager(Context pContext) {
         miContext = pContext;
-        miTts = new TextToSpeech(miContext,this);
+        miTts = new TextToSpeech(miContext, this);
         colombia = new Locale("es", "COL");
-        miTts.setLanguage(colombia);
+        //miTts.setLanguage(colombia);
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
         iFinder = new Finder(miContext);
         buildings = iFinder.getBuildingList();
@@ -48,16 +55,22 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
      * la ejecución.
      * @param pText Texto a que se quiere sintetizar.
      */
-    public void textToSpeech(String pText) {
+    public void textToSpeech(final String pText) {
         if(isEngineInitialized) {
-            if(pText != null && !miTts.isSpeaking()) {
-                if( Build.VERSION.SDK_INT < 21) {
-                    miTts.speak(pText, TextToSpeech.QUEUE_ADD, null);
+            speaking = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (pText != null && !miTts.isSpeaking()) {
+                        Log.v("textToSpeech", "hablando: " + pText);
+                        if (Build.VERSION.SDK_INT < 21) {
+                            miTts.speak(pText, TextToSpeech.QUEUE_ADD, null);
+                        } else {
+                            miTts.speak(pText, TextToSpeech.QUEUE_ADD, null, "");
+                        }
+                    }
                 }
-                else {
-                    miTts.speak(pText, TextToSpeech.QUEUE_ADD, null, "");
-                }
-            }
+            });
+            speaking.start();
         }
     }
 
@@ -123,23 +136,23 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
             String toSpeech = "";
             switch (turnType) {
                 case R.mipmap.ahead_arrow:
-                    toSpeech = "Continúa adelante";
+                    toSpeech = " Continúa adelante";
                     break;
                 case R.mipmap.left_arrow:
-                    toSpeech = "Gira a la izquierda";
+                    toSpeech = " Gire a la izquierda";
                     break;
                 case R.mipmap.soft_left_arrow:
-                    toSpeech = "Gira a la izquierda";
+                    toSpeech = " Gire a la izquierda";
                     break;
                 case R.mipmap.right_arrow:
-                    toSpeech = "Gira a la derecha";
+                    toSpeech = " Gire a la derecha";
                     break;
                 case R.mipmap.soft_right_arrow:
-                    toSpeech = "Gira a la derecha";
+                    toSpeech = " Gire a la derecha";
                     break;
             }
-            toSpeech = "A: " + dist +" metros aproximadamente." + toSpeech + "." + degrees +" grados.";
-            textToSpeech(toSpeech);
+            toSpeech = "A: " + Math.round(dist) +" metros aproximadamente.\n" + toSpeech + "." + Math.round(degrees) +" grados.";
+            if(!miTts.isSpeaking())textToSpeech(toSpeech);
         }
         lastTurnType = turnType;
 
@@ -167,6 +180,10 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         iMapView = mapView;
     }
 
+    public boolean isSpeaking() {
+        return miTts.isSpeaking();
+    }
+
 
     /**
      * Called to signal the completion of the TextToSpeech engine initialization.
@@ -183,6 +200,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
             else {
                 isEngineInitialized = true;
                 Log.v("VoiceManager", "TTS inicializado");
+
             }
         }
         else {

@@ -95,7 +95,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         miMapa.removeMapObjects();
         miMapa.toggleGPS(false);
         miContent.restoreContent();
-        iVoiceManager.stop();
+        //iVoiceManager.stop();
         if (doubleBackToExitPressedOnce) {
             super.onBackPressed();
             return;
@@ -115,7 +115,6 @@ public class MainActivity extends ActionBarActivity implements Constants {
     protected void onPause() {
         super.onPause();
         miMapa.saveState();
-        iVoiceManager.shutdown();
         //miMapa.toggleGPS(false);
         //iVoiceManager.stop();
         //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
@@ -125,6 +124,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
     protected void onDestroy() {
         super.onDestroy();
         iVoiceManager.shutdown();
+        iFinder.closeDataBase();
     }
 
     /**
@@ -141,9 +141,6 @@ public class MainActivity extends ActionBarActivity implements Constants {
         super.onResume();
         //miContent.setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
         miContent.checkViews();
-        iVoiceManager.shutdown();
-        iVoiceManager = new VoiceManager(this);
-
     }
 
     /**

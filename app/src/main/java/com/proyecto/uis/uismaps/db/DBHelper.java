@@ -154,7 +154,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         String year = null;
         String constructor = null;
         Cursor c = iDataBase.rawQuery("SELECT Year, Builder FROM Edifice WHERE EdificeName LIKE'%" + building + "%'", null);
-        while (c.moveToNext()){
+            while (c.moveToNext()){
             year = c.getString(0);
             constructor = c.getString(1);
         }
