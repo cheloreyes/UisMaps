@@ -1,8 +1,8 @@
 package com.proyecto.uis.uismaps.finder;
 
-/**
- * Created by JEF on 17/03/2015.
- */
+//**
+// * Created by JEF on 17/03/2015.
+// */
 public class Spaces {
 
     private String name;
