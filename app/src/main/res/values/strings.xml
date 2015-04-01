@@ -48,4 +48,5 @@
     <string name="behind">Atrás.</string>
     <string name="lefthand">A la izquierda.</string>
     <string name="arrive">Ha llegado.</string>
+    <string name="after_tone">Después del tono, diga a dónde quiere ir.</string>
 </resources>

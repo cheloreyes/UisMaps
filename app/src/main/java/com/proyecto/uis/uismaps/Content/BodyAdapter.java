@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.proyecto.uis.uismaps.R;
 import com.proyecto.uis.uismaps.finder.Spaces;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

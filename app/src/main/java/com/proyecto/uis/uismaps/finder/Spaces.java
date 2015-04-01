@@ -1,10 +1,9 @@
 package com.proyecto.uis.uismaps.finder;
 
-//**
-// * Created by JEF on 17/03/2015.
-// */
+/**
+ * Created by CheloReyes on 1/04/15.
+ */
 public class Spaces {
-
     private String name;
     private String building;
     private String office;
@@ -47,6 +46,4 @@ public class Spaces {
     public void setUaa(String uaa) {
         this.uaa = uaa;
     }
-
-
 }

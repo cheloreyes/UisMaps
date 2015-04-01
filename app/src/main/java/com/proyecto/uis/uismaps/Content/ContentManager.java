@@ -24,6 +24,7 @@ import com.melnykov.fab.FloatingActionButton;
 import com.proyecto.uis.uismaps.CompassCtrl;
 import com.proyecto.uis.uismaps.Constants;
 import com.proyecto.uis.uismaps.MapView;
+import com.proyecto.uis.uismaps.Notify;
 import com.proyecto.uis.uismaps.R;
 import com.proyecto.uis.uismaps.VoiceManager;
 import com.proyecto.uis.uismaps.finder.Finder;
@@ -74,14 +75,11 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private int btn_switch = START_POINT_BTN;
     private Activity callerActivity;
 
-    private VoiceManager iVoiceManager;
     private Context miContext;
     private MapView miMapview;
     private SharedPreferences preferences;
-    private SearchView searchView;
-    private long touchTime;
-    private CompassCtrl iCompass;
     private Finder iFinder;
+    private Notify iNotify;
 
     // **********************
     // Constructor
@@ -109,7 +107,6 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                           TextView description) {
         super(context);
         miContext = context;
-        iVoiceManager = voiceManager;
         iPanel = panel;
         iLocationBtn = locationBtn;
         iRoutesBtn = routesBtn;
@@ -129,9 +126,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iRoutesBtn.setOnClickListener(this);
         iListView = listView;
         iVibrator = (Vibrator) miContext.getSystemService(Context.VIBRATOR_SERVICE);
-
+        iNotify = new Notify(miContext, voiceManager);
         iFinder = new Finder(miContext);
-        //iCompass = new CompassCtrl(miContext, imgInfo);
     }
 
 
@@ -166,7 +162,6 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iMapContainer.setOnClickListener(this);
         iMapContainer.setOnLongClickListener(this);
         iMapContainer.setId(ID_MAP_CONTAINER);
-        touchTime = 0;
     }
 
     /**
@@ -379,7 +374,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     @Override
     public boolean onLongClick(View v) {
         Log.v(TAG, "Long Click ");
-        iVoiceManager.textToSpeech("Despues del tono, diga a donde quiere ir.");
+        iNotify.newNotification(miContext.getString(R.string.after_tone));
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {

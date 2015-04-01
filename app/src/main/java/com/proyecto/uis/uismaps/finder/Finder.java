@@ -36,7 +36,6 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
     private SearchView iSearch;
     private DBHelper iDbHelper;
     private List<Spaces> iSpaces;
-
     // **********************
     // Constructor
     // **********************
@@ -88,7 +87,6 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
      * @param query
      */
     private void loadData(String query) {
-        query = new Thesaurus(query).getResult();
         String[] from = {"text"};
         int[] to = {R.id.item_finder};
         if(query.length() > 4) {
