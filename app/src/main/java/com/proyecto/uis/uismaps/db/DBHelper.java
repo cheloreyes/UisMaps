@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.Html;
 import android.util.Log;
 
 import com.proyecto.uis.uismaps.Constants;
@@ -153,13 +154,22 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
     public String descriptionBuilding(String building) {
         String year = null;
         String constructor = null;
-        Cursor c = iDataBase.rawQuery("SELECT Year, Builder FROM Edifice WHERE EdificeName LIKE'%" + building + "%'", null);
+        String description = null;
+        String toReturn = null;
+        Cursor c = iDataBase.rawQuery("SELECT Year, Builder, Description FROM Edifice WHERE EdificeName LIKE'%" + building + "%'", null);
             while (c.moveToNext()){
-            year = c.getString(0);
-            constructor = c.getString(1);
+                year = c.getString(0);
+                constructor = c.getString(1);
+                description = c.getString(2);
+
         }
-        if(year != null && constructor != null) return "Construido por: " + constructor + ". \nEn el año: " + year;
-        else return null;
+        if(year != null && constructor != null) {
+            toReturn = "Construido por: " + constructor + ". \nEn el año: " + year;
+            if(description != null) {
+                toReturn = description + "\n \n" + toReturn;
+            }
+        }
+        return toReturn;
     }
 
     /**

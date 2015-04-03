@@ -2,17 +2,13 @@ package com.proyecto.uis.uismaps;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.media.AudioManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
-import android.speech.tts.Voice;
 import android.util.Log;
 import com.proyecto.uis.uismaps.finder.Finder;
-import com.proyecto.uis.uismaps.mapview.NearbyPlace;
-import java.util.ArrayList;
-import java.util.HashMap;
+import com.proyecto.uis.uismaps.mapview.MapView;
+
 import java.util.Locale;
 
 /**

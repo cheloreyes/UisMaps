@@ -7,9 +7,8 @@ import android.support.v7.widget.SearchView;
 import android.util.Log;
 
 import com.proyecto.uis.uismaps.Content.BodyAdapter;
-import com.proyecto.uis.uismaps.MapView;
+import com.proyecto.uis.uismaps.mapview.MapView;
 import com.proyecto.uis.uismaps.R;
-import com.proyecto.uis.uismaps.Thesaurus;
 import com.proyecto.uis.uismaps.db.DBHelper;
 import android.support.v4.widget.SimpleCursorAdapter;
 import java.io.IOException;

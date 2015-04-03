@@ -21,7 +21,9 @@ import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
 import com.proyecto.uis.uismaps.Content.ContentManager;
+import com.proyecto.uis.uismaps.Content.SettingsActivity;
 import com.proyecto.uis.uismaps.finder.Finder;
+import com.proyecto.uis.uismaps.mapview.MapView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.ArrayList;
@@ -93,7 +95,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
     @Override
     public void onBackPressed() {
         miMapa.removeMapObjects();
-        miMapa.toggleGPS(false);
+        //miMapa.toggleGPS(false);
         miContent.restoreContent();
         //iVoiceManager.stop();
         if (doubleBackToExitPressedOnce) {

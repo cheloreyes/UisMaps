@@ -4,34 +4,28 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
-import com.proyecto.uis.uismaps.CompassCtrl;
 import com.proyecto.uis.uismaps.Constants;
-import com.proyecto.uis.uismaps.MapView;
+import com.proyecto.uis.uismaps.mapview.MapView;
 import com.proyecto.uis.uismaps.Notify;
 import com.proyecto.uis.uismaps.R;
 import com.proyecto.uis.uismaps.VoiceManager;
 import com.proyecto.uis.uismaps.finder.Finder;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
-
-import java.util.HashMap;
 
 /**
  * ContentManager controla los componentes de la UI de la app, habilitando y deshabilitando la interfaz adaptada para las personas con discapacidad
@@ -81,6 +75,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private Finder iFinder;
     private Notify iNotify;
 
+    private int i = 0;
     // **********************
     // Constructor
     // **********************
@@ -199,8 +194,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 iInfoTextB.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
                 iInfoTextA.setText("Dependencia");
                 iInfoTextB.setText("Espacio");
-                iInfoTextB.setTextSize(20.0f);
-                iInfoTextA.setTextSize(20.0f);
+                iInfoTextB.setTextSize(19.0f);
+                iInfoTextA.setTextSize(19.0f);
                 iListView.setAdapter(iFinder.getDependencesAdapter(title));
                 if(iFinder.getiSpaces().size() == 0) {
                     iInfoTextA.setVisibility(INVISIBLE);
@@ -213,11 +208,16 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 imgBuilding = iFinder.getImgBuilding(title);
                 if(imgBuilding != null) {
                     iImgInfo.setImageBitmap(imgBuilding);
-                    iImgInfo.setScaleY(1.5f);
-                    iImgInfo.setScaleX(1.5f);
+                    iImgInfo.setScaleY(1.4f);
+                    iImgInfo.setScaleX(1.4f);
                 }
+                else iImgInfo.setImageBitmap(null);
                 description = iFinder.getDescriptionBuilding(title);
-                if(description != null) iDesciption.setText(description);
+                if(description != null) {
+                    iDesciption.setVisibility(VISIBLE);
+                    iDesciption.setText(description);
+                }
+                else iDesciption.setVisibility(INVISIBLE);
             }
             else {
                 iInfoTextA.setTextColor(miContext.getResources().getColor(R.color.primary_dark_material_dark));
@@ -331,6 +331,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.loc_btn:
+
                 //iStatus.setText("rotación: " + iCompass.getCurrentDegree());
                 miMapview.locateMe();
                 //miMapview.showNavigation();
@@ -343,6 +344,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
             case R.id.btn_slider:
                 if(miMapview.isNavigating()){
                     btn_switch = CANCEL_BTN;
+                    changeRouteBtnIcon();
                 }
                switch(btn_switch) {
                    case START_POINT_BTN:
