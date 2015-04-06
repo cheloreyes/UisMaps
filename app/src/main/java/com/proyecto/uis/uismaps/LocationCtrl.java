@@ -25,6 +25,7 @@ public class LocationCtrl implements LocationListener {
     private boolean isGPSon = false;
 
     private final Context iContext;
+
     private ProgressDialog progressDialog;
     private boolean hasAccurancy = false;
     private boolean iWantNavigate = false;
@@ -69,10 +70,11 @@ public class LocationCtrl implements LocationListener {
                 iLocationManager = (LocationManager) iContext.getSystemService(Context.LOCATION_SERVICE);
                 iLocationManager.removeUpdates(this);
                 isGPSon = false;
+                hasAccurancy = false;
+
             }
         }
     }
-
     /**
      * Está el Gps iniciado?
      * @return Estado del Gps.
@@ -87,6 +89,10 @@ public class LocationCtrl implements LocationListener {
      */
     public boolean isNavigateStarted(){
         return isNavigateStarted;
+    }
+
+    public boolean isAccurancy() {
+        return hasAccurancy;
     }
 
     /**

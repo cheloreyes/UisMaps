@@ -12,6 +12,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -293,33 +294,41 @@ public class MapView extends View implements View.OnTouchListener,
      * @param aLatitude  Coordenarda Y del evento.
      */
     public void setSelectedPoint(double aLongitude, double aLatitude) {
-       if(canSetPoints) {
+        if(canSetPoints) {
            interestingPointLong = aLongitude;
            interestingPointLat = aLatitude;
            miFramework.deleteObjects(ID_SELECTED_POINT, ID_SELECTED_POINT);
            miFramework.addPointObject("pushpin", interestingPointLong, interestingPointLat, Framework.DEGREE_COORDS,
                    "", 0, ID_SELECTED_POINT, 0);
            Log.v(TAG, "pone marcador en: " + aLongitude +", "+aLatitude);
-
-           ArrayList<NearbyPlace> neabyPoint = getNearbyPlaces(interestingPointLong, interestingPointLat);
-           if(neabyPoint.size() != 0){
-               currentPlace = neabyPoint.get(0);
-               if(lastPlace == null) lastPlace= currentPlace;
-               if(!UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
-                   miContent.setPanelContent(neabyPoint.get(0).getLabel(), true);
-               }
-               else{
-                   if(hasAccurancy()){
-                       //iNotify.newNotification("Iniciando navegación hacia: "+ neabyPoint.get(0).getLabel());
-                       setRouteEnd();
-                   }
-                   else{
-                       //iNotify.newNotification(iContext.getString(R.string.init_gps));
-                       //toggleGPS(true);
-                       //removeMapObjects();
-                   }
-               }
-           }
+            ArrayList<NearbyPlace> neabyPoint = getNearbyPlaces(interestingPointLong, interestingPointLat);
+            if(neabyPoint.size() != 0){
+                currentPlace = neabyPoint.get(0);
+                if(lastPlace == null) lastPlace= currentPlace;
+                if(!UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
+                    miContent.setPanelContent(neabyPoint.get(0).getLabel(), true);
+                }
+                else{
+                    if(hasAccurancy()){
+                        //iNotify.newNotification("Iniciando navegación hacia: "+ neabyPoint.get(0).getLabel());
+                        setRouteEnd();
+                    }
+                    else{
+                        //iNotify.newNotification(iContext.getString(R.string.init_gps));
+                        iLocation.switchLocation(true);
+                        iNotify.newNotification(iContext.getString(R.string.init_gps));
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            public void run() {
+                                if(iLocation.isAccurancy()) {
+                                    setRouteEnd();
+                                }
+                            }
+                        }, 5000);
+                        //removeMapObjects();
+                    }
+                }
+            }
 
            getMap();
            invalidate();
@@ -633,8 +642,10 @@ public class MapView extends View implements View.OnTouchListener,
             displayCurrentLocation();
             if(UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)){
                 ArrayList<NearbyPlace> nearbys = getNearbyPlaces(iCurrentLon, iCurrentLat);
-                iNotify.newNotification(whereIam(nearbys));
-                Log.v(TAG, whereIam(nearbys));
+                if(nearbys.size() != 0) {
+                    iNotify.newNotification(whereIam(nearbys));
+                    Log.v(TAG, whereIam(nearbys));
+                }
             }
         }
     }
@@ -678,8 +689,9 @@ public class MapView extends View implements View.OnTouchListener,
             }else {
                 Log.v(TAG + "LocationCtrl", "No está dentro del campus. Ubicación: " + iCurrentLon + " , " + iCurrentLat);
                 iNotify.newNotification(iContext.getString(R.string.not_inside_campus));
-                //toggleGPS(false);
                 iLocation.switchLocation(false);
+                iCurrentLon = 0.0;
+                iCurrentLat = 0.0;
             }
             getMap();
             invalidate();
