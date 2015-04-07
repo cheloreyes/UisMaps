@@ -127,9 +127,10 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
      * @param degrees Angulo de giro.
      * @param dist Distancia para el próximo giro.
      */
-    public void navigation(int turnType, double degrees, double dist){
+    public void navigation(int fulldistance, int turnType, double degrees, double dist, double nextDist, String place){
         if(lastTurnType != turnType && lastTurnType != 0) {
             String toSpeech = "";
+            degrees = Math.abs(Math.round(degrees));
             switch (turnType) {
                 case R.mipmap.ahead_arrow:
                     toSpeech = " Continúa adelante";
@@ -147,7 +148,20 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                     toSpeech = " Gire a la derecha";
                     break;
             }
-            toSpeech = "A: " + Math.round(dist) +" metros aproximadamente.\n" + toSpeech + "." + Math.round(degrees) +" grados.";
+            if(fulldistance == 0) {
+                stop();
+                toSpeech = miContext.getString(R.string.arrive) + " a su destino: " + place;
+            }
+            else {
+                stop();
+                toSpeech = "A: " + Math.round(dist) +" Metros.\n" + toSpeech + ".";
+                if(degrees > 40) {
+                    toSpeech = toSpeech + degrees + " grados.";
+                }
+                if(nextDist > 0) {
+                    toSpeech = toSpeech + " Luego, continúe " + (int) nextDist + " Metros, aproximada-mente.";
+                }
+            }
             if(!miTts.isSpeaking())textToSpeech(toSpeech);
         }
         lastTurnType = turnType;

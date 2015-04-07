@@ -39,7 +39,7 @@
     <string name="locate_notify">Usted está en:</string>
     <string name="action_search">Buscar lugar.</string>
     <string name="asStartPoint">marcado como punto de inicio.</string>
-    <string name="asEndPoint">marcado como destino.</string>
+    <string name="asEndPoint"> marcado como destino.</string>
     <string name="navigation_title">Destino:</string>
     <string name="action_categories">Categorías</string>
     <string name="switch_route">Cambiar ruta.</string>

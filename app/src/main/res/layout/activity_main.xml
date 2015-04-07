@@ -79,7 +79,7 @@
                     android:id="@+id/btn_slider"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
+                    android:layout_margin="14dp"
                     android:layout_gravity="center"
                     android:src="@mipmap/add_point"
                     fab:fab_colorNormal="@color/my_material_green"
@@ -88,25 +88,48 @@
                     fab:fab_shadow="false"/>
             </LinearLayout>
             <ImageView
-                android:layout_width="140dp"
-                android:layout_height="140dp"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
                 android:layout_gravity="center"
-                android:layout_marginBottom="15dp"
-                android:layout_marginTop="7dp"
+                android:layout_marginTop="10dp"
                 android:id="@+id/img_slider"
                 android:src="@mipmap/loading_arrow">
             </ImageView>
             <LinearLayout
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:layout_marginRight="10dp"
+                        android:id="@+id/nav_info_a"
+                        android:textSize="14sp"
+                        android:text=""/>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:layout_marginRight="10dp"
+                        android:id="@+id/nav_info_b"
+                        android:textSize="14sp"
+                        android:text=""/>
+                </LinearLayout>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:id="@+id/description_text"
                     android:layout_weight="1"
                     android:gravity="top|center_horizontal"
-                    android:padding="13dp"
-                    android:textSize="16sp"/>
+                    android:padding="10dp"
+                    android:textSize="15sp"/>
                 </LinearLayout>
             <LinearLayout
                 android:layout_width="fill_parent"

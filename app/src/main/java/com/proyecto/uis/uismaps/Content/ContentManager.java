@@ -63,6 +63,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private final TextView iInfoTextB;
     private final TextView iBodyText;
     private final TextView iStatus;
+    private final TextView NavInfoA;
+    private final TextView NavInfoB;
     private final Vibrator iVibrator;
     private final ListView iListView;
     private final TextView iDesciption;
@@ -76,6 +78,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private Notify iNotify;
 
     private int i = 0;
+    private VoiceManager iVoiceManager;
     // **********************
     // Constructor
     // **********************
@@ -99,7 +102,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      */
     public ContentManager(Context context, MapView mapView, VoiceManager voiceManager, FloatingActionButton locationBtn, FloatingActionButton routesBtn, ImageView imgInfo
     , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer, TextView statusText, ListView listView,
-                          TextView description) {
+                          TextView description, TextView navInfoA, TextView navInfoB) {
         super(context);
         miContext = context;
         iPanel = panel;
@@ -114,10 +117,13 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iMapContainer = mapContainer;
         miMapview = mapView;
         iDesciption = description;
+        NavInfoA = navInfoA;
+        NavInfoB = navInfoB;
 
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
         iPanel.setPanelState(PanelState.HIDDEN);
         iLocationBtn.setOnClickListener(this);
+        iLocationBtn.setOnLongClickListener(this);
         iRoutesBtn.setOnClickListener(this);
         iListView = listView;
         iVibrator = (Vibrator) miContext.getSystemService(Context.VIBRATOR_SERVICE);
@@ -168,13 +174,17 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      */
     public void setPanelContent(String title, String textInfoA, String textInfoB, int img) {
         iPanel.setPanelState(PanelState.ANCHORED);
+        resetViews();
         if(title != null) {
             resizeText(title);
             iTileTxt.setText(title);
         }
-        if(textInfoA != null) iInfoTextA.setText(textInfoA);
-        if(textInfoB != null) iInfoTextB.setText(textInfoB);
+        if(textInfoA != null) NavInfoA.setText(textInfoA);
+        if(textInfoB != null) NavInfoB.setText(textInfoB);
         iImgInfo.setImageResource(img);
+        iImgInfo.setScaleY(1.0f);
+        iImgInfo.setScaleX(1.0f);
+        iPanel.setAnchorPoint(0.4f);
         iPanel.setTouchEnabled(false);
     }
 
@@ -186,10 +196,12 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     public void setPanelContent(String title, boolean enablePanel) {
         Bitmap imgBuilding = null;
         String description = null;
+        resetViews();
         if(title != null) {
             resizeText(title);
             iTileTxt.setText(title);
             if(enablePanel){
+                iPanel.setAnchorPoint(0.35f);
                 iInfoTextA.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
                 iInfoTextB.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
                 iInfoTextA.setText("Dependencia");
@@ -208,8 +220,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 imgBuilding = iFinder.getImgBuilding(title);
                 if(imgBuilding != null) {
                     iImgInfo.setImageBitmap(imgBuilding);
-                    iImgInfo.setScaleY(1.4f);
-                    iImgInfo.setScaleX(1.4f);
+                    iImgInfo.setScaleY(1.6f);
+                    iImgInfo.setScaleX(1.6f);
                 }
                 else iImgInfo.setImageBitmap(null);
                 description = iFinder.getDescriptionBuilding(title);
@@ -251,7 +263,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      *      * @END_POINT_BTN: Agregar punto de destino.
      *      * @CANCEL_BTN: Cancelar .
      */
-    private void changeRouteBtnIcon() {
+    public void changeRouteBtnIcon(int btn_switch) {
+        this.btn_switch = btn_switch;
         switch(btn_switch) {
             case START_POINT_BTN:
                 iRoutesBtn.setImageResource(R.mipmap.add_point);
@@ -269,8 +282,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      * Restaura el contenido de la UI.
      */
     public void restoreContent(){
-        btn_switch = START_POINT_BTN;
-        changeRouteBtnIcon();
+        changeRouteBtnIcon(START_POINT_BTN);
         setStatusLocationBtn(OUT_OF_SERVICE);
         if (iPanel != null && iPanel.getPanelState() != PanelState.HIDDEN) {
             iPanel.setPanelState(PanelState.HIDDEN);
@@ -319,6 +331,16 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         callerActivity.startActivityForResult(intent, MediaRecorder.AudioSource.VOICE_RECOGNITION);
     }
 
+    private void resetViews() {
+        NavInfoB.setText("");
+        NavInfoA.setText("");
+        iInfoTextA.setText("");
+        iInfoTextB.setText("");
+    }
+    public void setVoiceManager(VoiceManager voiceManager){
+        iVoiceManager = voiceManager;
+    }
+
     // **********************
     // Methods from SuperClass
     // **********************
@@ -335,29 +357,20 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 //iStatus.setText("rotación: " + iCompass.getCurrentDegree());
                 miMapview.locateMe();
                 //miMapview.showNavigation();
-                if(!miMapview.hasAccurancy()) {
-                    btn_switch = END_POINT_BTN;
-                    changeRouteBtnIcon();
-                }
+
                 break;
 
             case R.id.btn_slider:
-                if(miMapview.isNavigating()){
-                    btn_switch = CANCEL_BTN;
-                    changeRouteBtnIcon();
-                }
                switch(btn_switch) {
                    case START_POINT_BTN:
                        miMapview.setRouteStart();
                        Log.v(TAG,"switch: "+btn_switch);
-                       btn_switch = END_POINT_BTN;
-                       changeRouteBtnIcon();
+                       changeRouteBtnIcon(END_POINT_BTN);
                        break;
                    case END_POINT_BTN:
                        miMapview.setRouteEnd();
                        Log.v(TAG,"switch: "+btn_switch);
-                       btn_switch = CANCEL_BTN;
-                       changeRouteBtnIcon();
+                       changeRouteBtnIcon(CANCEL_BTN);
                        break;
                    case CANCEL_BTN:
                        miMapview.removeMapObjects();
@@ -367,8 +380,13 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                }
                 break;
             case ID_MAP_CONTAINER:
-                Log.v(TAG, "Click Simple");
-                miMapview.locateMe();
+                if(iVoiceManager.isSpeaking()){
+                    iVoiceManager.stop();
+                }
+                else{
+                    Log.v(TAG, "Click Simple");
+                    miMapview.locateMe();
+                }
                 break;
         }
     }
@@ -376,13 +394,25 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     @Override
     public boolean onLongClick(View v) {
         Log.v(TAG, "Long Click ");
-        iNotify.newNotification(miContext.getString(R.string.after_tone));
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            public void run() {
-               startVoiceRecognition();
-            }
-        }, 3000);
+        switch (v.getId()) {
+            case ID_MAP_CONTAINER:
+                if(miMapview.isNavigating()){
+                    miMapview.switchNavigation(false);
+                }
+                else{
+                    iNotify.newNotification(miContext.getString(R.string.after_tone));
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        public void run() {
+                            startVoiceRecognition();
+                        }
+                    }, 3000);
+                }
+                break;
+            case R.id.loc_btn:
+                miMapview.switchOffLocation(false);
+                miMapview.removeMapObjects();
+        }
         //startVoiceRecognition();
         return true;
     }

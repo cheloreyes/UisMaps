@@ -18,8 +18,8 @@ import com.proyecto.uis.uismaps.mapview.MapView;
  */
 public class LocationCtrl implements LocationListener {
 
-    private static final int MIN_TIME = 2500;
-    private static final int MIN_DISTANCE = 2;
+    private static final int MIN_TIME = 1500;
+    private static final int MIN_DISTANCE = 1;
     private final MapView iMapView;
 
     private boolean isGPSon = false;
@@ -71,6 +71,7 @@ public class LocationCtrl implements LocationListener {
                 iLocationManager.removeUpdates(this);
                 isGPSon = false;
                 hasAccurancy = false;
+                iMapView.setAccurancy(false);
 
             }
         }
@@ -117,6 +118,7 @@ public class LocationCtrl implements LocationListener {
             progressDialog.hide();
             progressDialog.dismiss();
             hasAccurancy = location.hasAccuracy();
+            iMapView.setAccurancy(hasAccurancy);
         }
         iMapView.setICurrentLocation(location.getLongitude(), location.getLatitude());
         //miCurrentLon = location.getLongitude() + 0.00000895;
