@@ -10,11 +10,9 @@
             android:key="voice_capabilities"
             android:summary="@string/details_voice"
             android:title="@string/enable_voice_capabilities" />
-
-        <PreferenceScreen android:title="@string/about_us">
-
-        </PreferenceScreen>
-
+        <Preference
+            android:key="about_us"
+            android:title="@string/about_us"/>
 
     </PreferenceCategory>
 </PreferenceScreen>

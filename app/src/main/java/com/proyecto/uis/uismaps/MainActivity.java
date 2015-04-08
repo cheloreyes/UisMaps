@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -91,6 +92,9 @@ public class MainActivity extends ActionBarActivity implements Constants {
         if (id == R.id.action_settings) {
             startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
             return true;
+        }
+        if(id == R.id.action_poll) {
+            lunchPoll();
         }
 
         return super.onOptionsItemSelected(item);
@@ -213,5 +217,11 @@ public class MainActivity extends ActionBarActivity implements Constants {
                                               imgSlider, titleText, infoTextA, infoTextB, bodyTextA, mLayout, mapContainer, statusText, listView, descriptionTxt,
                 navInfoA, navInfoB);
         //CompassCtrl compass = new CompassCtrl(this, imgSlider);
+    }
+    public void lunchPoll() {
+        String url = "http://goo.gl/forms/Kra0xi76Yj";
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
     }
 }

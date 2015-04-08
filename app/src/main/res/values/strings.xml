@@ -3,6 +3,7 @@
 
     <string name="app_name">UisMaps</string>
     <string name="action_settings">Ajustes</string>
+    <string name="action_poll">Responder encuesta</string>
 
     <string name="destination_not_know">No es posible iniciar la navegación, destino desconocido. Por favor seleccione el destino tocando en el mapa e intente nuevamente.</string>
     <string name="waiting_GPS">Esperando ubicación GPS.</string>

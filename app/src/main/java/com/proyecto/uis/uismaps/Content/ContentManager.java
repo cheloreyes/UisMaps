@@ -160,6 +160,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      * Establece al layout contenedor a registrar los eventos tactiles. Cuando se habilita la interfaz especial.
      */
     private void initBlindCapabilities() {
+        miMapview.removeMapObjects();
         iMapContainer.setOnClickListener(this);
         iMapContainer.setOnLongClickListener(this);
         iMapContainer.setId(ID_MAP_CONTAINER);

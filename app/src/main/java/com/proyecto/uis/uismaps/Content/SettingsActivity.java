@@ -1,9 +1,13 @@
 package com.proyecto.uis.uismaps.Content;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.view.MenuItem;
 
 import com.proyecto.uis.uismaps.Constants;
 import com.proyecto.uis.uismaps.R;
@@ -28,6 +32,16 @@ public class SettingsActivity extends Activity{
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.settings_screen);
+            Preference aboutUs = (Preference) getPreferenceManager().findPreference("about_us");
+            if(aboutUs != null) {
+                aboutUs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        lunchWebpage();
+                        return true;
+                    }
+                });
+            }
         }
 
         /**
@@ -40,11 +54,9 @@ public class SettingsActivity extends Activity{
          */
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if(key.equals(EYESIGHT_ASSISTANT)) {
 
-
-            }
         }
+
         @Override
         public void onResume() {
             super.onResume();
@@ -57,6 +69,13 @@ public class SettingsActivity extends Activity{
             super.onPause();
             getPreferenceScreen().getSharedPreferences()
                     .unregisterOnSharedPreferenceChangeListener(this);
+        }
+
+        private void lunchWebpage() {
+            String url = "http://www.uismaps.com/#AcercaUISMaps";
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            startActivity(i);
         }
     }
 }
