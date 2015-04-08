@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
-import android.view.MenuItem;
 
 import com.proyecto.uis.uismaps.Constants;
 import com.proyecto.uis.uismaps.R;
@@ -54,9 +53,11 @@ public class SettingsActivity extends Activity{
          */
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            if(key.equals(EYESIGHT_ASSISTANT)) {
 
+
+            }
         }
-
         @Override
         public void onResume() {
             super.onResume();
@@ -70,8 +71,7 @@ public class SettingsActivity extends Activity{
             getPreferenceScreen().getSharedPreferences()
                     .unregisterOnSharedPreferenceChangeListener(this);
         }
-
-        private void lunchWebpage() {
+        public void lunchWebpage() {
             String url = "http://www.uismaps.com/#AcercaUISMaps";
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setData(Uri.parse(url));

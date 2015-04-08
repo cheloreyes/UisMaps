@@ -70,6 +70,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         miMapa.setVoiceManager(iVoiceManager);
         miMapa.setContentManager(miContent);
         miContent.setCallingActivity(this);
+
         }
 
     @Override
