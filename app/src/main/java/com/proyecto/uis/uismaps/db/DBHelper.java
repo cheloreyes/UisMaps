@@ -140,7 +140,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
 
     public Bitmap imageBuilding(String building) {
         byte[] image = new byte[1024];
-        Cursor c = iDataBase.rawQuery("SELECT Image FROM Edifice WHERE EdificeName='" + building + "'", null);
+        Cursor c = iDataBase.rawQuery("SELECT Image FROM Edifice WHERE EdificeName LIKE '%" + building + "%'", null);
         if(c != null) {
             while (c.moveToNext()){
                 if(c.getBlob(0) != null) image = c.getBlob(0);
