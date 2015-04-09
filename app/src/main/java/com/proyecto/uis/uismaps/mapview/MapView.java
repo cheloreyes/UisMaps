@@ -394,7 +394,7 @@ public class MapView extends View implements View.OnTouchListener,
             if (miRouteEndLon != 0 && miRouteEndLat != 0 && miRouteStartLon != 0 && miRouteStartLat != 0) {
                 if(!hasAccurancy) {
                     showRoute();
-                    iNotify.newNotification(currentPlace.getLabel() + iContext.getString(R.string.asEndPoint));
+                    if(currentPlace != null) iNotify.newNotification(currentPlace.getLabel() + iContext.getString(R.string.asEndPoint));
                 }
                 else {
                     switchNavigation(true);
