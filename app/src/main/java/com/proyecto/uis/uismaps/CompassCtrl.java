@@ -185,6 +185,7 @@ public class CompassCtrl implements SensorEventListener{
     public float getCardinalPoint() {
         return cardinalPoint;
     }
+
     // **********************
     // Methods from super class
     // **********************
@@ -206,18 +207,17 @@ public class CompassCtrl implements SensorEventListener{
             SensorManager.getOrientation(mR, iOrientation);
             float radiants = iOrientation[0];
             float degress = (float)(Math.toDegrees(radiants) + 360) % 360;
-
             if(Math.abs(currentDegree + degress) > 89 && Math.abs(currentDegree + degress) < 91) {
                 cardinalPoint = Math.round(-degress);
             }
-            if(iImageView != null){
-                RotateAnimation ra = new RotateAnimation(Math.round(-currentDegree), Math.round(-degress), Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                //Log.v("Brujula", "De: " + Math.round(currentDegree) +" a :" +  Math.round(-degress));
-                ra.setDuration(250);
-                ra.setFillAfter(true);
-                iImageView.startAnimation(ra);
-            }
-            if(Math.abs(degress + currentDegree) > 10){
+            if(Math.abs(degress - currentDegree) > 24){
+                if(iImageView != null){
+                    RotateAnimation ra = new RotateAnimation(Math.round(-currentDegree), Math.round(-degress), Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    //Log.v("Brujula", "De: " + Math.round(currentDegree) +" a :" +  Math.round(-degress));
+                    ra.setDuration(250);
+                    ra.setFillAfter(true);
+                    iImageView.startAnimation(ra);
+                }
                 currentDegree = degress;
             }
 

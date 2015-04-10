@@ -1,6 +1,7 @@
 package com.proyecto.uis.uismaps;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.util.Log;
 
@@ -42,6 +43,13 @@ public class FileManager implements Constants{
             assetCopy("mapa");
             Log.i(TAG, "Mapa no encontrado, se copia de asset");
         }
+        else {
+            if(needUpdate(f)) {
+                assetCopy("mapa");
+                Log.i(TAG, "Se actualiza Mapa");
+            }
+            else Log.i(TAG, "No necesita actualizar mapa");
+        }
         //Existe la hoja de estilo?
         f = new File(FILE_STYLE);
         if (!f.exists()) {
@@ -58,7 +66,13 @@ public class FileManager implements Constants{
         if (!f.exists()) {
             assetCopy("database");
             Log.i(TAG, "archivo de database no encontrado, se compia de asset");
-
+        }
+        else {
+            if(needUpdate(f)) {
+                assetCopy("database");
+                Log.i(TAG, "Se actualiza base de datos");
+            }
+            else Log.i(TAG, "No necesita actualizar base de datos");
         }
     }
 
@@ -116,5 +130,22 @@ public class FileManager implements Constants{
         while ((read = in.read(buffer)) != -1) {
             out.write(buffer, 0, read);
         }
+    }
+
+    private boolean needUpdate(File file) {
+        SharedPreferences preferences = iContext.getSharedPreferences(ACT_OPTIONS, Context.MODE_PRIVATE);
+        boolean update = false;
+        Log.i(TAG, "Version mapa actual: "+ preferences.getFloat(MAP_VERSION, 0.0f) + " Nueva:" + iContext.getString(R.string.map_version));
+        if(Float.parseFloat(iContext.getString(R.string.map_version)) > preferences.getFloat(MAP_VERSION, 0.0f)) {
+            update = true;
+            file.delete();
+            Log.i(TAG, "Necesita actualizar " + CAMPUS_MAP);
+        }
+        if(Float.parseFloat(iContext.getString(R.string.db_version)) > preferences.getFloat(DB_VERSION, 0.0f)) {
+            update = true;
+            Log.i(TAG, "Necesita actualizar " + DB_PATH + DB_NAME);
+            file.delete();
+        }
+        return update;
     }
 }

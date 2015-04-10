@@ -18,7 +18,7 @@ import com.proyecto.uis.uismaps.mapview.MapView;
  */
 public class LocationCtrl implements LocationListener {
 
-    private static final int MIN_TIME = 1500;
+    private static final int MIN_TIME = 5000;
     private static final int MIN_DISTANCE = 1;
     private final MapView iMapView;
 
@@ -48,6 +48,7 @@ public class LocationCtrl implements LocationListener {
         Alerts alertsDialog = new Alerts(iContext);
         Notify notify = new Notify(iContext);
         progressDialog = new ProgressDialog(iContext);
+        iMapView.switchCompass(true);
         LocationManager iLocationManager;
         if (!isGPSon && status) {
             iLocationManager = (LocationManager) iContext.getSystemService(Context.LOCATION_SERVICE);
@@ -72,6 +73,7 @@ public class LocationCtrl implements LocationListener {
                 isGPSon = false;
                 hasAccurancy = false;
                 iMapView.setAccurancy(false);
+                iMapView.switchCompass(false);
 
             }
         }
@@ -129,7 +131,7 @@ public class LocationCtrl implements LocationListener {
         }
         if (isNavigateStarted) {
             iMapView.navigate(location.getLongitude(), location.getLatitude());
-            iMapView.displayCurrentLocation();
+            //iMapView.displayCurrentLocation();
         } else {
             //locateMe();
             iMapView.displayCurrentLocation();

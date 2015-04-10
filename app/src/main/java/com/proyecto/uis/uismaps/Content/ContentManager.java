@@ -83,6 +83,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     // Constructor
     // **********************
 
+
     /**
      * Toma y guada como referencia todos los componentes de la UI.
      * @param context
@@ -196,6 +197,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     public void setPanelContent(String title, boolean enablePanel) {
         Bitmap imgBuilding = null;
         String description = null;
+        int dependencesSize = 0;
         resetViews();
         if(title != null) {
             resizeText(title);
@@ -209,7 +211,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 iInfoTextB.setTextSize(19.0f);
                 iInfoTextA.setTextSize(19.0f);
                 iListView.setAdapter(iFinder.getDependencesAdapter(title));
-                if(iFinder.getiSpaces().size() == 0) {
+                dependencesSize = iFinder.getiSpaces().size();
+                if(dependencesSize== 0) {
                     iInfoTextA.setVisibility(INVISIBLE);
                     iInfoTextB.setVisibility(INVISIBLE);
                 }
@@ -239,6 +242,9 @@ public class ContentManager extends View implements Constants, View.OnClickListe
             iPanel.setPanelState(PanelState.COLLAPSED);
         }
         if(title == miContext.getString(R.string.no_places_nearby)){
+            iPanel.setTouchEnabled(false);
+        }
+        if(imgBuilding == null && description == null && dependencesSize == 0){
             iPanel.setTouchEnabled(false);
         }
     }

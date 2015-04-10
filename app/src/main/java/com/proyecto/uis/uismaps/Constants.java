@@ -21,6 +21,9 @@ public interface Constants {
     public static final String DB_PATH = UIS_MAPS_FOLDER + "/database/";
     public static final String DB_NAME = "uis_maps.sqlite";
 
+    public static final String DB_VERSION ="db_version";
+    public static final String MAP_VERSION ="map_version";
+
     public static final int END_ROUTE_BUTTON_ID = 3;
     public static final int FIND_ME_BUTTON_ID = 1;
     public static final int START_ROUTE_BUTTON_ID = 2;

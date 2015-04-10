@@ -59,5 +59,13 @@ public class Alerts {
                 .setCancelable(false)
                 .show();
     }
+    public void arriveToDestination(String destino){
+        new AlertDialog.Builder(iContext)
+                .setTitle(iContext.getString(R.string.arrive))
+                .setMessage("Ha llegado a: " + destino +".")
+                .setPositiveButton("Gracias", null)
+                .setCancelable(false)
+                .show();
+    }
 
 }

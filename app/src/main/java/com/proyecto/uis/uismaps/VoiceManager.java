@@ -131,26 +131,10 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         if(lastTurnType != turnType && lastTurnType != 0) {
             String toSpeech = "";
             degrees = Math.abs(Math.round(degrees));
-            switch (turnType) {
-                case R.mipmap.ahead_arrow:
-                    toSpeech = " Continúa adelante";
-                    break;
-                case R.mipmap.left_arrow:
-                    toSpeech = " Gire a la izquierda";
-                    break;
-                case R.mipmap.soft_left_arrow:
-                    toSpeech = " Gire a la izquierda";
-                    break;
-                case R.mipmap.right_arrow:
-                    toSpeech = " Gire a la derecha";
-                    break;
-                case R.mipmap.soft_right_arrow:
-                    toSpeech = " Gire a la derecha";
-                    break;
-            }
+            toSpeech = getTurnIndication(turnType);
             if(fulldistance == 0) {
                 stop();
-                toSpeech = miContext.getString(R.string.arrive) + " a su destino: " + place;
+                toSpeech = miContext.getString(R.string.arrive) + " : " + place;
             }
             else {
                 stop();
@@ -166,6 +150,28 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         }
         lastTurnType = turnType;
 
+    }
+
+    public String getTurnIndication(int turnType) {
+        String toSpeech = "";
+        switch (turnType) {
+            case R.mipmap.ahead_arrow:
+                toSpeech = " Continúa adelante";
+                break;
+            case R.mipmap.left_arrow:
+                toSpeech = " Gire a la izquierda";
+                break;
+            case R.mipmap.soft_left_arrow:
+                toSpeech = " Gire a la izquierda";
+                break;
+            case R.mipmap.right_arrow:
+                toSpeech = " Gire a la derecha";
+                break;
+            case R.mipmap.soft_right_arrow:
+                toSpeech = " Gire a la derecha";
+                break;
+        }
+        return toSpeech;
     }
 
     /**

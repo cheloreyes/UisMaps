@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="db_version">0.22</string>
+    <string name="map_version">0.26</string>
+
     <string name="app_name">UisMaps</string>
     <string name="action_settings">Ajustes</string>
     <string name="action_poll">Responder encuesta</string>
@@ -48,6 +51,6 @@
     <string name="righthand">A la derecha.</string>
     <string name="behind">Atrás.</string>
     <string name="lefthand">A la izquierda.</string>
-    <string name="arrive">Ha llegado.</string>
+    <string name="arrive">Ha llegado a su destino.</string>
     <string name="after_tone">Después del tono, diga a dónde quiere ir.</string>
 </resources>
