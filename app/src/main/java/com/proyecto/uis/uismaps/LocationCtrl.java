@@ -8,6 +8,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.cartotype.Framework;
 import com.proyecto.uis.uismaps.Content.Alerts;
 import com.proyecto.uis.uismaps.mapview.MapView;
 
@@ -18,8 +19,8 @@ import com.proyecto.uis.uismaps.mapview.MapView;
  */
 public class LocationCtrl implements LocationListener {
 
-    private static final int MIN_TIME = 5000;
-    private static final int MIN_DISTANCE = 1;
+    private static final int MIN_TIME = 1000;
+    private static final int MIN_DISTANCE = 2;
     private final MapView iMapView;
 
     private boolean isGPSon = false;
@@ -31,6 +32,7 @@ public class LocationCtrl implements LocationListener {
     private boolean iWantNavigate = false;
 
     private boolean isNavigateStarted = false;
+    private float lastAccurancy;
 
     public LocationCtrl(Context context, MapView mapView) {
         iContext = context;
@@ -48,7 +50,6 @@ public class LocationCtrl implements LocationListener {
         Alerts alertsDialog = new Alerts(iContext);
         Notify notify = new Notify(iContext);
         progressDialog = new ProgressDialog(iContext);
-        iMapView.switchCompass(true);
         LocationManager iLocationManager;
         if (!isGPSon && status) {
             iLocationManager = (LocationManager) iContext.getSystemService(Context.LOCATION_SERVICE);
@@ -73,8 +74,6 @@ public class LocationCtrl implements LocationListener {
                 isGPSon = false;
                 hasAccurancy = false;
                 iMapView.setAccurancy(false);
-                iMapView.switchCompass(false);
-
             }
         }
     }
@@ -122,15 +121,28 @@ public class LocationCtrl implements LocationListener {
             hasAccurancy = location.hasAccuracy();
             iMapView.setAccurancy(hasAccurancy);
         }
+        lastAccurancy = location.getAccuracy();
         iMapView.setICurrentLocation(location.getLongitude(), location.getLatitude());
         //miCurrentLon = location.getLongitude() + 0.00000895;
         //miCurrentLat = location.getLatitude() - 0.00004458;
         if (iWantNavigate) {
-            iMapView.switchNavigation(true);
+            //iMapView.switchNavigation(true);
             iWantNavigate = false;
         }
         if (isNavigateStarted) {
-            iMapView.navigate(location.getLongitude(), location.getLatitude());
+            if(location.getAccuracy() <= lastAccurancy){
+                //iMapView.navigate(location.getLongitude(), location.getLatitude());
+                int validity = Framework.POSITION_VALID | Framework.TIME_VALID;
+                if (location.hasSpeed())
+                    validity |= Framework.SPEED_VALID;
+                if (location.hasBearing())
+                    validity |= Framework.COURSE_VALID;
+                if (location.hasAltitude())
+                    validity |= Framework.HEIGHT_VALID;
+                double time = location.getTime() / 1000;
+                iMapView.secondNavigation(validity, time, location.getLongitude(),
+                        location.getLatitude(), location.getSpeed(), location.getBearing(), location.getAltitude());
+            }
             //iMapView.displayCurrentLocation();
         } else {
             //locateMe();

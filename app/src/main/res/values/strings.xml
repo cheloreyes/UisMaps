@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="db_version">0.22</string>
-    <string name="map_version">0.26</string>
+    <string name="db_version">0.28</string>
+    <string name="map_version">0.36</string>
 
     <string name="app_name">UisMaps</string>
     <string name="action_settings">Ajustes</string>
@@ -12,7 +12,7 @@
     <string name="waiting_GPS">Esperando ubicación GPS.</string>
     <string name="navigation_error">No se pudo iniciar la navegación.</string>
     <string name="gps_device_on">Iniciando servicio GPS, ésto puede tomar un tiempo.</string>
-    <string name="conecting">Conectando...</string>
+    <string name="conecting">Conectando…</string>
     <string name="please_wait">Por favor espera</string>
     <string name="cancel">Cancelar</string>
     <string name="location_unable">Servicios de ubicación inhabilitados</string>
@@ -23,8 +23,6 @@
     <string name="power_save_title">Ahorro de batería</string>
     <string name="power_save_description">UISMaps utilizará el proveedor de red para saber tu ubicación pero puede ser menos preciso</string>
     <string name="title_activity_splash">Splash</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_vista_mapa">Map</string>
     <string name="no_gps">Su dispositivo no tiene GPS. No es posible hacer seguimiento a su navegación, lo sentimos!</string>
     <string name="current_location">Mi ubicación actual</string>
@@ -39,7 +37,7 @@
     <string name="navigation_turn_off">Apagando navegación.</string>
     <string name="turn_round">De media vuelta.</string>
     <string name="new_route">Calculando nueva ruta.</string>
-    <string name="calculating">Calculando...</string>
+    <string name="calculating">Calculando…</string>
     <string name="locate_notify">Usted está en:</string>
     <string name="action_search">Buscar lugar.</string>
     <string name="asStartPoint">marcado como punto de inicio.</string>
@@ -53,4 +51,10 @@
     <string name="lefthand">A la izquierda.</string>
     <string name="arrive">Ha llegado a su destino.</string>
     <string name="after_tone">Después del tono, diga a dónde quiere ir.</string>
+    <string name="error_route_title">"Error al generar ruta."</string>
+    <string name="error_route_sms">Ha ocurrido un problema al generar la ruta, por favor intente nuevamente.</string>
+
+    <string name="ok">OK</string>
+
+
 </resources>

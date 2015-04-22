@@ -15,14 +15,13 @@
         android:layout_marginLeft="5dp" />
 
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="95dp"
         android:layout_height="wrap_content"
         android:text="test"
         android:id="@+id/num_office"
         android:padding="10dp"
-        android:layout_gravity="right"
-        android:layout_weight="1"
         android:layout_marginRight="5dp"
-        android:gravity="right" />
+        android:layout_gravity="right"
+        android:gravity="center_horizontal" />
 
 </LinearLayout>

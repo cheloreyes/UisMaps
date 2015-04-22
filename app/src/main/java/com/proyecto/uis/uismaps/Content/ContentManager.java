@@ -223,8 +223,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 imgBuilding = iFinder.getImgBuilding(title);
                 if(imgBuilding != null) {
                     iImgInfo.setImageBitmap(imgBuilding);
-                    iImgInfo.setScaleY(1.6f);
-                    iImgInfo.setScaleX(1.6f);
+                    iImgInfo.setScaleY(1.2f);
+                    iImgInfo.setScaleX(1.2f);
                 }
                 else iImgInfo.setImageBitmap(null);
                 description = iFinder.getDescriptionBuilding(title);

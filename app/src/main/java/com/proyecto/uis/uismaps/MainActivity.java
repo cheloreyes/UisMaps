@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -21,6 +22,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
@@ -47,6 +49,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
     private SlidingUpPanelLayout mLayout;
     private Finder iFinder;
     private SearchView searchView;
+    private CompassCtrl compass;
 
 
     @Override
@@ -69,6 +72,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         init_Componets();
         miMapa.setVoiceManager(iVoiceManager);
         miMapa.setContentManager(miContent);
+        miMapa.setiCompass(compass);
         miContent.setCallingActivity(this);
 
         }
@@ -127,6 +131,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
     protected void onPause() {
         super.onPause();
         miMapa.saveState();
+        compass.pauseSensor();
         //miMapa.toggleGPS(false);
         //iVoiceManager.stop();
         //TODO: agregar a los estados guardados el estado del GPS y la ubicación del punto seleccionado.
@@ -136,6 +141,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
     protected void onDestroy() {
         super.onDestroy();
         iVoiceManager.shutdown();
+        compass.pauseSensor();
         iFinder.closeDataBase();
     }
 
@@ -153,6 +159,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         super.onResume();
         //miContent.setMyContent(preferences.getBoolean(EYESIGHT_ASSISTANT, false));
         miContent.checkViews();
+        compass.resumeSensors();
     }
 
     /**
@@ -194,6 +201,8 @@ public class MainActivity extends ActionBarActivity implements Constants {
         TextView descriptionTxt = (TextView) findViewById(R.id.description_text);
         TextView navInfoA= (TextView) findViewById(R.id.nav_info_a);
         TextView navInfoB= (TextView) findViewById(R.id.nav_info_b);
+        final ImageView compassPointer = (ImageView) findViewById(R.id.compass_pointer);
+        final ImageView compassBase = (ImageView) findViewById(R.id.compass);
         mLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
             public void onPanelSlide(View panel, float slideOffset) {
@@ -205,19 +214,44 @@ public class MainActivity extends ActionBarActivity implements Constants {
             @Override
             public void onPanelCollapsed(View panel) {
                 btnSlider.setVisibility(View.VISIBLE);
+                RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) compassPointer.getLayoutParams();
+                lp.topMargin = 0;
+                compassPointer.setLayoutParams(lp);
+                compassBase.setLayoutParams(lp);
             }
             @Override
             public void onPanelAnchored(View panel) {
                 btnSlider.setVisibility(View.VISIBLE);
+                compassBase.setVisibility(View.VISIBLE);
+                compassPointer.setVisibility(View.VISIBLE);
+            //miMapa.fixCenterView();
+                RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) compassPointer.getLayoutParams();
+                Point size = new Point();
+                getWindowManager().getDefaultDisplay().getSize(size);
+                int height = size.y;
+                if(miMapa.isNavigating()){
+                    lp.topMargin = (int) (height * 0.35f);
+                }
+                else{
+                    lp.topMargin = (int) (height * 0.3f);
+                }
+
+                compassBase.setLayoutParams(lp);
+                compassPointer.setLayoutParams(lp);
             }
             @Override
             public void onPanelHidden(View panel) {
+                RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) compassPointer.getLayoutParams();
+                lp.topMargin = 0;
+                compassPointer.setLayoutParams(lp);
+                compassBase.setLayoutParams(lp);
             }
         });
         miContent = new ContentManager(this, miMapa, iVoiceManager, btnLocation, btnSlider,
                                               imgSlider, titleText, infoTextA, infoTextB, bodyTextA, mLayout, mapContainer, statusText, listView, descriptionTxt,
                 navInfoA, navInfoB);
-        //CompassCtrl compass = new CompassCtrl(this, imgSlider);
+
+        compass = new CompassCtrl(this, compassPointer);
     }
     public void lunchPoll() {
         String url = "http://goo.gl/forms/Kra0xi76Yj";

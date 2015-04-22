@@ -18,7 +18,7 @@ public class Thesaurus {
     // **********************
     private static final String[] KEYS = {"portería carrera 27", "Laboratorios Pesados", "Teatro al aire libre Jose Antonio Galan",
             "Auditorio Luis A. Calvo", "Laboratorios Livianos", "Aula Maxima de Ciencias", "Jorge Bautista Vesga",
-            "Ciencias Humanas", "Daniel Casas", "Federico Mamitza Bayer", "CENTIC", "Planta Telefonica", "Canchas Multiples", "CICELPA CEIAM"};
+            "Ciencias Humanas", "Daniel Casas", "Federico Mamitza Bayer", "CENTIC", "Planta Telefónica", "Canchas Multiples", "CICELPA CEIAM"};
 
     private static final String[] ARTICLES = {"a","al","como","cómo", "llegar", "quiero", "ir", "la", "el", "edificio", "las"};
 
@@ -26,7 +26,7 @@ public class Thesaurus {
                                         "facultad de física mecánica", "físico mecánica", "pesados", "lp"};
     private static final String[] LUIS_A = {"Burladero", "luisa", "luis", "luis A", "luis  calvo", "calvo", "luisa calvo",
                               "auditorio luis calvo", "auditorio luis"};
-    private static final String[] ENTRY = {"entrada", "ingreso", "entrada principal"};
+    private static final String[] ENTRY = {"entrada", "ingreso", "entrada principal", "portería principal", "porteria principal"};
     private static final String[] LL = {"livianos", "ll", "l l", "escuelda de matemáticas", "escuela de biología", "escuela de química", "escuela de física"};
     private static final String[] GALLERA = {"GALLERA"};
     private static final String[] MATADERO = {"MATADERO"};

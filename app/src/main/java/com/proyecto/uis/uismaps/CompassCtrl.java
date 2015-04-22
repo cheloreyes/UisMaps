@@ -10,6 +10,7 @@ import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 
+import com.proyecto.uis.uismaps.mapview.MapView;
 import com.proyecto.uis.uismaps.mapview.NearbyPlace;
 
 /**
@@ -40,7 +41,9 @@ public class CompassCtrl implements SensorEventListener{
     private float[] iOrientation = new float[3];
 
     private float currentDegree = 0f;
-    private float cardinalPoint = 0f;
+    private float oneFourtDegress = 0f;
+    private MapView iMapView;
+    private boolean findAngle = false;
 
     // **********************
     // Constructor
@@ -162,12 +165,44 @@ public class CompassCtrl implements SensorEventListener{
         return iSeeing;
     }
 
+    public int imLookingTo(){
+        int toReturn = 0;
+        if(currentDegree > 315 && currentDegree < 45) {
+            toReturn = 0;
+        }
+        else {
+            if(currentDegree > 45 && currentDegree < 135 ) {
+                toReturn = 1;
+            }
+            else {
+                if(currentDegree > 135 && currentDegree < 225) {
+                    toReturn = 2;
+                }
+                else {
+                    if(currentDegree > 225 && currentDegree < 315) {
+                        toReturn = 3;
+                    }
+                }
+            }
+        }
+        return toReturn;
+    }
+
     /**
      * Pausa al oyente de los sensores. Se utiliza al salir de la aplicación.
      */
     public void pauseSensor() {
         iSensorManager.unregisterListener(this, iSensorAccelerometer);
         iSensorManager.unregisterListener(this, iSensorMagnometer);
+    }
+    public void whereIsTheRoute(){
+        if(iMapView.isNavigating()) {
+            int where = iMapView.getWhereIsThePoint();
+            if(where != 0 ){
+                iMapView.followRoute(where);
+                iMapView.showNavigation();
+            }
+        }
     }
 
     // **********************
@@ -182,8 +217,14 @@ public class CompassCtrl implements SensorEventListener{
         return currentDegree;
     }
 
-    public float getCardinalPoint() {
-        return cardinalPoint;
+    public void setMapView(MapView mapView) {
+        iMapView = mapView;
+    }
+    public void findAngle(boolean status) {
+        findAngle = status;
+    }
+    public  boolean isFindAngle() {
+        return findAngle;
     }
 
     // **********************
@@ -207,13 +248,15 @@ public class CompassCtrl implements SensorEventListener{
             SensorManager.getOrientation(mR, iOrientation);
             float radiants = iOrientation[0];
             float degress = (float)(Math.toDegrees(radiants) + 360) % 360;
-            if(Math.abs(currentDegree + degress) > 89 && Math.abs(currentDegree + degress) < 91) {
-                cardinalPoint = Math.round(-degress);
+            if(findAngle){
+                if(Math.abs(degress - oneFourtDegress) > 45){
+                    whereIsTheRoute();
+                    oneFourtDegress = degress;
+                }
             }
-            if(Math.abs(degress - currentDegree) > 24){
+            if(Math.abs(degress - currentDegree) > 10){
                 if(iImageView != null){
                     RotateAnimation ra = new RotateAnimation(Math.round(-currentDegree), Math.round(-degress), Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                    //Log.v("Brujula", "De: " + Math.round(currentDegree) +" a :" +  Math.round(-degress));
                     ra.setDuration(250);
                     ra.setFillAfter(true);
                     iImageView.startAnimation(ra);

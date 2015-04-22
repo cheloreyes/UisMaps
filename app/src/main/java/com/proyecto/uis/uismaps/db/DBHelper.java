@@ -107,6 +107,12 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      * @return Lista de tipo @Spaces.
      */
     public List<Spaces> spaces(String query, int limit) {
+        String[] accents = {"á", "é", "í", "ó", "ú"};
+        String[] vocals = {"a", "e", "i", "o", "u"};
+        for(int i = 0; i < accents.length; i++){
+            query = query.replaceAll(accents[i], vocals[i]);
+        }
+        query = query.replaceAll(" ", "%");
         Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE SpacesName LIKE '%" + query + "%' ORDER BY SpacesOfcNum LIMIT " + limit, null);
         Log.v("DB", "Buscando en la BD: "+query);
         return cursorToList(c);
@@ -170,6 +176,15 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
             }
         }
         return toReturn;
+    }
+    public double[] getBuildingEntrance(String building) {
+        double[] entrance = new double[2];
+        Cursor c = iDataBase.rawQuery("SELECT lon, lat from Edifice WHERE EdificeName LIKE '%" + building + "%'", null);
+        while (c.moveToNext()){
+            entrance[0] = c.getDouble(0);
+            entrance[1] = c.getDouble(1);
+        }
+        return entrance;
     }
 
     /**

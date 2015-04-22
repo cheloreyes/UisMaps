@@ -158,6 +158,9 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
     public String getDescriptionBuilding(String building) {
         return iDbHelper.descriptionBuilding(building);
     }
+    public double[] getBuildingEntrance(String building) {
+        return  iDbHelper.getBuildingEntrance(building);
+    }
 
     public void closeDataBase() {
         iDbHelper.close();
@@ -200,7 +203,7 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         Log.v("onSuggestionClick", "Pertenece al edificio: " + getBuilding(position));
         String selectedResult = getBuilding(position);
         iSearch.clearFocus();
-        iMapView.foundFocus(selectedResult);
+        iMapView.foundFocus(selectedResult, getBuildingEntrance(selectedResult));
         return true;
     }
 

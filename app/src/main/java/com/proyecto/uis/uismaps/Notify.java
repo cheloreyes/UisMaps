@@ -55,7 +55,7 @@ public class Notify implements Constants {
      * Utiliza la sintesis de voz @VoiceManager para notificar al usuario.
      */
     private void noVisualNotification(String sms) {
-        iVoiceManager.textToSpeech(sms);
+        iVoiceManager.textToSpeech(sms, false);
     }
 
 }

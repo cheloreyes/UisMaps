@@ -28,6 +28,16 @@
                 android:layout_height="match_parent"
                 android:id="@+id/map_container">
             </FrameLayout>
+            <ImageView
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:id="@+id/compass"
+                android:src="@mipmap/compass_base"/>
+            <ImageView
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:id="@+id/compass_pointer"
+                android:src="@mipmap/compass_pointer"/>
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
@@ -88,8 +98,8 @@
                     fab:fab_shadow="false"/>
             </LinearLayout>
             <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
+                android:layout_width="180dp"
+                android:layout_height="130dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="13dp"
                 android:id="@+id/img_slider"

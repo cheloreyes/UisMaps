@@ -3,11 +3,13 @@ package com.proyecto.uis.uismaps;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import com.proyecto.uis.uismaps.finder.Finder;
 import com.proyecto.uis.uismaps.mapview.MapView;
+import com.proyecto.uis.uismaps.mapview.NearbyPlace;
 
 import java.util.Locale;
 
@@ -51,22 +53,32 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
      * la ejecución.
      * @param pText Texto a que se quiere sintetizar.
      */
-    public void textToSpeech(final String pText) {
+    public void textToSpeech(final String pText, boolean isImportant) {
         if(isEngineInitialized) {
-            speaking = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    if (pText != null && !miTts.isSpeaking()) {
-                        Log.v("textToSpeech", "hablando: " + pText);
-                        if (Build.VERSION.SDK_INT < 21) {
-                            miTts.speak(pText, TextToSpeech.QUEUE_ADD, null);
-                        } else {
-                            miTts.speak(pText, TextToSpeech.QUEUE_ADD, null, "");
+            if(isImportant && miTts.isSpeaking()){
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        textToSpeech(pText, true);
+                    }
+                }, 1000);
+            }
+            else {
+                speaking = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (pText != null && !miTts.isSpeaking()) {
+                            Log.v("textToSpeech", "hablando: " + pText);
+                            if (Build.VERSION.SDK_INT < 21) {
+                                miTts.speak(pText, TextToSpeech.QUEUE_ADD, null);
+                            } else {
+                                miTts.speak(pText, TextToSpeech.QUEUE_ADD, null, "");
+                            }
                         }
                     }
-                }
-            });
-            speaking.start();
+                });
+                speaking.start();
+            }
         }
     }
 
@@ -99,7 +111,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                                         if(words[words.length - 1].equalsIgnoreCase(places[places.length - 1]) || words.length < 2)
                                         {
                                             Log.v("Voice", "La última palabra coincide");
-                                            iMapView.foundFocus(buildings[j]);
+                                            iMapView.foundFocus(buildings[j], iFinder.getBuildingEntrance(buildings[j]));
                                             to = false;
                                         }
                                         else{
@@ -116,7 +128,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         }
         if(to){
             //textToSpeech(miContext.getString(R.string.place_no_found));
-            textToSpeech(sentence + miContext.getString(R.string.place_no_found));
+            textToSpeech(sentence + miContext.getString(R.string.place_no_found), false);
         }
     }
 
@@ -127,26 +139,25 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
      * @param degrees Angulo de giro.
      * @param dist Distancia para el próximo giro.
      */
-    public void navigation(int fulldistance, int turnType, double degrees, double dist, double nextDist, String place){
+    public void navigation(int turnType, double degrees, double dist, double nextDist){
         if(lastTurnType != turnType && lastTurnType != 0) {
             String toSpeech = "";
             degrees = Math.abs(Math.round(degrees));
             toSpeech = getTurnIndication(turnType);
-            if(fulldistance == 0) {
-                stop();
-                toSpeech = miContext.getString(R.string.arrive) + " : " + place;
-            }
-            else {
-                stop();
-                toSpeech = "A: " + Math.round(dist) +" Metros.\n" + toSpeech + ".";
-                if(degrees > 40) {
-                    toSpeech = toSpeech + degrees + " grados.";
+            stop();
+            if(turnType != R.mipmap.ahead_arrow) {
+                toSpeech = "A: " + (int) Math.round(dist) +" Metros.\n" + toSpeech + ".";
+                if(degrees > 44 && degrees < 91) {
+                    toSpeech = toSpeech + (int) degrees + " grados.";
                 }
                 if(nextDist > 0) {
                     toSpeech = toSpeech + " Luego, continúe " + (int) nextDist + " Metros, aproximada-mente.";
                 }
             }
-            if(!miTts.isSpeaking())textToSpeech(toSpeech);
+            else{
+                toSpeech = toSpeech + " " + (int) dist + " Metros.";
+            }
+            textToSpeech(toSpeech, true);
         }
         lastTurnType = turnType;
 
@@ -169,6 +180,9 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                 break;
             case R.mipmap.soft_right_arrow:
                 toSpeech = " Gire a la derecha";
+                break;
+            case R.mipmap.turn_arround_arrow:
+                toSpeech = " De media vuelta";
                 break;
         }
         return toSpeech;
