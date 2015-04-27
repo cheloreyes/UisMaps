@@ -30,7 +30,7 @@ public class Thesaurus {
     private static final String[] LL = {"livianos", "ll", "l l", "escuelda de matemáticas", "escuela de biología", "escuela de química", "escuela de física"};
     private static final String[] GALLERA = {"GALLERA"};
     private static final String[] MATADERO = {"MATADERO"};
-    private static final String[] JORGE_B = {"escuela de petroleos", "escuela de metalúrgica", "escuela de geología", "de petróleos", "petróleos"};
+    private static final String[] JORGE_B = {"escuela de petróleos", "escuela de metalúrgica", "escuela de geología", "de petróleos", "petróleos", "Jorge Bautista"};
     private static final String[] HUMANAS = {"escuela de economía", "escuela de educación", "escuela de historia", "escuela de idiomas", "escuela de filosofía",
                                              "escuela de derecho", "escuela de economía", "escuela de tabajo social", "ciencias"};
     private static final String[] DANIEL_C = {"escuela de arte", "escuela de música", "escuela de música y arte"};

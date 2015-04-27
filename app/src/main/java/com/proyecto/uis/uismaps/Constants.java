@@ -42,4 +42,6 @@ public interface Constants {
      * Id para los valores modificados por el usuario en los ajustes de la aplicación.
      */
     public static final String EYESIGHT_ASSISTANT= "voice_capabilities";
+    public static final String SHOW_TUTORIAL = "show_tutorial";
+    public static final String SHOW_TUTORIAL_PANEL = "show_tutorial";
 }

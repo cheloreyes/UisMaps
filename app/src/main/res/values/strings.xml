@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="db_version">0.28</string>
+    <string name="db_version">0.30</string>
     <string name="map_version">0.36</string>
 
     <string name="app_name">UisMaps</string>
     <string name="action_settings">Ajustes</string>
     <string name="action_poll">Responder encuesta</string>
+    <string name="action_tutorial">Mostrar tutorial</string>
 
     <string name="destination_not_know">No es posible iniciar la navegación, destino desconocido. Por favor seleccione el destino tocando en el mapa e intente nuevamente.</string>
     <string name="waiting_GPS">Esperando ubicación GPS.</string>
@@ -27,7 +28,7 @@
     <string name="no_gps">Su dispositivo no tiene GPS. No es posible hacer seguimiento a su navegación, lo sentimos!</string>
     <string name="current_location">Mi ubicación actual</string>
     <string name="title">Universidad Industrial de Santander</string>
-    <string name="no_places_nearby">No se an encontrado lugares cercanos al punto seleccionado.</string>
+    <string name="no_places_nearby">No se han encontrado lugares cercanos al punto seleccionado.</string>
     <string name="not_inside_campus">No estas dentro del campus, UisMaps solo puede localizarte allí!</string>
     <string name="current_accuracy">Precisión:</string>
     <string name="meters">mts</string>
@@ -53,6 +54,8 @@
     <string name="after_tone">Después del tono, diga a dónde quiere ir.</string>
     <string name="error_route_title">"Error al generar ruta."</string>
     <string name="error_route_sms">Ha ocurrido un problema al generar la ruta, por favor intente nuevamente.</string>
+    <string name="voice_intro">Pulsa la pantalla una vez para conocer tu ubicación.
+        \n Haz una pulsación larga para indicar a donde quieres ir, ó dí Ayuda para oír nuevamente este mensaje.</string>
 
     <string name="ok">OK</string>
 

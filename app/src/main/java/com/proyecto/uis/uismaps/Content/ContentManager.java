@@ -76,6 +76,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private SharedPreferences preferences;
     private Finder iFinder;
     private Notify iNotify;
+    private boolean intro = true;
 
     private int i = 0;
     private VoiceManager iVoiceManager;
@@ -120,7 +121,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iDesciption = description;
         NavInfoA = navInfoA;
         NavInfoB = navInfoB;
-
+        iVoiceManager = voiceManager;
         preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
         iPanel.setPanelState(PanelState.HIDDEN);
         iLocationBtn.setOnClickListener(this);
@@ -154,6 +155,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
             iPanel.setTouchEnabled(true);
             iLocationBtn.setEnabled(true);
             iLocationBtn.setVisibility(VISIBLE);
+            intro = true;
         }
     }
 
@@ -161,6 +163,15 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      * Establece al layout contenedor a registrar los eventos tactiles. Cuando se habilita la interfaz especial.
      */
     private void initBlindCapabilities() {
+        if(intro){
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    iVoiceManager.textToSpeech(miContext.getString(R.string.voice_intro), true);
+                    intro = false;
+                }
+            }, 3000);
+        }
         iMapContainer.setOnClickListener(this);
         iMapContainer.setOnLongClickListener(this);
         iMapContainer.setId(ID_MAP_CONTAINER);
@@ -247,6 +258,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         if(imgBuilding == null && description == null && dependencesSize == 0){
             iPanel.setTouchEnabled(false);
         }
+        //new Alerts(miContext).tutorialScreen(1);
+        lunchTutorial();
     }
 
     /**
@@ -314,6 +327,17 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 break;
         }
         iLocationBtn.setImageResource(icon);
+    }
+    private void lunchTutorial()
+    {
+        SharedPreferences preferences = miContext.getSharedPreferences(ACT_OPTIONS, Context.MODE_PRIVATE);
+        boolean ranBefore = preferences.getBoolean(SHOW_TUTORIAL_PANEL, false);
+        if (!ranBefore) {
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean(SHOW_TUTORIAL_PANEL, true);
+            editor.commit();
+            new Alerts(miContext).tutorialScreen(1);
+        }
     }
     /**
      * Establece el @Activity donde se quiere iniciar el reconocimiento de voz, se prefiere usar el principal.

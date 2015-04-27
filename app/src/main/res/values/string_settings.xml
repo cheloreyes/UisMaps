@@ -2,11 +2,10 @@
     <string name="title_settings"> Ajustes UISMaps</string>
     <string name="general_settings"> Ajustes Generales</string>
     <string name="location_settings"> Ajustes de Ubicación</string>
-    <string name="enable_voice_capabilities">Activar capacidades de voz</string>
-    <string name="details_voice">UISMaps cambia la interfaz para habilitar capacidades de voz.</string>
+    <string name="enable_voice_capabilities">Activar interfaz para invidentes</string>
+    <string name="details_voice">UISMaps cambia la interfaz para habilitar capacidades de voz</string>
 
-    <string name="about_us">Acerca del proyecto.</string>
-    
+    <string name="about_us">Acerca del proyecto</string>
     <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
     <string-array name="pref_example_list_titles">
         <item>Always</item>

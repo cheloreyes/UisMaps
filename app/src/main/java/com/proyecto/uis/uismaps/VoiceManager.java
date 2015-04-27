@@ -32,6 +32,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
     private SharedPreferences preferences;
     private String[] buildings;
     private Thread speaking;
+    private double lastDistance = 0;
 
     /**
      * Inicializa el motor de voz en referencia al contexto de la aplicación. Se establecen
@@ -126,9 +127,14 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                 }
             }
         }
-        if(to){
-            //textToSpeech(miContext.getString(R.string.place_no_found));
-            textToSpeech(sentence + miContext.getString(R.string.place_no_found), false);
+        if(words[words.length -1].equalsIgnoreCase("ayuda")){
+            textToSpeech(miContext.getString(R.string.voice_intro), true);
+        }
+        else{
+            if(to){
+                //textToSpeech(miContext.getString(R.string.place_no_found));
+                textToSpeech(sentence +". "+ miContext.getString(R.string.place_no_found), false);
+            }
         }
     }
 
@@ -144,10 +150,10 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
             String toSpeech = "";
             degrees = Math.abs(Math.round(degrees));
             toSpeech = getTurnIndication(turnType);
-            stop();
+            //stop();
             if(turnType != R.mipmap.ahead_arrow) {
                 toSpeech = "A: " + (int) Math.round(dist) +" Metros.\n" + toSpeech + ".";
-                if(degrees > 44 && degrees < 91) {
+                if(degrees > 20 && degrees < 91) {
                     toSpeech = toSpeech + (int) degrees + " grados.";
                 }
                 if(nextDist > 0) {
@@ -160,6 +166,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
             textToSpeech(toSpeech, true);
         }
         lastTurnType = turnType;
+        lastDistance = dist;
 
     }
 

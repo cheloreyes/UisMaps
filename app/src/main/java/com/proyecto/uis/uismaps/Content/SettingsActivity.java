@@ -77,5 +77,6 @@ public class SettingsActivity extends Activity{
             i.setData(Uri.parse(url));
             startActivity(i);
         }
+
     }
 }

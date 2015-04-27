@@ -1,11 +1,16 @@
 package com.proyecto.uis.uismaps.Content;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.provider.Settings;
+import android.view.View;
+import android.view.Window;
+import android.widget.ImageView;
 
 import com.proyecto.uis.uismaps.R;
 
@@ -67,5 +72,30 @@ public class Alerts {
                 .setPositiveButton(btnSms, null)
                 .setCancelable(false)
                 .show();
+    }
+    public void tutorialScreen(int tutorialIndex){
+
+        final Dialog dialog = new Dialog(iContext);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        dialog.setContentView(R.layout.tutorial_screen);
+        dialog.setCanceledOnTouchOutside(true);
+        //for dismissing anywhere you touch
+        if(tutorialIndex == 1) {
+            ImageView img = (ImageView)dialog.findViewById(R.id.tutorial_img);
+            img.setImageResource(R.drawable.tuto_dos_wite);
+        }
+        else{
+            ImageView img = (ImageView)dialog.findViewById(R.id.tutorial_img);
+            img.setImageResource(R.drawable.tuto_uno_wite);
+        }
+        View masterView = dialog.findViewById(R.id.coach_mark_master_view);
+        masterView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 }

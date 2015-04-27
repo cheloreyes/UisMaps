@@ -33,6 +33,7 @@ public class LocationCtrl implements LocationListener {
 
     private boolean isNavigateStarted = false;
     private float lastAccurancy;
+    double time = 0;
 
     public LocationCtrl(Context context, MapView mapView) {
         iContext = context;
@@ -55,6 +56,7 @@ public class LocationCtrl implements LocationListener {
             iLocationManager = (LocationManager) iContext.getSystemService(Context.LOCATION_SERVICE);
             iLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
             if (iLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+               // time = System.currentTimeMillis();
                 progressDialog = alertsDialog.gpsProgressDialog();
                 progressDialog.show();
                 isGPSon = true;
@@ -118,6 +120,8 @@ public class LocationCtrl implements LocationListener {
         if (location.hasAccuracy() && !hasAccurancy) {
             progressDialog.hide();
             progressDialog.dismiss();
+            //time = System.currentTimeMillis() - time;
+            //new Alerts(iContext).showAlertDialog("Tiempo en conectar GPS", time + " milisegundos", "ok");
             hasAccurancy = location.hasAccuracy();
             iMapView.setAccurancy(hasAccurancy);
         }

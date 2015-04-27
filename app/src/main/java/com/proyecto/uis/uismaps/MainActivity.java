@@ -1,6 +1,7 @@
 package com.proyecto.uis.uismaps;
 
 import android.app.ActionBar;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,7 +19,9 @@ import android.support.v7.widget.SearchView;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -26,6 +29,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
+import com.proyecto.uis.uismaps.Content.Alerts;
 import com.proyecto.uis.uismaps.Content.ContentManager;
 import com.proyecto.uis.uismaps.Content.SettingsActivity;
 import com.proyecto.uis.uismaps.finder.Finder;
@@ -50,6 +54,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
     private Finder iFinder;
     private SearchView searchView;
     private CompassCtrl compass;
+    private int panelStatus = 0;
 
 
     @Override
@@ -74,7 +79,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         miMapa.setContentManager(miContent);
         miMapa.setiCompass(compass);
         miContent.setCallingActivity(this);
-
+        lunchTutorial();
         }
 
     @Override
@@ -100,6 +105,13 @@ public class MainActivity extends ActionBarActivity implements Constants {
         }
         if(id == R.id.action_poll) {
             lunchPoll();
+        }
+        if(id == R.id.show_tutorial) {
+            if(preferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
+                iVoiceManager.textToSpeech(this.getString(R.string.voice_intro), true);
+            }else{
+                new Alerts(this).tutorialScreen(panelStatus);
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -218,6 +230,8 @@ public class MainActivity extends ActionBarActivity implements Constants {
                 lp.topMargin = 0;
                 compassPointer.setLayoutParams(lp);
                 compassBase.setLayoutParams(lp);
+                panelStatus = 1;
+
             }
             @Override
             public void onPanelAnchored(View panel) {
@@ -238,6 +252,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
 
                 compassBase.setLayoutParams(lp);
                 compassPointer.setLayoutParams(lp);
+                panelStatus = 1;
             }
             @Override
             public void onPanelHidden(View panel) {
@@ -245,12 +260,13 @@ public class MainActivity extends ActionBarActivity implements Constants {
                 lp.topMargin = 0;
                 compassPointer.setLayoutParams(lp);
                 compassBase.setLayoutParams(lp);
+                panelStatus = 0;
             }
         });
         miContent = new ContentManager(this, miMapa, iVoiceManager, btnLocation, btnSlider,
                                               imgSlider, titleText, infoTextA, infoTextB, bodyTextA, mLayout, mapContainer, statusText, listView, descriptionTxt,
                 navInfoA, navInfoB);
-
+        //miContent.setVoiceManager(iVoiceManager);
         compass = new CompassCtrl(this, compassPointer);
     }
     public void lunchPoll() {
@@ -259,4 +275,16 @@ public class MainActivity extends ActionBarActivity implements Constants {
         i.setData(Uri.parse(url));
         startActivity(i);
     }
+    private void lunchTutorial()
+    {
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        boolean ranBefore = preferences.getBoolean(SHOW_TUTORIAL, false);
+        if (!ranBefore) {
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean(SHOW_TUTORIAL, true);
+            editor.commit();
+            new Alerts(this).tutorialScreen(0);
+        }
+    }
+
 }

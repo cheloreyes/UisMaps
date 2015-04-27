@@ -39,7 +39,9 @@ import java.util.ArrayList;
 
 /**
  * Created by cheloreyes on 21-01-15.
- * Implementa la vista del mapa CartoType
+ * Esta clase implementa la API de CartoType y métodos necesarios para la visualización, interacción con el mapa, posición de usuario, rutas
+ * y puntos seleccionados.
+ *
  */
 public class MapView extends View implements View.OnTouchListener,
                                                      ScaleGestureDetector.OnScaleGestureListener, Constants {
@@ -48,7 +50,6 @@ public class MapView extends View implements View.OnTouchListener,
     // **********************
     private static final int MIN_TIME = 2500;
     private static final int MIN_DISTANCE = 2;
-
     public static final int MAX_PLACES = 50;
     public static final int MIN_DIST_TO_POINT = 13;
     public static final int RADIO = 1080;
@@ -60,7 +61,7 @@ public class MapView extends View implements View.OnTouchListener,
     private static final int ID_ROUTE_END = 103;
     private static final int ID_ROUTE_START = 102;
     private static final int ID_SELECTED_POINT = 101;
-    private static final int PRED_SCALE = 15000;
+    private static final int PRED_SCALE = 14000;
     private static final double MAX_XA = -73.1233; //-73.12329138853613
     private static final double MAX_YA = 7.144; //7.143398173714375
     private static final double MAX_XB = -73.11553; //-73.1155327517166
@@ -129,6 +130,7 @@ public class MapView extends View implements View.OnTouchListener,
     private int distanceToDestination = 0;
     private int oldTurnType = 0;
     private int whereIsThePoint;
+    private String voiceResult;
 
     // **********************
     // Constructors
@@ -172,7 +174,7 @@ public class MapView extends View implements View.OnTouchListener,
     public void init() {
         FileManager fileManager = new FileManager(iContext);
         iNotify = new Notify(this.iContext, iVoiceManager);
-        miContent.setVoiceManager(iVoiceManager);
+        //miContent.setVoiceManager(iVoiceManager);
         iCompass.setMapView(this);
         setKeepScreenOn(true);
         miScaleGestureDetector = new ScaleGestureDetector(iContext, this);
@@ -212,7 +214,7 @@ public class MapView extends View implements View.OnTouchListener,
 
     /**
      * Obtiene el denomidador de la escala del mapa.
-     * @return
+     * @return la escala actual de la vista del mapa.
      */
     public int getMapScale() {
         int mapScale;
@@ -271,7 +273,7 @@ public class MapView extends View implements View.OnTouchListener,
         //se Intenta obtener los estados guardados (posición, escala, rotacion etc.).
         try {
             miDistanceUnits = preferences.getString(MAP_UNIT, "metric");
-            map_scale = preferences.getInt(MAP_ESCALE, 0);
+            map_scale = preferences.getInt(MAP_ESCALE, PRED_SCALE);
             map_rotation = Double.longBitsToDouble(preferences.getLong(MAP_ROTATION, 0));
             map_lat = Double.longBitsToDouble(preferences.getLong(MAP_LAT, 0));
             map_lon = Double.longBitsToDouble(preferences.getLong(MAP_LONG, 0));
@@ -497,6 +499,8 @@ public class MapView extends View implements View.OnTouchListener,
                             0, 0, 0);
                     miFramework.setRotation(0);
                     whereIsThePoint = 0;
+                    distanceToDestination = (int) miFramework.getRoute(0).getDistance();
+                    totalTime = System.currentTimeMillis();
                     showNavigation();
                 }
             }
@@ -580,6 +584,10 @@ public class MapView extends View implements View.OnTouchListener,
         if(UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)){
             final int turnIndication = imageTurn;
             if(startNavVoice){
+                if(currentPlace.getLabel().equals(iContext.getString(R.string.no_places_nearby))){
+                    if(voiceResult != null) currentPlace.setLabel(voiceResult);
+                    Log.v(TAG, "Cambia no encontrados por " + voiceResult);
+                }
                 iVoiceManager.textToSpeech("Iniciando navegación hacia: " + currentPlace.getLabel() + " \n A: "+ (int)fullDistance + " metros.", true);
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
@@ -588,7 +596,7 @@ public class MapView extends View implements View.OnTouchListener,
                         if(firstPlace.getWhere() == NearbyPlace.INSIDE) {
                             iVoiceManager.textToSpeech("Dirígete a la salida de " + firstPlace.getLabel(), false);
                         }else {
-                            iVoiceManager.textToSpeech("Ahora: " + iVoiceManager.getTurnIndication(turnIndication) + ", e inicia a caminar.", false);
+                            //iVoiceManager.textToSpeech("Ahora: " + iVoiceManager.getTurnIndication(turnIndication) + ", e inicia a caminar.", false);
                         }
 
                     }
@@ -611,7 +619,7 @@ public class MapView extends View implements View.OnTouchListener,
         } else {
             Log.v("Navigation:", "Titulo " + titleNav + "info turn: "+ infoTurn + "full distance: "+ fullDist );
             if(firstPlace.getWhere() == NearbyPlace.INSIDE && startNavVoice) {
-                new Alerts(iContext).showAlertDialog("Dirígete a la salida.", "Debes salir de: " + firstPlace.getLabel() +", para iniciar la navegación", iContext.getString(R.string.ok));
+                new Alerts(iContext).showAlertDialog("Dirígete a la salida.", "Debes salir de: " + firstPlace.getLabel() + ", para iniciar la navegación", iContext.getString(R.string.ok));
             }
             miContent.setPanelContent(titleNav, infoTurn, fullDist, imageTurn);
             startNavVoice = false;
@@ -788,41 +796,6 @@ public class MapView extends View implements View.OnTouchListener,
             }
         }
     }
-    private double roundAngle(double teta) {
-        Log.v("fixAngle", "UnFixed: "+ teta);
-        double angle = Math.round( teta);
-
-        if(angle > 0 && angle < 45){
-            angle = 0;
-        }
-        else {
-            if(angle > 45 && angle < 135) {
-                angle = 90;
-            }
-            else {
-                if(angle > 135 && angle < 180) {
-                    angle = 180;
-                }
-                else{
-                    if(angle < 0 && angle > -45) {
-                        angle = 0;
-                    }
-                    else{
-                        if(angle < -45 && angle > -135) {
-                            angle = -90;
-                        }
-                        else{
-                            if(angle < -135 && angle > -180) {
-                                angle = 180;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        Log.v("fixAngle", "Fixed: "+ angle);
-        return angle;
-    }
 
     /**
      * Determina el sentido del giro
@@ -884,7 +857,8 @@ public class MapView extends View implements View.OnTouchListener,
             }
             else {
                 iVoiceManager.stop();
-                here += iCompass.whereIsTheBuilding(temp) + ". Está " + temp.getLabel() + ". \n aproximada-mente a: " + (int) temp.getDistance() + " Metros.\n";
+                //here += iCompass.whereIsTheBuilding(temp) + ". Está " + temp.getLabel() + ". \n aproximada-mente a: " + (int) temp.getDistance() + " Metros.\n";
+                here += iCompass.whereIsTheBuilding(temp) + ". Está " + temp.getLabel() +". \n\n";
             }
         }
         return here;
@@ -993,7 +967,7 @@ public class MapView extends View implements View.OnTouchListener,
      * @param currentLocation Ubicación actual del usuario, (longitud, latitud).
      * @param centerNearby Centro del polígono (longitud, latitud).
      * @param bounds Máximos y mímimos (X ,Y) del polígono.
-     * @return
+     * @return la distancia a el edificio.
      */
     private double getNearbyDistance(double[] currentLocation, double[] centerNearby, double[] bounds) {
         double distance = 0.0;
@@ -1221,8 +1195,11 @@ public class MapView extends View implements View.OnTouchListener,
      * @param toFocus label del lugar.
      */
     public void foundFocus(String toFocus, double[] entrance) {
+        Log.v(TAG,"toFocus: " + toFocus);
         Log.v(TAG,"Entrada: " + entrance.length + " ("+entrance[0] +" , "+entrance[1] +")");
+        canSetPoints = true;
         if(entrance[0] != 0.0 && entrance[1] != 0.0){
+            voiceResult = toFocus;
             setSelectedPoint(entrance[0], entrance[1]);
             miFramework.setViewCenterLatLong(entrance[0], entrance[1]);
             miFramework.setScale(2500);
@@ -1231,7 +1208,6 @@ public class MapView extends View implements View.OnTouchListener,
             MapObject[] result = miFramework.find(toFocus, Framework.FUZZY_STRING_MATCH_METHOD, 1);
             if(result != null && result.length != 0) {
                 for( MapObject temp : result) {
-                    canSetPoints = true;
                     double[] center = getCenterNearby(temp);
                     //Log.v(TAG, "Centro a: " +toFocus+ " en: ( "+center[0]+", "+center[1]+")");
                     miFramework.convertCoords(center, Framework.MAP_COORDS, Framework.DEGREE_COORDS);
@@ -1246,13 +1222,17 @@ public class MapView extends View implements View.OnTouchListener,
     }
 
     /**
-     * Indica si está conectado al servicio GPS.
+     * Retorna si el servicio GPS tiene precisión.
      * @return estado de @hasAccuracy
      */
     public boolean hasAccurancy() {
         return hasAccurancy;
     }
 
+    /**
+     * Establece si el servicio GPS tiene precición.
+     * @param acurrancy
+     */
     public void setAccurancy(boolean acurrancy) {
         hasAccurancy = acurrancy;
     }
@@ -1292,28 +1272,38 @@ public class MapView extends View implements View.OnTouchListener,
         invalidate();
     }
 
+    /**
+     * Establece el objeto ya instanceado de @VoiceManager.
+     * @param voiceManager
+     */
     public void setVoiceManager(VoiceManager voiceManager) {
         this.iVoiceManager = voiceManager;
     }
 
+    /**
+     * Establece la ubicación del usuario en coordenadas geográficas.
+     * @param lon ubicación del usuario, longitud.
+     * @param lat ubicación del usuario, latitud.
+     */
     public void setICurrentLocation(double lon, double lat) {
         iCurrentLon = lon;
         iCurrentLat = lat;
     }
+
+    /**
+     * Cambia el estado del icóno del botón de localización para indicar que está activo.
+     * @param status
+     * @param provider
+     */
     public void changeStatusIcon(int status, String provider){
         Log.v(TAG + " oSC","Conectado a: " + provider);
         miContent.setStatusLocationBtn(status);
     }
 
-    public void setTurnType(int turnType) {
-        this.turnType = turnType;
-        showNavigation();
-    }
-
-    public int getTurnType() {
-        return turnType;
-    }
-
+    /**
+     * Retorna la posición del primer punto de inicio de ruta.
+     * @return la posición del punto según la ubicación en @NearbyPlace.
+     */
     public int getWhereIsThePoint() {
         return  whereIsThePoint;
     }
