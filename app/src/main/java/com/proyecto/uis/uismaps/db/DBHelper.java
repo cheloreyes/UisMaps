@@ -186,6 +186,18 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         }
         return entrance;
     }
+    public ArrayList<Spaces> getTableContent(String table) {
+        ArrayList<Spaces> content = new ArrayList<>();
+        Cursor c = iDataBase.rawQuery("select "+ table +"."+table +"Name, Edifice.EdificeName from "+ table +", Edifice where "+ table +".Edifice_EdificeCode = Edifice.EdificeCode", null);
+        while (c.moveToNext()){
+            Spaces space = new Spaces();
+            space.setName(c.getString(0));
+            space.setBuilding(c.getString(1));
+            content.add(space);
+        }
+
+        return content;
+    }
 
     /**
      * Almacena el resutlado de la consulta a la base de datos que es de tipo @Cursor en una @List de tipo @Spaces

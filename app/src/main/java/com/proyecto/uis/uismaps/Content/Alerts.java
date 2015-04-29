@@ -6,13 +6,16 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.provider.Settings;
 import android.view.View;
 import android.view.Window;
+import android.widget.ExpandableListView;
 import android.widget.ImageView;
 
 import com.proyecto.uis.uismaps.R;
+import com.proyecto.uis.uismaps.categories.CategoriesBuilder;
 
 /**
  * La clase Alerts realiza notificaciones mas completas que pueden requerir de interacción con el usuario.
@@ -96,6 +99,26 @@ public class Alerts {
                 dialog.dismiss();
             }
         });
+        dialog.show();
+    }
+    public void showCategories(final CategoriesBuilder category){
+
+        final Dialog dialog = new Dialog(iContext);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setTitle("Categorías");
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+        dialog.setContentView(R.layout.categories);
+        dialog.setCanceledOnTouchOutside(true);
+        ExpandableListView listCategories = (ExpandableListView) dialog.findViewById(R.id.list_categories);
+        listCategories.setAdapter(category.getAdapter());
+        listCategories.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+                category.childClickAction(groupPosition, childPosition, dialog);
+                return false;
+            }
+        });
+        //for dismissing anywhere you touch
         dialog.show();
     }
 }

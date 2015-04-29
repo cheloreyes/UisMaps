@@ -1,13 +1,9 @@
 package com.proyecto.uis.uismaps;
 
-import android.app.ActionBar;
-import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Point;
-import android.graphics.drawable.ColorDrawable;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,9 +15,7 @@ import android.support.v7.widget.SearchView;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -32,6 +26,8 @@ import com.melnykov.fab.FloatingActionButton;
 import com.proyecto.uis.uismaps.Content.Alerts;
 import com.proyecto.uis.uismaps.Content.ContentManager;
 import com.proyecto.uis.uismaps.Content.SettingsActivity;
+import com.proyecto.uis.uismaps.categories.CategoriesAdapter;
+import com.proyecto.uis.uismaps.categories.CategoriesBuilder;
 import com.proyecto.uis.uismaps.finder.Finder;
 import com.proyecto.uis.uismaps.mapview.MapView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -112,6 +108,12 @@ public class MainActivity extends ActionBarActivity implements Constants {
             }else{
                 new Alerts(this).tutorialScreen(panelStatus);
             }
+        }
+        if(id == R.id.action_categories) {
+            CategoriesBuilder categories = new CategoriesBuilder(this);
+            categories.setiFider(iFinder);
+            //startActivity(new Intent(getApplicationContext(), CategoriesActivity.class));
+            new Alerts(this).showCategories(categories);
         }
 
         return super.onOptionsItemSelected(item);

@@ -58,6 +58,10 @@
         \n Haz una pulsación larga para indicar a donde quieres ir, ó dí Ayuda para oír nuevamente este mensaje.</string>
 
     <string name="ok">OK</string>
+    <string name="title_activity_categories">Categories</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="categories">Categorías</string>
 
 
 </resources>

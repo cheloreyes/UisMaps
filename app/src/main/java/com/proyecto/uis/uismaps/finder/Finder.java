@@ -166,6 +166,16 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         iDbHelper.close();
     }
 
+    public ArrayList<Spaces> getTableContent(String table) {
+        return iDbHelper.getTableContent(table);
+    }
+    public void setFocus(String selectedResult) {
+        if(selectedResult!= null){
+            Log.v("resultados", selectedResult + " " + getBuildingEntrance(selectedResult)[0] + ", " + getBuildingEntrance(selectedResult)[1]);
+            iMapView.foundFocus(selectedResult, getBuildingEntrance(selectedResult));
+        }
+    }
+
 
     // **********************
     // Methods from SuperClass
