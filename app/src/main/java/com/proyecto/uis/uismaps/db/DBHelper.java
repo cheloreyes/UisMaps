@@ -144,6 +144,11 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         return toReturn;
     }
 
+    /**
+     * Obtiene de la base de datos la imágen del edificio requerido.
+     * @param building Nombre del edificio que se desea la imágen.
+     * @return
+     */
     public Bitmap imageBuilding(String building) {
         byte[] image = new byte[1024];
         Cursor c = iDataBase.rawQuery("SELECT Image FROM Edifice WHERE EdificeName LIKE '" + building + "'", null);
@@ -157,6 +162,11 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         return null;
     }
 
+    /**
+     * Obtiene la descripción del edificio requerido.
+     * @param building Nombre del edificio que se desea la descripción.
+     * @return
+     */
     public String descriptionBuilding(String building) {
         String year = null;
         String constructor = null;
@@ -177,6 +187,12 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         }
         return toReturn;
     }
+
+    /**
+     * Obtiene la posición de la entrada del edificio requerido en coordenadas geográficas.
+     * @param building Nombre del edificio que se desea la entrada.
+     * @return Un arreglo con la longitud y latitud geográfica.
+     */
     public double[] getBuildingEntrance(String building) {
         double[] entrance = new double[2];
         Cursor c = iDataBase.rawQuery("SELECT lon, lat from Edifice WHERE EdificeName LIKE '%" + building + "%'", null);
@@ -186,6 +202,12 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         }
         return entrance;
     }
+
+    /**
+     * Obtiene los espacios y edificio al que pertenece cada espacio según la categoría deseada.
+     * @param table Cada categoría representa una tabla de la base de datos.
+     * @return Una lista del tipo @Spaces con el contenido de la categoría.
+     */
     public ArrayList<Spaces> getTableContent(String table) {
         ArrayList<Spaces> content = new ArrayList<>();
         Cursor c = iDataBase.rawQuery("select "+ table +"."+table +"Name, Edifice.EdificeName from "+ table +", Edifice where "+ table +".Edifice_EdificeCode = Edifice.EdificeCode", null);
@@ -197,6 +219,14 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         }
 
         return content;
+    }
+    public String imageUrl(String building) {
+        String toReturn = null;
+        Cursor c = iDataBase.rawQuery("SELECT ImageUrl FROM Edifice WHERE EdificeName LIKE'%" + building + "%'", null);
+        while (c.moveToNext()){
+            toReturn = c.getString(0);
+        }
+        return toReturn;
     }
 
     /**

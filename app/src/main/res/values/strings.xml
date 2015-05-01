@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="db_version">0.30</string>
+    <string name="db_version">0.34</string>
     <string name="map_version">0.36</string>
 
     <string name="app_name">UisMaps</string>

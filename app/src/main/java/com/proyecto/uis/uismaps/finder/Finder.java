@@ -147,28 +147,58 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         return iDbHelper.buildingsList();
     }
 
+    /**
+     * Obtiene la imágen básica del edificio encontrada en la base de datos.
+     * @param building Edificio que se requiere imágen.
+     * @return Un Bitmap con los datos de la imágen del edificio.
+     */
     public Bitmap getImgBuilding( String building) {
         return iDbHelper.imageBuilding(building);
     }
 
+    /**
+     * Obtiene los espacios resultantes de la búsqueda
+     * @return @Spaces
+     */
     public List<Spaces> getiSpaces() {
         return iSpaces;
     }
 
+    /**
+     * Obtiene la descripción del edificio encontrada en la base de datos.
+     * @param building Edificio que se requiere descripción.
+     * @return @String con la descripción del edificio.
+     */
     public String getDescriptionBuilding(String building) {
         return iDbHelper.descriptionBuilding(building);
     }
+
+    /**
+     * Obtiene la posición geográfica de la entrada del edificio encontrada en la base de datos.
+     * @param building Edificio que se requiere entrada.
+     * @return Arreglo con las cordenadas geográficas encontradas.
+     */
     public double[] getBuildingEntrance(String building) {
         return  iDbHelper.getBuildingEntrance(building);
     }
 
-    public void closeDataBase() {
-        iDbHelper.close();
-    }
-
+    /**
+     * Otiene el contenido de cada categoría.
+     * @param table Cada categoría hace referencia a una tabla de la base de datos.
+     * @return Arreglo con la lista de dependencias.
+     */
     public ArrayList<Spaces> getTableContent(String table) {
         return iDbHelper.getTableContent(table);
     }
+
+    public String getImageUrl(String building) {
+        return iDbHelper.imageUrl(building);
+    }
+
+    /**
+     * Coloca un marcador en la entrada del edificio seleccionado.
+     * @param selectedResult Edificio al que se relaciona.
+     */
     public void setFocus(String selectedResult) {
         if(selectedResult!= null){
             Log.v("resultados", selectedResult + " " + getBuildingEntrance(selectedResult)[0] + ", " + getBuildingEntrance(selectedResult)[1]);
@@ -176,6 +206,12 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         }
     }
 
+    /**
+     * Cierra la conexión a la base de datos.
+     */
+    public void closeDataBase() {
+        iDbHelper.close();
+    }
 
     // **********************
     // Methods from SuperClass

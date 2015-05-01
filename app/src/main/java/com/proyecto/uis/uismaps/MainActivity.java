@@ -22,6 +22,9 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.analytics.GoogleAnalytics;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.melnykov.fab.FloatingActionButton;
 import com.proyecto.uis.uismaps.Content.Alerts;
 import com.proyecto.uis.uismaps.Content.ContentManager;
@@ -51,25 +54,24 @@ public class MainActivity extends ActionBarActivity implements Constants {
     private SearchView searchView;
     private CompassCtrl compass;
     private int panelStatus = 0;
+    private Tracker tracker;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        tracker = ((MyApp) getApplication()).getTracker(MyApp.TrackerName.APP_TRACKER);
+        tracker.setScreenName("UisMaps");
+        tracker.send(new HitBuilders.AppViewBuilder().build());
         setContentView(R.layout.activity_main);
-
-
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
         miDisplayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(miDisplayMetrics);
-
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         miMapa = new MapView(this, miDisplayMetrics.densityDpi);
         iVoiceManager = new VoiceManager(this);
         iVoiceManager.setMapView(miMapa);
-
         init_Componets();
         miMapa.setVoiceManager(iVoiceManager);
         miMapa.setContentManager(miContent);
@@ -127,6 +129,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         //iVoiceManager.stop();
         if (doubleBackToExitPressedOnce) {
             miMapa.switchOffLocation(false);
+
             super.onBackPressed();
             return;
         }

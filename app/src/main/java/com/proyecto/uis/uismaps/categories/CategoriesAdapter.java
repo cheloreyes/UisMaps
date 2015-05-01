@@ -15,6 +15,8 @@ import java.util.HashMap;
 
 /**
  * Created by CheloReyes on 28/04/15.
+ * Esta clase es un adaptador personalizado para establecer el contenido de la lista de categorías, hereda de @BaseExpandableListAdapter
+ * con el fin de tener control sobre el grupo, y el hijo del grupo que es seleccionado.
  */
 public class CategoriesAdapter extends BaseExpandableListAdapter {
     private final Context iContext;

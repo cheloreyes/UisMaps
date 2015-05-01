@@ -7,6 +7,8 @@
 
     <string name="about_us">Acerca del proyecto</string>
     <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
+    <string name="load_images">Habilitar la descarga de imágenes usando datos móviles</string>
+    <string name="load_images_description">Por defecto descarga solo cuando haya una conexión Wi-Fi disponilbe.</string>
     <string-array name="pref_example_list_titles">
         <item>Always</item>
         <item>When possible</item>

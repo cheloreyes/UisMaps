@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.MediaRecorder;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
@@ -18,6 +20,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.melnykov.fab.FloatingActionButton;
+import com.proyecto.uis.uismaps.BuildingImageLoader;
 import com.proyecto.uis.uismaps.Constants;
 import com.proyecto.uis.uismaps.mapview.MapView;
 import com.proyecto.uis.uismaps.Notify;
@@ -80,6 +83,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
 
     private int i = 0;
     private VoiceManager iVoiceManager;
+    private BuildingImageLoader imageBuilding;
+    private String buildingName;
     // **********************
     // Constructor
     // **********************
@@ -131,6 +136,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iVibrator = (Vibrator) miContext.getSystemService(Context.VIBRATOR_SERVICE);
         iNotify = new Notify(miContext, voiceManager);
         iFinder = new Finder(miContext);
+
     }
 
 
@@ -194,6 +200,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         if(textInfoA != null) NavInfoA.setText(textInfoA);
         if(textInfoB != null) NavInfoB.setText(textInfoB);
         iImgInfo.setImageResource(img);
+        iImgInfo.setOnClickListener(null);
         iImgInfo.setScaleY(1.0f);
         iImgInfo.setScaleX(1.0f);
         iPanel.setAnchorPoint(0.4f);
@@ -206,12 +213,15 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      * @param enablePanel Habilitar interacción.
      */
     public void setPanelContent(String title, boolean enablePanel) {
+        ConnectivityManager connMgr = (ConnectivityManager) miContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifi = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         Bitmap imgBuilding = null;
         String description = null;
         int dependencesSize = 0;
         resetViews();
         if(title != null) {
             resizeText(title);
+            buildingName = title;
             iTileTxt.setText(title);
             if(enablePanel){
                 iPanel.setAnchorPoint(0.35f);
@@ -236,6 +246,10 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                     iImgInfo.setImageBitmap(imgBuilding);
                     iImgInfo.setScaleY(1.2f);
                     iImgInfo.setScaleX(1.2f);
+                    if(wifi.isConnected() || preferences.getBoolean("download_images", false)){
+                        iImgInfo.setOnClickListener(this);
+                    }
+                    else iImgInfo.setOnClickListener(null);
                 }
                 else iImgInfo.setImageBitmap(null);
                 description = iFinder.getDescriptionBuilding(title);
@@ -254,6 +268,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         }
         if(title == miContext.getString(R.string.no_places_nearby)){
             iPanel.setTouchEnabled(false);
+            buildingName = null;
         }
         if(imgBuilding == null && description == null && dependencesSize == 0){
             iPanel.setTouchEnabled(false);
@@ -371,6 +386,18 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iVoiceManager = voiceManager;
     }
 
+    public void loadImageBuilding(){
+        if(buildingName != null){
+            String newUrl = iFinder.getImageUrl(buildingName);
+            Log.v("Image URl", "Url: " + newUrl);
+            if(imageBuilding == null) {
+                imageBuilding = new BuildingImageLoader(miContext);
+            }
+            imageBuilding.showImageBuilding(newUrl);
+        }
+
+    }
+
     // **********************
     // Methods from SuperClass
     // **********************
@@ -418,6 +445,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                     miMapview.locateMe();
                 }
                 break;
+            case R.id.img_slider:
+                loadImageBuilding();
         }
     }
 

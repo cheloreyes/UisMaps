@@ -10,6 +10,10 @@
             android:key="voice_capabilities"
             android:summary="@string/details_voice"
             android:title="@string/enable_voice_capabilities" />
+        <CheckBoxPreference
+            android:key="download_images"
+            android:summary="@string/load_images_description"
+            android:title="@string/load_images" />
         <Preference
             android:key="about_us"
             android:title="@string/about_us"/>
