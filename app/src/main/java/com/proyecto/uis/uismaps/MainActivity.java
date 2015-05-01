@@ -22,6 +22,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
@@ -54,15 +55,14 @@ public class MainActivity extends ActionBarActivity implements Constants {
     private SearchView searchView;
     private CompassCtrl compass;
     private int panelStatus = 0;
-    private Tracker tracker;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        tracker = ((MyApp) getApplication()).getTracker(MyApp.TrackerName.APP_TRACKER);
-        tracker.setScreenName("UisMaps");
-        tracker.send(new HitBuilders.AppViewBuilder().build());
+        FlurryAgent.init(this, "NWPQQCYW2ZTKTSKSBQVH");
+
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         miDisplayMetrics = new DisplayMetrics();
@@ -160,6 +160,7 @@ public class MainActivity extends ActionBarActivity implements Constants {
         iVoiceManager.shutdown();
         compass.pauseSensor();
         iFinder.closeDataBase();
+        FlurryAgent.onEndSession(this);
     }
 
     /**
