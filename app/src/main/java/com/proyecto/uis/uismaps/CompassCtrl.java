@@ -195,6 +195,10 @@ public class CompassCtrl implements SensorEventListener{
         iSensorManager.unregisterListener(this, iSensorAccelerometer);
         iSensorManager.unregisterListener(this, iSensorMagnometer);
     }
+
+    /**
+     * Necesario para determinar donde inicia la ruta con respecto al usuario.
+     */
     public void whereIsTheRoute(){
         if(iMapView.isNavigating()) {
             int where = iMapView.getWhereIsThePoint();
@@ -209,20 +213,15 @@ public class CompassCtrl implements SensorEventListener{
     // Getter and Setter
     // **********************
 
-    /**
-     * Obtiene el ángulo actual con respecto al norte en grados centigrados. 0 para el norte.
-     * @return
-     */
-    public float getCurrentDegree() {
-        return currentDegree;
-    }
 
     public void setMapView(MapView mapView) {
         iMapView = mapView;
     }
+
     public void findAngle(boolean status) {
         findAngle = status;
     }
+
     public  boolean isFindAngle() {
         return findAngle;
     }
