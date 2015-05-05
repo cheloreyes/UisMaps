@@ -444,7 +444,7 @@ public class MapView extends View implements View.OnTouchListener,
     public void switchNavigation(boolean switcher) {
         if(switcher){
 
-            Log.v(TAG + " sN","Inicia navegación.");
+            Log.v(TAG + " sN", "Inicia navegación.");
             navigateStart();
         }
         else{
@@ -614,8 +614,7 @@ public class MapView extends View implements View.OnTouchListener,
             }
             if(fullDistance == 0) {
                 navigateStop();
-                iVoiceManager.textToSpeech(iContext.getString(R.string.arrive) + ": " + currentPlace.getLabel(), true);
-                iVoiceManager.textToSpeech(iContext.getString(R.string.navigation_turn_off), true);
+                iVoiceManager.textToSpeech(iContext.getString(R.string.arrive) + ": " + currentPlace.getLabel() + ". \n" + iContext.getString(R.string.navigation_turn_off), true);
             }
         } else {
             Log.v("Navigation:", "Titulo " + titleNav + "info turn: "+ infoTurn + "full distance: "+ fullDist );
@@ -686,18 +685,13 @@ public class MapView extends View implements View.OnTouchListener,
         Log.v("Navigation", "distancia intermedia" + littleTurnDist);
         if (littleTurnDist != 0) {
             nextTurn = littleTurn;
-            if(nextTurn.iContinue){
-                distToTurn = (int) littleTurnDist;
-            }
+            distToTurn = (int) littleTurnDist;
         } else {
             nextTurn = firstTurn;
-            if(nextTurn.iContinue){
-                distToTurn = (int) firstTurnDist;
-            }
+            distToTurn = (int) firstTurnDist;
         }
-
         turnAngle = nextTurn.iTurnAngle;
-        if (distToTurn < 15) {
+        if (distToTurn < 15 ) {
             turnType = nextTurn.iTurnType;
             nextDist = (int) bigTurnDist;
             if (distToTurn < 5) {
@@ -783,8 +777,8 @@ public class MapView extends View implements View.OnTouchListener,
         temp.setWhere(whereCode);
         String where = iCompass.whereIsTheBuilding(temp);
         if(where.equals(iContext.getString(R.string.ahead))){
-            //turnType = oldTurnType;
-            turnType = Turn.TURN_AHEAD;
+            turnType = oldTurnType;
+            //turnType = Turn.TURN_AHEAD;
         }
         else{
             if(where.equals(iContext.getString(R.string.behind))){
