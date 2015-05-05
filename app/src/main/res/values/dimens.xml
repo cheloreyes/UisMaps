@@ -6,4 +6,6 @@
 
     <color name="my_material_green">#67b93e</color>
     <color name="my_material_light_green">#8bc34a</color>
+    <color name="my_material_orange">#CD6A37</color>
+    <color name="my_material_blue">#379acd</color>
 </resources>

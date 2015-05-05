@@ -60,6 +60,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private final FrameLayout iMapContainer;
     private final FloatingActionButton iLocationBtn;
     private final FloatingActionButton iRoutesBtn;
+    private final FloatingActionButton iInfoBtn;
     private final ImageView iImgInfo;
     private final TextView iInfoTextA;
     private final TextView iTileTxt;
@@ -68,9 +69,9 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     private final TextView iStatus;
     private final TextView NavInfoA;
     private final TextView NavInfoB;
+    private final TextView iDesciption;
     private final Vibrator iVibrator;
     private final ListView iListView;
-    private final TextView iDesciption;
     private int btn_switch = START_POINT_BTN;
     private Activity callerActivity;
 
@@ -109,7 +110,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
      */
     public ContentManager(Context context, MapView mapView, VoiceManager voiceManager, FloatingActionButton locationBtn, FloatingActionButton routesBtn, ImageView imgInfo
     , TextView title, TextView infoTextA, TextView infoTextB, TextView bodyText, SlidingUpPanelLayout panel, FrameLayout mapContainer, TextView statusText, ListView listView,
-                          TextView description, TextView navInfoA, TextView navInfoB) {
+                          TextView description, TextView navInfoA, TextView navInfoB, FloatingActionButton infoBtn) {
         super(context);
         miContext = context;
         iPanel = panel;
@@ -136,7 +137,8 @@ public class ContentManager extends View implements Constants, View.OnClickListe
         iVibrator = (Vibrator) miContext.getSystemService(Context.VIBRATOR_SERVICE);
         iNotify = new Notify(miContext, voiceManager);
         iFinder = new Finder(miContext);
-
+        iInfoBtn = infoBtn;
+        iInfoBtn.setOnClickListener(this);
     }
 
 
@@ -155,6 +157,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
             iPanel.setTouchEnabled(false);
             iLocationBtn.setEnabled(false);
             iLocationBtn.setVisibility(INVISIBLE);
+            iInfoBtn.setVisibility(INVISIBLE);
             initBlindCapabilities();
         }
         else{
@@ -228,7 +231,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 iInfoTextA.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
                 iInfoTextB.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
                 iInfoTextA.setText("Dependencia");
-                iInfoTextB.setText("Espacio");
+                iInfoTextB.setText("Oficina");
                 iInfoTextB.setTextSize(19.0f);
                 iInfoTextA.setTextSize(19.0f);
                 iListView.setAdapter(iFinder.getDependencesAdapter(title));
@@ -318,6 +321,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     public void restoreContent(){
         changeRouteBtnIcon(START_POINT_BTN);
         setStatusLocationBtn(OUT_OF_SERVICE);
+        iInfoBtn.setVisibility(INVISIBLE);
         if (iPanel != null && iPanel.getPanelState() != PanelState.HIDDEN) {
             iPanel.setPanelState(PanelState.HIDDEN);
         }
@@ -398,6 +402,11 @@ public class ContentManager extends View implements Constants, View.OnClickListe
 
     }
 
+    public void showInfoBtn(boolean show){
+        if(show) iInfoBtn.setVisibility(VISIBLE);
+        else iInfoBtn.setVisibility(INVISIBLE);
+    }
+
     // **********************
     // Methods from SuperClass
     // **********************
@@ -447,6 +456,11 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 break;
             case R.id.img_slider:
                 loadImageBuilding();
+                break;
+            case R.id.info_btn:
+                Log.v(TAG, "click info btn");
+                iFinder.showInfoDialog(miMapview.getSelectPlace());
+                break;
         }
     }
 

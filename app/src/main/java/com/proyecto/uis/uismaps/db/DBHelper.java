@@ -195,7 +195,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      */
     public double[] getBuildingEntrance(String building) {
         double[] entrance = new double[2];
-        Cursor c = iDataBase.rawQuery("SELECT lon, lat from Edifice WHERE EdificeName LIKE '%" + building + "%'", null);
+        Cursor c = iDataBase.rawQuery("SELECT lon, lat from Edifice WHERE EdificeName LIKE '" + building + "'", null);
         while (c.moveToNext()){
             entrance[0] = c.getDouble(0);
             entrance[1] = c.getDouble(1);

@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 
+import com.proyecto.uis.uismaps.Content.Alerts;
 import com.proyecto.uis.uismaps.Content.BodyAdapter;
 import com.proyecto.uis.uismaps.mapview.MapView;
 import com.proyecto.uis.uismaps.R;
@@ -199,11 +200,22 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
      * Coloca un marcador en la entrada del edificio seleccionado.
      * @param selectedResult Edificio al que se relaciona.
      */
-    public void setFocus(String selectedResult) {
+    public void setFocus(String place, String selectedResult) {
         if(selectedResult!= null){
             Log.v("resultados", selectedResult + " " + getBuildingEntrance(selectedResult)[0] + ", " + getBuildingEntrance(selectedResult)[1]);
-            iMapView.foundFocus(selectedResult, getBuildingEntrance(selectedResult));
+
+            iMapView.foundFocus(place, selectedResult, getBuildingEntrance(selectedResult));
         }
+    }
+
+    public void showInfoDialog(String place) {
+        if(place != null){
+            Log.v("place", "place");
+            List<Spaces> spaces = iDbHelper.spaces(place, 1);
+            Spaces space = spaces.get(0);
+            if(space != null) new Alerts(iContext).showAlertDialog(space.getName(), "Dentro del edificio de " + space.getBuilding() + ", en la oficina " + space.getOffice(), "OK");
+        }
+        else Log.v("place", "no place");
     }
 
     /**
@@ -249,7 +261,7 @@ public class Finder implements SearchView.OnQueryTextListener, SearchView.OnSugg
         Log.v("onSuggestionClick", "Pertenece al edificio: " + getBuilding(position));
         String selectedResult = getBuilding(position);
         iSearch.clearFocus();
-        iMapView.foundFocus(selectedResult, getBuildingEntrance(selectedResult));
+        iMapView.foundFocus(iSpaces.get(position).getName(), selectedResult, getBuildingEntrance(selectedResult));
         return true;
     }
 

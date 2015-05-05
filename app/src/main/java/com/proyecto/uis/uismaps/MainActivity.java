@@ -23,9 +23,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.flurry.android.FlurryAgent;
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 import com.melnykov.fab.FloatingActionButton;
 import com.proyecto.uis.uismaps.Content.Alerts;
 import com.proyecto.uis.uismaps.Content.ContentManager;
@@ -269,9 +266,10 @@ public class MainActivity extends ActionBarActivity implements Constants {
                 panelStatus = 0;
             }
         });
+        FloatingActionButton btnInfo = (FloatingActionButton) findViewById(R.id.info_btn);
         miContent = new ContentManager(this, miMapa, iVoiceManager, btnLocation, btnSlider,
                                               imgSlider, titleText, infoTextA, infoTextB, bodyTextA, mLayout, mapContainer, statusText, listView, descriptionTxt,
-                navInfoA, navInfoB);
+                navInfoA, navInfoB, btnInfo);
         //miContent.setVoiceManager(iVoiceManager);
         compass = new CompassCtrl(this, compassPointer);
     }

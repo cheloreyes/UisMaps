@@ -87,7 +87,8 @@ public class CategoriesBuilder {
     public void childClickAction(int groupPosition, int childPosition, Dialog owner) {
         Log.v("Categories", content.get(categoryName[groupPosition]).get(childPosition).getName() + " Pertenece a: " + content.get(categoryName[groupPosition]).get(childPosition).getBuilding());
         String edifice = content.get(categoryName[groupPosition]).get(childPosition).getBuilding();
-        iFider.setFocus(edifice);
+        String place = content.get(categoryName[groupPosition]).get(childPosition).getName();
+        iFider.setFocus(place, edifice);
         owner.dismiss();
     }
 }

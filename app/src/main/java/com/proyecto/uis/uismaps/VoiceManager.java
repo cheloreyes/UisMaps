@@ -29,10 +29,8 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
     private Locale colombia;
     private MapView iMapView;
     private TextToSpeech miTts;
-    private SharedPreferences preferences;
     private String[] buildings;
-    private Thread speaking;
-    private double lastDistance = 0;
+    private double lastDistance = 10;
 
     /**
      * Inicializa el motor de voz en referencia al contexto de la aplicación. Se establecen
@@ -44,7 +42,6 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         miTts = new TextToSpeech(miContext, this);
         colombia = new Locale("es", "COL");
         //miTts.setLanguage(colombia);
-        preferences = PreferenceManager.getDefaultSharedPreferences(miContext);
         iFinder = new Finder(miContext);
         buildings = iFinder.getBuildingList();
     }
@@ -65,7 +62,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                 }, 1000);
             }
             else {
-                speaking = new Thread(new Runnable() {
+                Thread speaking = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         if (pText != null && !miTts.isSpeaking()) {
@@ -96,7 +93,6 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
         Log.v("Voice", "Sentencia arreglada: " + sentence);
         String delimiters = "[ .,;?!¡¿\'\"\\[\\]]+";
         String[] words = sentence.split(delimiters);
-        String where = null;
         Log.v("Voice", "Numero de palabras " + words.length);
         for (int i = 0; i< words.length; i++) {
             if(to){
@@ -112,7 +108,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
                                         if(words[words.length - 1].equalsIgnoreCase(places[places.length - 1]) || words.length < 2)
                                         {
                                             Log.v("Voice", "La última palabra coincide");
-                                            iMapView.foundFocus(buildings[j], iFinder.getBuildingEntrance(buildings[j]));
+                                            iMapView.foundFocus("",buildings[j], iFinder.getBuildingEntrance(buildings[j]));
                                             to = false;
                                         }
                                         else{
@@ -147,7 +143,7 @@ public class VoiceManager implements TextToSpeech.OnInitListener{
      */
     public void navigation(int turnType, double degrees, double dist, double nextDist){
         if(lastTurnType != turnType && lastTurnType != 0) {
-            String toSpeech = "";
+            String toSpeech;
             degrees = Math.abs(Math.round(degrees));
             toSpeech = getTurnIndication(turnType);
             //stop();

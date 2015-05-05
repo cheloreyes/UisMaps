@@ -44,6 +44,17 @@
                 android:orientation="vertical"
                 android:gravity="bottom">
                 <com.melnykov.fab.FloatingActionButton
+                    android:id="@+id/info_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_gravity="right|bottom"
+                    android:visibility="invisible"
+                    android:src="@mipmap/info_ico"
+                    fab:fab_colorNormal="@color/my_material_orange"
+                    fab:fab_colorPressed="@color/my_material_blue"/>
+                <com.melnykov.fab.FloatingActionButton
                     android:id="@+id/loc_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

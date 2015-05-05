@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -50,9 +49,8 @@ public class MapView extends View implements View.OnTouchListener,
     // **********************
     private static final int MIN_TIME = 2500;
     private static final int MIN_DISTANCE = 2;
-    public static final int MAX_PLACES = 50;
+    public static final int MAX_PLACES = 100;
     public static final int MIN_DIST_TO_POINT = 13;
-    public static final int RADIO = 1080;
     public static final int MIN_SCALE = 500;
     private static final int DEFAULT_PROFILE = RouteProfile.WALKING_PROFILE;
     private static final int DPI_MIN = 160;
@@ -73,7 +71,7 @@ public class MapView extends View implements View.OnTouchListener,
     // **********************
 
     private final Context iContext;
-
+    public int radio;
     private int lastScale = 4000;
     private int dpiScreen;
     private int miTouchCount;
@@ -130,7 +128,8 @@ public class MapView extends View implements View.OnTouchListener,
     private int distanceToDestination = 0;
     private int oldTurnType = 0;
     private int whereIsThePoint;
-    private String voiceResult;
+    private String buildingFinded;
+    private String selectPlace;
 
     // **********************
     // Constructors
@@ -184,12 +183,12 @@ public class MapView extends View implements View.OnTouchListener,
         fileManager.folderCheck();
         //Color de fondo para las zonas que no cubre el mapa.
         setBackgroundColor(GRAY_COLOR);
-
         int width = getWidth();
         int height = getHeight();
+        radio = width;
         String miMapFile = CAMPUS_MAP;
         File f = new File(miMapFile);
-        Log.v(TAG, "Creando nuevo framework");
+        Log.v(TAG, "Creando nuevo framework " + width + " x " + height );
         //Se crea la instancia del framework
         miFramework = new Framework(miMapFile, FILE_STYLE, FILE_FONT, width, height);
         miFramework.setResolutionDpi(dpiScreen);
@@ -337,7 +336,8 @@ public class MapView extends View implements View.OnTouchListener,
                 }
             }
             else Log.v("SetSelectedPoint", "GetNearbyPlaces es null");
-
+            miContent.showInfoBtn(false);
+            buildingFinded = null;
            getMap();
            invalidate();
        }
@@ -395,7 +395,7 @@ public class MapView extends View implements View.OnTouchListener,
         deleteSelectedPoint();
         miFramework.deleteObjects(ID_ROUTE_END, ID_ROUTE_END);
         miFramework.addPointObject("route_end", miRouteEndLon, miRouteEndLat, Framework.DEGREE_COORDS, "", 0, ID_ROUTE_END, 0);
-        Log.v(TAG,"Destino Seleccionado");
+        Log.v(TAG, "Destino Seleccionado");
         if (isDisplayingRoute) {
             miFramework.endNavigation();
             showRoute();
@@ -585,8 +585,8 @@ public class MapView extends View implements View.OnTouchListener,
             final int turnIndication = imageTurn;
             if(startNavVoice){
                 if(currentPlace.getLabel().equals(iContext.getString(R.string.no_places_nearby))){
-                    if(voiceResult != null) currentPlace.setLabel(voiceResult);
-                    Log.v(TAG, "Cambia no encontrados por " + voiceResult);
+                    if(buildingFinded != null) currentPlace.setLabel(buildingFinded);
+                    Log.v(TAG, "Cambia no encontrados por " + buildingFinded);
                 }
                 iVoiceManager.textToSpeech("Iniciando navegación hacia: " + currentPlace.getLabel() + " \n A: "+ (int)fullDistance + " metros.", true);
                 Handler handler = new Handler();
@@ -615,6 +615,7 @@ public class MapView extends View implements View.OnTouchListener,
             if(fullDistance == 0) {
                 navigateStop();
                 iVoiceManager.textToSpeech(iContext.getString(R.string.arrive) + ": " + currentPlace.getLabel(), true);
+                iVoiceManager.textToSpeech(iContext.getString(R.string.navigation_turn_off), true);
             }
         } else {
             Log.v("Navigation:", "Titulo " + titleNav + "info turn: "+ infoTurn + "full distance: "+ fullDist );
@@ -624,8 +625,6 @@ public class MapView extends View implements View.OnTouchListener,
             miContent.setPanelContent(titleNav, infoTurn, fullDist, imageTurn);
             startNavVoice = false;
             if(fullDistance == 0) {
-                navigateStop();
-                setSelectedPoint(iCurrentLon, iCurrentLat);
                 totalTime = System.currentTimeMillis() - totalTime;
                 totalTime = totalTime / 1000;
                 double hours = (int) (totalTime / 3600);
@@ -636,6 +635,8 @@ public class MapView extends View implements View.OnTouchListener,
                         + String.format("%02d", (int) minutes) + ":"
                         + String.format("%02d", (int) this.totalTime);
                 new Alerts(iContext).showAlertDialog(iContext.getString(R.string.arrive) + currentPlace.getLabel(), distanceToDestination + " M. Recorridos. En: " + totalTime, "Gracias");
+                setSelectedPoint(iCurrentLon, iCurrentLat);
+                navigateStop();
             }
         }
     }
@@ -685,10 +686,14 @@ public class MapView extends View implements View.OnTouchListener,
         Log.v("Navigation", "distancia intermedia" + littleTurnDist);
         if (littleTurnDist != 0) {
             nextTurn = littleTurn;
-            distToTurn = (int) littleTurnDist;
+            if(nextTurn.iContinue){
+                distToTurn = (int) littleTurnDist;
+            }
         } else {
             nextTurn = firstTurn;
-            distToTurn = (int) firstTurnDist;
+            if(nextTurn.iContinue){
+                distToTurn = (int) firstTurnDist;
+            }
         }
 
         turnAngle = nextTurn.iTurnAngle;
@@ -778,7 +783,8 @@ public class MapView extends View implements View.OnTouchListener,
         temp.setWhere(whereCode);
         String where = iCompass.whereIsTheBuilding(temp);
         if(where.equals(iContext.getString(R.string.ahead))){
-            turnType = oldTurnType;
+            //turnType = oldTurnType;
+            turnType = Turn.TURN_AHEAD;
         }
         else{
             if(where.equals(iContext.getString(R.string.behind))){
@@ -893,7 +899,7 @@ public class MapView extends View implements View.OnTouchListener,
     }
 
     /**
-     * Busca los lugares en un radio @RADIO del punto establecido por @setSelectedPoint obteniendo un maximo de elementos @MAX_PLACES.
+     * Busca los lugares en un radio @radio del punto establecido por @setSelectedPoint obteniendo un maximo de elementos @MAX_PLACES.
      *
      * @return un @String con el nombre del lugar si toca un edifico o informa si no se encuentran lugares.
      */
@@ -908,7 +914,7 @@ public class MapView extends View implements View.OnTouchListener,
         point[0] = longitud;
         point[1] = latitud;
         miFramework.convertCoords(point, Framework.DEGREE_COORDS, Framework.SCREEN_COORDS);
-        MapObject[] nearby = miFramework.findInDisplay(point[0], point[1], (RADIO * (MIN_SCALE / currentScale)), MAX_PLACES);
+        MapObject[] nearby = miFramework.findInDisplay(point[0], point[1], (radio * (MIN_SCALE / currentScale)), MAX_PLACES);
         if(nearby == null) nearby = miFramework.findPolygonsContainingPoint(longitud, latitud, Framework.DEGREE_COORDS, MAX_PLACES);
         if (nearby != null && nearby.length > 0) {
             Log.v(TAG, "GetNearbyPlaces primer if");
@@ -931,12 +937,13 @@ public class MapView extends View implements View.OnTouchListener,
                     }
                 }
             if (i == 0) {
-                Log.v(TAG, "No se encontraron lugares");
-                iterativePlace.setLabel(iContext.getString(R.string.no_places_nearby));
+                Log.v(TAG, "No se encontraron lugares por metodo basico");
+                if(buildingFinded != null) iterativePlace.setLabel(buildingFinded);
+                else iterativePlace.setLabel(iContext.getString(R.string.no_places_nearby));
                 arrayPlaces.add(i, iterativePlace);
             }
         }
-        Log.v(TAG, "Radio: " + (RADIO * (MIN_SCALE / currentScale)));
+        Log.v(TAG, "Radio: " + (radio * (MIN_SCALE / currentScale)));
         arrayPlaces = arrangeArray(arrayPlaces);
         iterativePlace = arrayPlaces.get(0);
         return arrayPlaces;
@@ -1194,12 +1201,12 @@ public class MapView extends View implements View.OnTouchListener,
      * Encuentra un lugar específico del mapa y utiliza @setSelectedPoint para marcarlo.
      * @param toFocus label del lugar.
      */
-    public void foundFocus(String toFocus, double[] entrance) {
+    public void foundFocus(String place, String toFocus, double[] entrance) {
         Log.v(TAG,"toFocus: " + toFocus);
         Log.v(TAG,"Entrada: " + entrance.length + " ("+entrance[0] +" , "+entrance[1] +")");
         canSetPoints = true;
         if(entrance[0] != 0.0 && entrance[1] != 0.0){
-            voiceResult = toFocus;
+            buildingFinded = toFocus;
             setSelectedPoint(entrance[0], entrance[1]);
             miFramework.setViewCenterLatLong(entrance[0], entrance[1]);
             miFramework.setScale(2500);
@@ -1217,9 +1224,19 @@ public class MapView extends View implements View.OnTouchListener,
                 }
             }
         }
+        if(!UIpreferences.getBoolean(EYESIGHT_ASSISTANT, false)) {
+            selectPlace = place;
+            miContent.showInfoBtn(true);
+        }
         getMap();
         invalidate();
     }
+
+    public String getSelectPlace(){
+        return selectPlace;
+    }
+
+
 
     /**
      * Retorna si el servicio GPS tiene precisión.
