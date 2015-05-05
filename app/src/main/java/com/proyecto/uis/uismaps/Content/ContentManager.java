@@ -49,7 +49,7 @@ public class ContentManager extends View implements Constants, View.OnClickListe
     public static final int DPI_NEXUS5 = 480;
     private static final String TAG = "ContentManager";
     public static final int ID_MAP_CONTAINER = 15;
-    public static final int MAX_TEXT_LENGTH = 20;
+    public static final int MAX_TEXT_LENGTH = 15;
     public static final float MIN_SIZE = 18.0f;
     public static final float MAX_SIZE = 24.0f;
     // **********************
@@ -230,13 +230,13 @@ public class ContentManager extends View implements Constants, View.OnClickListe
                 iPanel.setAnchorPoint(0.35f);
                 iInfoTextA.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
                 iInfoTextB.setTextColor(miContext.getResources().getColor(R.color.my_material_green));
-                iInfoTextA.setText("Dependencia");
-                iInfoTextB.setText("Oficina");
+                iInfoTextA.setText(miContext.getString(R.string.dependence));
+                iInfoTextB.setText(miContext.getString(R.string.office_num));
                 iInfoTextB.setTextSize(19.0f);
                 iInfoTextA.setTextSize(19.0f);
                 iListView.setAdapter(iFinder.getDependencesAdapter(title));
                 dependencesSize = iFinder.getiSpaces().size();
-                if(dependencesSize== 0) {
+                if(dependencesSize == 0) {
                     iInfoTextA.setVisibility(INVISIBLE);
                     iInfoTextB.setVisibility(INVISIBLE);
                 }

@@ -110,7 +110,8 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
         String[] accents = {"á", "é", "í", "ó", "ú"};
         String[] vocals = {"a", "e", "i", "o", "u"};
         for(int i = 0; i < accents.length; i++){
-            query = query.replaceAll(accents[i], vocals[i]);
+            //query = query.replaceAll(accents[i], "%");
+            query = query.replaceAll(vocals[i], "%");
         }
         query = query.replaceAll(" ", "%");
         Cursor c = iDataBase.rawQuery("SELECT * FROM Spaces WHERE SpacesName LIKE '%" + query + "%' ORDER BY SpacesOfcNum LIMIT " + limit, null);

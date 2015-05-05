@@ -12,15 +12,16 @@
         android:textSize="16sp"
         android:gravity="start"
         android:padding="10dp"
-        android:layout_marginLeft="5dp" />
+        android:layout_marginLeft="35dp"
+        android:paddingLeft="5dp" />
 
     <TextView
-        android:layout_width="95dp"
+        android:layout_width="74dp"
         android:layout_height="wrap_content"
         android:text="test"
         android:id="@+id/num_office"
         android:padding="10dp"
-        android:layout_marginRight="5dp"
+        android:layout_marginRight="25dp"
         android:layout_gravity="right"
         android:gravity="center_horizontal" />
 
