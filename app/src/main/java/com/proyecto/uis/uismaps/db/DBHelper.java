@@ -211,7 +211,7 @@ public class DBHelper extends SQLiteOpenHelper implements Constants {
      */
     public ArrayList<Spaces> getTableContent(String table) {
         ArrayList<Spaces> content = new ArrayList<>();
-        Cursor c = iDataBase.rawQuery("select "+ table +"."+table +"Name, Edifice.EdificeName from "+ table +", Edifice where "+ table +".Edifice_EdificeCode = Edifice.EdificeCode", null);
+        Cursor c = iDataBase.rawQuery("select "+ table +"."+table +"Name, Edifice.EdificeName from "+ table +", Edifice where "+ table +".Edifice_EdificeCode = Edifice.EdificeCode order by "+table+"Name", null);
         while (c.moveToNext()){
             Spaces space = new Spaces();
             space.setName(c.getString(0));
